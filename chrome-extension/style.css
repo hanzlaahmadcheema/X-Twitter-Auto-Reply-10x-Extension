@@ -1,0 +1,82 @@
+@font-face {
+  font-family: 'Twitter Chirp';
+  src:url('fonts/Chirp-Regular.woff2') format('woff2');
+  font-weight: bold;
+  font-style: 900;
+  font-display: swap;
+}
+
+/* Container for tone selector dropdown and generate button */
+.tone-selector-container {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Spacing between dropdown and button */
+  }
+  
+  /* Styling for the tone selection dropdown */
+  #toneSelect, #langSelect, #lengthSelect {
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-bottom: 20px;
+    border-radius: 20px;
+    border: 1px solid #1da1f2;
+    background-color: #000000;
+    color: #1da1f2;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  
+  /* Hover effect for the dropdown */
+  #toneSelect:hover, #toneSelect:focus, #toneSelect:focus-within, #langSelect:hover, #langSelect:focus, #langSelect:focus-within, #lengthSelect:hover, #lengthSelect:focus, #lengthSelect:focus-within {
+    background-color: #0e0e0e;
+  }
+  
+  /* Styling for the generate reply button */
+  /* pushed to right */
+  .generate-reply-btn {
+    margin-left: 10px;
+    margin-bottom: 20px;
+    padding: 10px 18px;
+    font-family: 'Twitter Chirp', sans-serif;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 20px;
+    background-color: #1da1f2; /* Twitter blue color */
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    position: absolute;
+    right: 0;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+  }
+  
+  /* Hover effect for the button */
+  .generate-reply-btn:hover {
+    background-color: #0d8bda;
+  }
+  
+  /* Add some space above the button for clarity */
+  .tone-selector-container {
+    margin-top: 4px;
+  }
+  
+  /* Animation for click effect */
+@keyframes clickPulse {
+  0% {
+    transform: scale(1);
+    background-color: #1da1f2;
+  }
+  50% {
+    transform: scale(1.1);
+    background-color: #0d8bda;
+  }
+  100% {
+    transform: scale(1);
+    background-color: #1da1f2;
+  }
+}
+
+/* Trigger animation on button click */
+.generate-reply-btn .animate-click:active {
+  animation: clickPulse 0.4s ease-out;
+}

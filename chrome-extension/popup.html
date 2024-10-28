@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Twitter Reply Assistant Settings</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 15px; max-width: 250px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    select, input[type="text"] { width: 100%; padding: 5px; margin-top: 5px; }
+    button { width: 100%; padding: 10px; margin-top: 15px; background-color: #1da1f2; color: #fff; border: none; cursor: pointer; }
+    button:hover { background-color: #0d8bda; }
+  </style>
+</head>
+<body>
+
+  <h3>Settings</h3>
+  
+  <label for="apiKey">API Key:</label>
+  <input type="text" id="apiKey" placeholder="Enter your API key">
+
+  <label for="language">Language:</label>
+  <select id="language">
+    <option value="en">English</option>
+    <option value="es">Spanish</option>
+    <option value="fr">French</option>
+    <option value="de">German</option>
+  </select>
+
+  <label for="responseLength">Response Length:</label>
+  <select id="responseLength">
+    <option value="short">Short</option>
+    <option value="medium">Medium</option>
+    <option value="long">Long</option>
+  </select>
+
+  <label for="customInstruction">Custom Instruction:</label>
+  <input type="text" id="customInstruction" placeholder="Enter custom instruction">
+
+  <button id="saveSettings">Save Settings</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>

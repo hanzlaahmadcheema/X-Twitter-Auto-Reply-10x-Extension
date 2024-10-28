@@ -1,0 +1,35 @@
+{
+    "manifest_version": 3,
+    "name": "Twitter Reply Assistant",
+    "version": "2.0",
+    "description": "Generate replies with contextual tones on Twitter.",
+    "permissions": ["activeTab", "scripting", "storage"],
+    "host_permissions": [
+      "http://localhost:3000/*"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "content_scripts": [
+      {
+        "matches": ["*://x.com/*"],
+        "js": ["contentScript.bundle.js"],
+        "css": ["style.css"]
+      }
+    ],
+    "web_accessible_resources": [
+    {
+      "resources": ["style.css"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+      }
+    }
+  }
+  
