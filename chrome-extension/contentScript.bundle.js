@@ -30,7 +30,7 @@ function getReplyAccountDetails() {
 }
 
 function filterResponse(response) {
-  response = response.replace(/["]/g, '');
+  response = response.replace(/['"]/g, '');
   response = response.replace(/[\u{1F600}-\u{1F6FF}\u{1F300}-\u{1F5FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
   response = response.replace(/#\w+/g, '');
   response = response.trim();
@@ -72,15 +72,15 @@ function appendToneSelector(toolbar) {
     </select>
     <select id="toneSelect">
       <option value="casual">Casual</option>
+      <option value="straightforward">Straightforward</option>
       <option value="witty">Witty</option>
       <option value="friendly">Friendly</option>
       <option value="professional">Professional</option>
       <option value="humorous">Humorous</option>
       <option value="supportive">Supportive</option>
       <option value="curious">Curious</option>
-      <option value="encouraging">Encouraging</option>
-      <option value="thoughtful">Thoughtful</option>
-      <option value="informative">Informative</option>
+      <option value="encouraging">Encouraging</option> 
+      <option value="negative">negative</option>
     </select>
     <button class="generate-reply-btn animate-click">Generate</button>
   `;
