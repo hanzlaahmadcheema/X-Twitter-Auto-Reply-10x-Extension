@@ -1,5 +1,5 @@
 const apiUrl = "https://api.edenai.run/v2/text/generation";
-const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjY0NTFlOWYtYmUzZi00YzFmLWI1MDQtZjk1MzNjZjYyOGJiIiwidHlwZSI6ImFwaV90b2tlbiJ9.ksbpP9Pnd5k7wv5UtLZwDTPUPVm_fHfzYtXo5JP1VRY";  // Replace this with your actual API key
+const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYzk3OTQ4MjMtZTQ5OS00YzY2LWE4N2QtNzg4YzVlZWE3Y2RjIiwidHlwZSI6ImFwaV90b2tlbiJ9.ITx3xrctp6Du5gwdldI4fW5uUIVe6LZq63g3LqBO5v8";  // Replace this with your actual API key
 
 const tonePrompts = {
   straightforward: "Respond to this tweet focus on being clear and direct without embellishments or emotional language. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Don't use Interjections like Wow, Huh, etc.",
