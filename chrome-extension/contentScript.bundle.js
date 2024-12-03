@@ -30,21 +30,16 @@ function getReplyAccountDetails() {
 }
 
 function filterResponse(response) {
-  // Remove quotation marks
   response = response.replace(/['"]/g, '');
-  
-  // Remove emojis
+
   response = response.replace(/[\u{1F600}-\u{1F6FF}\u{1F300}-\u{1F5FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
   
-  // Remove hashtags
   response = response.replace(/#\w+/g, '');
   
-  // Remove specific excitement words with punctuation
   const excitementWords = ["wow", "wow,", "wow!", "oh", "oh,", "oh!", "amazing", "awesome"];
   const regex = new RegExp(`\\b(${excitementWords.join("|")})\\b`, "gi");
-  response = response.replace(regex, '').replace(/,+/g, ''); // Remove extra commas left after the match
+  response = response.replace(regex, '').replace(/,+/g, ''); 
   
-  // Trim and capitalize the first letter of the cleaned response
   response = response.trim();
   if (response.length > 0) {
     response = response[0].toUpperCase() + response.slice(1);

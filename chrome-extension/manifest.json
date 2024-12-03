@@ -14,12 +14,12 @@
       {
         "matches": ["*://x.com/*"],
         "js": ["contentScript.bundle.js"],
-        "css": ["style.css"]
+        "css": ["popup.css", "style.css"]
       }
     ],
     "web_accessible_resources": [
     {
-      "resources": ["style.css"],
+      "resources": ["style.css", "popup.css"],
       "matches": ["<all_urls>"]
     }
   ],

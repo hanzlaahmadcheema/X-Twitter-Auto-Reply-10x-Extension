@@ -1,26 +1,25 @@
-document.getElementById("saveSettings").addEventListener("click", () => {
-    const apiKey = document.getElementById("apiKey").value;
-    const language = document.getElementById("language").value;
-    const responseLength = document.getElementById("responseLength").value;
-    const customInstruction = document.getElementById("customInstruction").value;
-  
-    chrome.storage.sync.set({
-      apiKey,
-      language,
-      responseLength,
-      customInstruction
-    }, () => {
-      console.log("Settings saved");
-      alert("Settings have been saved.");
-    });
+document.addEventListener("DOMContentLoaded", () => {
+  const saveApiKeyBtn = document.getElementById("saveApiKeyBtn");
+  const apiKeyInput = document.getElementById("apiKey");
+  const status = document.getElementById("status");
+
+  // Restore the saved API key if available
+  chrome.storage.sync.get("apiKey", (data) => {
+    if (data.apiKey) {
+      apiKeyInput.value = data.apiKey;
+    }
   });
-  
-  document.addEventListener("DOMContentLoaded", () => {
-    chrome.storage.sync.get(["apiKey", "language", "responseLength", "customInstruction"], (settings) => {
-      document.getElementById("apiKey").value = settings.apiKey || "";
-      document.getElementById("language").value = settings.language || "en";
-      document.getElementById("responseLength").value = settings.responseLength || "medium";
-      document.getElementById("customInstruction").value = settings.customInstruction || "";
-    });
+
+  // Save the API key
+  saveApiKeyBtn.addEventListener("click", () => {
+    const apiKey = apiKeyInput.value.trim();
+    if (apiKey) {
+      chrome.storage.sync.set({ apiKey }, () => {
+        status.textContent = "API Key saved successfully!";
+        setTimeout(() => (status.textContent = ""), 2000);
+      });
+    } else {
+      status.textContent = "Please enter a valid API key.";
+    }
   });
-  
+});

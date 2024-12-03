@@ -1,5 +1,4 @@
 const apiUrl = "https://api.edenai.run/v2/text/generation";
-const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYzk3OTQ4MjMtZTQ5OS00YzY2LWE4N2QtNzg4YzVlZWE3Y2RjIiwidHlwZSI6ImFwaV90b2tlbiJ9.ITx3xrctp6Du5gwdldI4fW5uUIVe6LZq63g3LqBO5v8";  // Replace this with your actual API key
 
 const tonePrompts = {
   straightforward: "Respond to this tweet focus on being clear and direct without embellishments or emotional language. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Don't use Interjections like Wow, Huh, etc.",
@@ -19,49 +18,59 @@ const tonePrompts = {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "generateReply") {
     const { text, tone, lang, length, accountName } = message;
-    
-    const promptTemplate = tonePrompts[tone];
-    if (!promptTemplate) {
-      sendResponse({ reply: "Error: Invalid tone selected." });
-      return;
-    }
 
-    const prompt = promptTemplate
-      .replace("{text}", text || "No text provided")
-      .replace("{length}", length || "1-2 lines")
-      .replace("{lang}", lang || "same language")
-      .replace("{accountName}", accountName || "User");
+    chrome.storage.sync.get("apiKey", (data) => {
+      const apiKey = data.apiKey;
 
-    const payload = {
-      providers: ["openai"],
-      text: prompt,
-      response_as_dict: true,
-      temperature: 0,
-      max_tokens: 1000
-    };
+      if (!apiKey) {
+        console.error("Error: API key not found.");
+        sendResponse({ reply: "Error: API key not set. Please enter your API key in the extension settings in pop-up." });
+        return;
+      }
 
-    fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(payload)
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
+      const promptTemplate = tonePrompts[tone];
+      if (!promptTemplate) {
+        sendResponse({ reply: "Error: Invalid tone selected." });
+        return;
+      }
+
+      const prompt = promptTemplate
+        .replace("{text}", text || "No text provided")
+        .replace("{length}", length || "1-2 lines")
+        .replace("{lang}", lang || "same language")
+        .replace("{accountName}", accountName || "User");
+
+      const payload = {
+        providers: ["openai"],
+        text: prompt,
+        response_as_dict: true,
+        temperature: 0,
+        max_tokens: 1000
+      };
+
+      fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(payload)
       })
-      .then(data => {
-        const generatedText = data?.openai?.generated_text || "Error: AI response missing.";
-        sendResponse({ reply: generatedText });
-      })
-      .catch(error => {
-        console.error("API request failed:", error);
-        sendResponse({ reply: "Error generating AI response." });
-      });
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          const generatedText = data?.openai?.generated_text || "Error: AI response missing.";
+          sendResponse({ reply: generatedText });
+        })
+        .catch((error) => {
+          console.error("API request failed:", error);
+          sendResponse({ reply: "Error generating AI response. Please check your API key and connection." });
+        });
+    });
 
     return true;
   }
