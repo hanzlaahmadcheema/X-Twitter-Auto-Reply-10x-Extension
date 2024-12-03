@@ -16,7 +16,6 @@ const tonePrompts = {
   witty: "Write a reply to this tweet with a bit of sarcasm and a hint of disrespect. Respond in a way that dismisses the original tweet's importance or pokes fun at the author's opinion without being overtly rude. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'."
 };
 
-// Unified onMessage listener for handling different actions
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "generateReply") {
     const { text, tone, lang, length, accountName } = message;
@@ -64,6 +63,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ reply: "Error generating AI response." });
       });
 
-    return true; // Keeps the sendResponse channel open for async calls
+    return true;
   }
 });

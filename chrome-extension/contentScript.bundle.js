@@ -43,12 +43,14 @@ function filterResponse(response) {
   const excitementWords = ["wow", "wow,", "wow!", "oh", "oh,", "oh!", "amazing", "awesome"];
   const regex = new RegExp(`\\b(${excitementWords.join("|")})\\b`, "gi");
   response = response.replace(regex, '').replace(/,+/g, ''); // Remove extra commas left after the match
-
-  // Trim whitespace and return cleaned response
+  
+  // Trim and capitalize the first letter of the cleaned response
   response = response.trim();
+  if (response.length > 0) {
+    response = response[0].toUpperCase() + response.slice(1);
+  }
   return response;
 }
-
 
 
 function insertReplyText(replyText) {
