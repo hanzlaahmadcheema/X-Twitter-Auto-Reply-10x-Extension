@@ -24,7 +24,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       if (!apiKey) {
         console.error("Error: API key not found.");
-        sendResponse({ reply: "Error: API key not set. Please enter your API key in the extension settings in pop-up." });
+        sendResponse({ reply: "Error: API key not set. Please enter your API key in the extension settings in the popup." });
         return;
       }
 
@@ -41,7 +41,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         .replace("{accountName}", accountName || "User");
 
       const payload = {
-        providers: ["openai"],
+        providers: ["google"], // Changed provider to Amazon
         text: prompt,
         response_as_dict: true,
         temperature: 0,
@@ -63,7 +63,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return response.json();
         })
         .then((data) => {
-          const generatedText = data?.openai?.generated_text || "Error: AI response missing.";
+          // Adjust response parsing for Amazon
+          const generatedText = data?.google?.generated_text || "Error: AI response missing. Check your API key and connection.";
           sendResponse({ reply: generatedText });
         })
         .catch((error) => {
@@ -72,6 +73,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
     });
 
-    return true;
+    return true; // Keeps the sendResponse channel open for async handling
   }
 });

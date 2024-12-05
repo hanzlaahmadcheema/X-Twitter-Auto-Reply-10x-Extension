@@ -11,6 +11,7 @@
     display: flex;
     align-items: center;
     gap: 8px; /* Spacing between dropdown and button */
+    margin-top: 10px;
   }
   
   /* Styling for the tone selection dropdown */
@@ -41,8 +42,8 @@
     font-size: 15px;
     font-weight: bold;
     border-radius: 20px;
-    background-color: #1da1f2; /* Twitter blue color */
-    color: #fff;
+    background-color: rgb(239, 243, 244); /* Twitter blue color */
+    color: #000000;
     border: none;
     cursor: pointer;
     position: absolute;
