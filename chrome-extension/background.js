@@ -1,5 +1,3 @@
-const apiUrl = "https://api.edenai.run/v2/text/generation";
-
 const tonePrompts = {
   straightforward: "Be direct and clear. Respond to this tweet with no embellishments or emotional language. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
 
@@ -26,13 +24,12 @@ const tonePrompts = {
   witty: "Respond to this tweet with a clever and sarcastic tone. Make it dismissive or subtly mocking without being overtly rude. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'."
 };
 
-
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "generateReply") {
     const { text, tone, lang, length, accountName } = message;
 
     chrome.storage.sync.get("apiKey", (data) => {
-      const apiKey = data.apiKey;
+      const apiKey = data.apiKey || "YOUR_API_KEY"; // Replace with your actual API key for testing
 
       if (!apiKey) {
         console.error("Error: API key not found.");
@@ -53,19 +50,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         .replace("{accountName}", accountName || "User");
 
       const payload = {
-        providers: ["google"], 
-        fallback_providers: ['amazon'],
-        text: prompt,
-        response_as_dict: true,
-        temperature: 0,
-        max_tokens: 1000
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt
+              }
+            ]
+          }
+        ]
       };
+
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
       fetch(apiUrl, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(payload)
       })
@@ -76,7 +77,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return response.json();
         })
         .then((data) => {
-          const generatedText = data?.google?.generated_text || "Error: AI response missing. Check your API key and connection.";
+          console.log("Full API Response:", data); 
+
+          if (!data?.candidates || data.candidates.length === 0) {
+            console.error("Invalid or empty candidates field:", data);
+            sendResponse({ reply: "Error: No AI response generated. Please try again." });
+            return;
+          }
+
+          const generatedText = data.candidates[0]?.content?.parts[0]?.text || "Error: AI response missing.";
+          console.log("Generated Text:", generatedText);
+
           sendResponse({ reply: generatedText });
         })
         .catch((error) => {
@@ -85,6 +96,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
     });
 
-    return true; 
+    return true; // Keeps the sendResponse channel open for async calls
   }
 });

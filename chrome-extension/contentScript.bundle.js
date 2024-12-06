@@ -109,7 +109,8 @@ function appendToneSelector(toolbar) {
       tone: tone,
       lang: "same as tweet",
       length: length,
-      accountName: accountName
+      accountName: accountName,
+      accountUserName: accountUserName
     }, (response) => {
       if (response && response.reply) {
         insertReplyText(response.reply);
