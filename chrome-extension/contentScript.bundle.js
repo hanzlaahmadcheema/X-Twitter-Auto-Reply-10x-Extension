@@ -3,11 +3,13 @@ function getTweetContext() {
   const modalTweetElement = document.querySelector('[aria-labelledby="modal-header"] [data-testid="tweetText"]') || document.querySelector('[data-testid="tweet"]');
   if (modalTweetElement) {
     tweetText = modalTweetElement.innerText.trim();
+    console.log(tweetText);
     return tweetText;
   }
   const mainTweetElement = document.querySelector('[data-testid="tweetText"]') || document.querySelector('[data-testid="tweet"]');
   if (mainTweetElement) {
     tweetText = mainTweetElement.innerText.trim();
+    console.log(tweetText);
     return tweetText;
   }
   return "";
@@ -30,7 +32,7 @@ function getReplyAccountDetails() {
 }
 
 function filterResponse(response) {
-  response = response.replace(/['"]/g, '');
+  response = response.replace(/[*"]/g, '');
 
   response = response.replace(/[\u{1F600}-\u{1F6FF}\u{1F300}-\u{1F5FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
   
@@ -58,17 +60,24 @@ function insertReplyText(replyText) {
   }
 }
 
-function injectCSS() {
-  fetch(chrome.runtime.getURL("style.css"))
-    .then(response => response.text())
-    .then(css => {
-      const style = document.createElement("style");
-      style.textContent = css;
-      document.head.appendChild(style);
-    });
-}
 
-injectCSS();
+function showErrorInButton(message) {
+  const generateButton = document.querySelector(".generate-reply-btn");
+
+  if (generateButton) {
+    // Show the error message in the button
+    generateButton.textContent = message;
+    generateButton.style.backgroundColor = "red";  // Error color
+    generateButton.disabled = true;  // Disable the button during error state
+
+    // After 5 seconds, reset the button to its original state
+    setTimeout(() => {
+      generateButton.textContent = "Generate";
+      generateButton.style.backgroundColor = "#1da1f2";  // Normal color
+      generateButton.disabled = false;  // Re-enable the button
+    }, 5000);
+  }
+}
 
 function appendToneSelector(toolbar) {
   const container = document.createElement("div");
@@ -94,14 +103,32 @@ function appendToneSelector(toolbar) {
       <option value="negative">negative</option>
     </select>
     <button class="generate-reply-btn animate-click">Generate</button>
+    <button class="stop-btn" style="display: none;">🛑</button>
   `;
   toolbar.appendChild(container);
 
-  container.querySelector(".generate-reply-btn").addEventListener("click", async () => {
+  const generateBtn = container.querySelector(".generate-reply-btn");
+  const stopBtn = container.querySelector(".stop-btn");
+
+  let isGenerating = false;
+  let controller; // To store the AbortController instance
+
+  generateBtn.addEventListener("click", async () => {
+    if (isGenerating) return; // Prevent multiple clicks
+
+    isGenerating = true;
+    generateBtn.disabled = true; // Disable the button
+    generateBtn.textContent = "Generating..."; // Update button text
+    stopBtn.style.display = "inline-block"; // Show the Stop button
+
     const tone = document.getElementById("toneSelect").value;
     const length = document.getElementById("lengthSelect").value;
     const tweetContext = getTweetContext();
     const { accountUserName, accountName } = getReplyAccountDetails();
+
+    // Create a new AbortController to handle cancellation
+    controller = new AbortController();
+    const signal = controller.signal;
 
     chrome.runtime.sendMessage({
       action: "generateReply",
@@ -110,13 +137,45 @@ function appendToneSelector(toolbar) {
       lang: "same as tweet",
       length: length,
       accountName: accountName,
-      accountUserName: accountUserName
+      accountUserName: accountUserName,
+      signal: signal, // Pass the signal to the request
     }, (response) => {
       if (response && response.reply) {
         insertReplyText(response.reply);
+        resetButtons();
+      } else {
+        showError(generateBtn, "Error generating reply. Please try again.");
+        resetButtons();
       }
     });
   });
+
+  stopBtn.addEventListener("click", () => {
+    if (controller) {
+      controller.abort(); // Abort the ongoing request
+      resetButtons(); // Reset the buttons
+      showError(generateBtn, "Process stopped."); // Show the stop message
+    }
+  });
+
+  function resetButtons() {
+    isGenerating = false;
+    generateBtn.disabled = false; // Enable the button
+    generateBtn.textContent = "Generate"; // Reset button text
+    stopBtn.style.display = "none"; // Hide the Stop button
+  }
+
+  // Function to show error message on the button
+  function showError(button, message) {
+    button.style.backgroundColor = "#ff4d4d"; // Red background color
+    button.textContent = message; // Show the error message on the button
+
+    // After 5 seconds, reset the button
+    setTimeout(() => {
+      button.style.backgroundColor = "#ffffff"; // Reset to original color
+      button.textContent = "Generate"; // Reset button text
+    }, 5000); // Error message disappears after 5 seconds
+  }
 }
 
 const observer = new MutationObserver(() => {

@@ -1,83 +1,102 @@
-@font-face {
-  font-family: 'Twitter Chirp';
-  src:url('fonts/Chirp-Regular.woff2') format('woff2');
-  font-weight: bold;
-  font-style: 900;
-  font-display: swap;
+/* Base styling for the popup */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #1c1c1c; /* Dark background */
+  color: #fff;
+  
+  padding: 5px;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+h2 {
+  font-size: 12px;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #1da1f2; /* Twitter blue color */
 }
 
 /* Container for tone selector dropdown and generate button */
 .tone-selector-container {
-    display: flex;
-    align-items: center;
-    gap: 8px; /* Spacing between dropdown and button */
-    margin-top: 10px;
-  }
-  
-  /* Styling for the tone selection dropdown */
-  #toneSelect, #langSelect, #lengthSelect {
-    padding: 6px 12px;
-    font-size: 12px;
-    margin-bottom: 20px;
-    border-radius: 20px;
-    border: 1px solid #1da1f2;
-    background-color: #000000;
-    color: #1da1f2;
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease;
-  }
-  
-  /* Hover effect for the dropdown */
-  #toneSelect:hover, #toneSelect:focus, #toneSelect:focus-within, #langSelect:hover, #langSelect:focus, #langSelect:focus-within, #lengthSelect:hover, #lengthSelect:focus, #lengthSelect:focus-within {
-    background-color: #0e0e0e;
-  }
-  
-  /* Styling for the generate reply button */
-  /* pushed to right */
-  .generate-reply-btn {
-    margin-left: 10px;
-    margin-bottom: 20px;
-    padding: 10px 18px;
-    font-family: 'Twitter Chirp', sans-serif;
-    font-size: 15px;
-    font-weight: bold;
-    border-radius: 20px;
-    background-color: rgb(239, 243, 244); /* Twitter blue color */
-    color: #000000;
-    border: none;
-    cursor: pointer;
-    position: absolute;
-    right: 0;
-    transition: background-color 0.3s ease, transform 0.1s ease;
-  }
-  
-  /* Hover effect for the button */
-  .generate-reply-btn:hover {
-    background-color: #0d8bda;
-  }
-  
-  /* Add some space above the button for clarity */
-  .tone-selector-container {
-    margin-top: 4px;
-  }
-  
-  /* Animation for click effect */
-@keyframes clickPulse {
-  0% {
-    transform: scale(1);
-    background-color: #1da1f2;
-  }
-  50% {
-    transform: scale(1.1);
-    background-color: #0d8bda;
-  }
-  100% {
-    transform: scale(1);
-    background-color: #1da1f2;
-  }
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  margin-top: 20px;
+  border-radius: 20px;
 }
 
-/* Trigger animation on button click */
-.generate-reply-btn .animate-click:active {
-  animation: clickPulse 0.4s ease-out;
+/* Styling for the tone selection dropdown */
+#toneSelect, #langSelect, #lengthSelect {
+  padding: 8px 16px;
+  font-size: 10px;
+  font-family: 'Chirp-Regular', sans-serif;
+  margin-bottom: 10px;
+  border-radius: 25px;
+  border: 1px solid #1da1f2;
+  background-color: #000000;
+  color: #1da1f2;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Hover effect for the dropdown */
+#toneSelect:hover, #toneSelect:focus, #toneSelect:focus-within, 
+#langSelect:hover, #langSelect:focus, #langSelect:focus-within, 
+#lengthSelect:hover, #lengthSelect:focus, #lengthSelect:focus-within {
+  background-color: #0e0e0e;
+}
+
+/* Styling for the generate reply button */
+.generate-reply-btn {
+  padding: 8px 18px;
+  font-family: 'Chirp-Regular', sans-serif;
+  font-size: 14px;
+  font-weight: bolder;
+  border-radius: 25px;
+  background-color: #ffffff; /* White background for button */
+  color: #000000; /* Black text color */
+  cursor: pointer;
+  text-align: right;
+  border: none;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  margin-bottom: 5px;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.generate-reply-btn.error {
+  background-color: #ff4d4d;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Hover effect for the button */
+.generate-reply-btn:hover {
+  background-color: #d3d3d3; /* Light grey on hover */
+}
+
+/* Add some space above the button for clarity */
+.tone-selector-container {
+  margin-top: 4px;
+}
+
+
+/* Spacing for the dropdown container */
+.tone-selector-container {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Styling for the Stop button */
+.stop-btn {
+  background-color: #ffffff; /* Red background */
+  color: #ff4d4d;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  display: none; /* Hidden by default */
 }
