@@ -1,19 +1,31 @@
 const apiUrl = "https://api.edenai.run/v2/text/generation";
 
 const tonePrompts = {
-  straightforward: "Respond to this tweet focus on being clear and direct without embellishments or emotional language. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Don't use Interjections like Wow, Huh, etc.",
-  negative: "Respond to this tweet critically,disagreement in a respectful manner. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Don't use Interjections like Wow, Huh, etc.",
-  casual: "Write a short reply to this tweet in a casual manner. avoid overly formal language. Message: '{text}'. Author: {accountName}. Exclude hashtags, emojis, and mentions. Language: {lang}. Response length: {length}. Gender-neutral language only without excitement. Don't use word's like WOW, Huh, Thanks, etc.",  
-  friendly: "Reply to this tweet in a warm, friendly, and welcoming way. Text: '{text}'. Author: {accountName}. Avoid using hashtags, emojis, and mentions. Language: {lang}. Response length: {length}. Gender-neutral language only. Don't use Interjections like Wow, Huh, etc.",
-  professional: "Craft a reply to this tweet in a professional, respectful manners, from my perspective. Text: '{text}'. Author: {accountName}. Exclude hashtags, emojis, and mentions. Language: {lang}. Response length: {length}. Gender-neutral language only. Don't use word's like Wow, Huh, etc.",
-  humorous: "Reply to this tweet with humorous touch. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Don't use Interjections like Wow, Huh, etc.",
-  supportive: "Respond to this tweet with an encouraging and empathetic tone. Text: '{text}'. Author: {accountName}. Avoid hashtags, emojis, and mentions. Language: {lang}. Length: {length}. Use gender-neutral language. Don't use Interjections like Wow, Huh, etc.",
-  curious: "Ask a thoughtful question or show interest in this tweet. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Response length: {length}. Keep it gender-neutral. Don't use Interjections like Wow, Huh, etc.",
-  encouraging: "Write an uplifting reply to this tweet providing positive reinforcement. Text: '{text}'. Author: {accountName}. Exclude hashtags, emojis, and mentions. Language: {lang}. Length: {length}. Use gender-neutral language. Don't use Interjections like Wow, Huh, etc.",
-  thoughtful: "Craft a reflective reply to this tweet in a meaningful way. Text: '{text}'. Author: {accountName}. No hashtags, emojis, and mentions. Language: {lang}. Response length: {length}. Gender-neutral only. Don't use Interjections like Wow, Huh, etc.",
-  informative: "Provide a concise, factual reply to this tweet. Text: '{text}'. Author: {accountName}. Exclude hashtags, emojis, and mentions. Language: {lang}. Length: {length}. Keep language gender-neutral. Don't use Interjections like Wow, Huh, etc.",
-  witty: "Write a reply to this tweet with a bit of sarcasm and a hint of disrespect. Respond in a way that dismisses the original tweet's importance or pokes fun at the author's opinion without being overtly rude. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'."
+  straightforward: "Be direct and clear. Respond to this tweet with no embellishments or emotional language. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
+
+  negative: "Critically respond to this tweet with respectful disagreement. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
+
+  casual: "Write a casual reply to this tweet in a friendly and light-hearted tone. Avoid overly formal language. Text: '{text}'. Author: {accountName}. Exclude hashtags, emojis, and mentions. Language: {lang}. Response length: {length}. Keep it gender-neutral and avoid excitement words like 'Wow' or 'Awesome'.",
+
+  friendly: "Respond warmly and positively to this tweet. Make your reply welcoming and approachable. Text: '{text}'. Author: {accountName}. Avoid hashtags, emojis, or mentions. Language: {lang}. Response length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
+
+  professional: "Craft a professional and respectful response to this tweet. Maintain a formal and concise tone. Text: '{text}'. Author: {accountName}. Exclude hashtags, emojis, or mentions. Language: {lang}. Response length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
+
+  humorous: "Add a touch of humor in your response to this tweet. Keep it witty but respectful. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
+
+  supportive: "Reply to this tweet with empathy and encouragement. Text: '{text}'. Author: {accountName}. Avoid hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Use gender-neutral language. Avoid interjections like 'Wow' or 'Huh'.",
+
+  curious: "Show curiosity or interest in this tweet by asking a thoughtful question or making an engaging comment. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Response length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
+
+  encouraging: "Respond to this tweet with uplifting and motivational words. Provide positive reinforcement. Text: '{text}'. Author: {accountName}. Exclude hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Use gender-neutral language. Avoid interjections like 'Wow' or 'Huh'.",
+
+  thoughtful: "Craft a meaningful and reflective reply to this tweet. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Response length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
+
+  informative: "Provide a concise and factual reply to this tweet. Share relevant information or insights. Text: '{text}'. Author: {accountName}. Exclude hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
+
+  witty: "Respond to this tweet with a clever and sarcastic tone. Make it dismissive or subtly mocking without being overtly rude. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'."
 };
+
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "generateReply") {
@@ -41,7 +53,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         .replace("{accountName}", accountName || "User");
 
       const payload = {
-        providers: ["google"], // Changed provider to Amazon
+        providers: ["google"], 
+        fallback_providers: ['amazon'],
         text: prompt,
         response_as_dict: true,
         temperature: 0,
@@ -63,7 +76,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return response.json();
         })
         .then((data) => {
-          // Adjust response parsing for Amazon
           const generatedText = data?.google?.generated_text || "Error: AI response missing. Check your API key and connection.";
           sendResponse({ reply: generatedText });
         })
@@ -73,6 +85,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
     });
 
-    return true; // Keeps the sendResponse channel open for async handling
+    return true; 
   }
 });
