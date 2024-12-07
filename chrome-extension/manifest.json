@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Twitter Reply Assistant",
-    "version": "2.0",
+    "version": "3.0",
     "description": "Generate replies with contextual tones on Twitter.",
     "permissions": ["activeTab", "scripting", "storage"],
     "host_permissions": [
@@ -12,7 +12,7 @@
     },
     "content_scripts": [
       {
-        "matches": ["*://x.com/*"],
+        "matches": ["*://x.com/*", "*://twitter.com/*"],
         "js": ["contentScript.bundle.js"],
         "css": ["popup.css", "style.css"]
       }

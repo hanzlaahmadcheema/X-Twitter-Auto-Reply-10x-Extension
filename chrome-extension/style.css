@@ -27,17 +27,44 @@ h2 {
 
 /* Styling for the tone selection dropdown */
 #toneSelect, #langSelect, #lengthSelect {
-  padding: 8px 16px;
-  font-size: 10px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: bold;
   font-family: 'Chirp-Regular', sans-serif;
   margin-bottom: 10px;
   border-radius: 25px;
-  border: 1px solid #1da1f2;
-  background-color: #000000;
-  color: #1da1f2;
+  border: 1px solid #fff;
+  background-color: #000;
+  color: #fff;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
+  
+  /* Ensure the dropdown opens only downward */
+  overflow: hidden;
+  max-height: 4em; /* Limit height to 4 options */
 }
+
+/* Limit the height of the dropdown to 4 options and add a scrollbar for the rest */
+#toneSelect:focus, #langSelect:focus, #lengthSelect:focus {
+  /* When the dropdown is focused, limit the height to 4 options and enable scrolling */
+  max-height: 4em; /* 4 options visible */
+  overflow-y: auto; /* Add vertical scrollbar */
+}
+
+/* Style for the scrollbar */
+#toneSelect::-webkit-scrollbar, #langSelect::-webkit-scrollbar, #lengthSelect::-webkit-scrollbar {
+  width: 8px;
+}
+
+#toneSelect::-webkit-scrollbar-thumb, #langSelect::-webkit-scrollbar-thumb, #lengthSelect::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+#toneSelect::-webkit-scrollbar-thumb:hover, #langSelect::-webkit-scrollbar-thumb:hover, #lengthSelect::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
 
 /* Hover effect for the dropdown */
 #toneSelect:hover, #toneSelect:focus, #toneSelect:focus-within, 
@@ -48,7 +75,7 @@ h2 {
 
 /* Styling for the generate reply button */
 .generate-reply-btn {
-  padding: 8px 18px;
+  padding: 12px 18px;
   font-family: 'Chirp-Regular', sans-serif;
   font-size: 14px;
   font-weight: bolder;
@@ -92,11 +119,20 @@ h2 {
 .stop-btn {
   background-color: #ffffff; /* Red background */
   color: #ff4d4d;
-  padding: 10px 20px;
+  padding: 6px 12px;
   border-radius: 20px;
-  font-size: 14px;
+  font-size: 10px;
+  font-weight: bold;
+  font-family: 'Chirp-Regular', sans-serif;
   border: none;
   cursor: pointer;
+  margin-bottom: 5px;
   transition: background-color 0.3s ease, transform 0.1s ease;
   display: none; /* Hidden by default */
+}
+
+/* Hover effect for the Stop button */
+.stop-btn:hover {
+  background-color: #ff4d4d; /* Light red on hover */
+  color: #ffffff;
 }

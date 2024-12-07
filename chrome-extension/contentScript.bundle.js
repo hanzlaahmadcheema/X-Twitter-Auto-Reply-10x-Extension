@@ -1,12 +1,16 @@
 function getTweetContext() {
   let tweetText = "";
-  const modalTweetElement = document.querySelector('[aria-labelledby="modal-header"] [data-testid="tweetText"]') || document.querySelector('[data-testid="tweet"]');
+  const modalTweetElement =
+    document.querySelector('[aria-labelledby="modal-header"] [data-testid="tweetText"]') ||
+    document.querySelector('[data-testid="tweet"]');
   if (modalTweetElement) {
     tweetText = modalTweetElement.innerText.trim();
     console.log(tweetText);
     return tweetText;
   }
-  const mainTweetElement = document.querySelector('[data-testid="tweetText"]') || document.querySelector('[data-testid="tweet"]');
+  const mainTweetElement =
+    document.querySelector('[data-testid="tweetText"]') ||
+    document.querySelector('[data-testid="tweet"]');
   if (mainTweetElement) {
     tweetText = mainTweetElement.innerText.trim();
     console.log(tweetText);
@@ -16,12 +20,18 @@ function getTweetContext() {
 }
 
 function getReplyAccountDetails() {
-  const tweetContainer = document.querySelector('[data-testid="tweet"]') || document.querySelector('[role="article"]');
-  const usernameElement = tweetContainer ? tweetContainer.querySelector('[class="css-146c3p1 r-dnmrzs r-1udh08x r-3s2u2q r-bcqeeo r-1ttztb7 r-qvutc0 r-1qd0xha r-a023e6 r-rjixqe r-16dba41 r-18u37iz r-1wvb978"]') : null;
-  const displayNameElement = tweetContainer ? tweetContainer.querySelector('[data-testid="User-Name"] span') : null;
+  const tweetContainer =
+    document.querySelector('[data-testid="tweet"]') ||
+    document.querySelector('[role="article"]');
+  const usernameElement = tweetContainer
+    ? tweetContainer.querySelector('[class="css-146c3p1 r-dnmrzs r-1udh08x r-3s2u2q r-bcqeeo r-1ttztb7 r-qvutc0 r-1qd0xha r-a023e6 r-rjixqe r-16dba41 r-18u37iz r-1ftll1t"]')
+    : null;
+  const displayNameElement = tweetContainer
+    ? tweetContainer.querySelector('[data-testid="User-Name"] span')
+    : null;
 
   let accountUserName = usernameElement ? usernameElement.innerText.trim() : "Unknown User";
-  accountUserName = accountUserName.startsWith('@') ? accountUserName.slice(1) : accountUserName;
+  accountUserName = accountUserName.startsWith("@") ? accountUserName.slice(1) : accountUserName;
 
   const accountName = displayNameElement ? displayNameElement.innerText.trim() : "Unknown User";
 
@@ -32,16 +42,14 @@ function getReplyAccountDetails() {
 }
 
 function filterResponse(response) {
-  response = response.replace(/[*"]/g, '');
+  response = response.replace(/[*"]/g, "");
+  response = response.replace(/[\u{1F600}-\u{1F6FF}\u{1F300}-\u{1F5FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
+  response = response.replace(/#\w+/g, "");
 
-  response = response.replace(/[\u{1F600}-\u{1F6FF}\u{1F300}-\u{1F5FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
-  
-  response = response.replace(/#\w+/g, '');
-  
   const excitementWords = ["wow", "wow,", "wow!", "oh", "oh,", "oh!", "amazing", "awesome"];
   const regex = new RegExp(`\\b(${excitementWords.join("|")})\\b`, "gi");
-  response = response.replace(regex, '').replace(/,+/g, ''); 
-  
+  response = response.replace(regex, "").replace(/,+/g, "");
+
   response = response.trim();
   if (response.length > 0) {
     response = response[0].toUpperCase() + response.slice(1);
@@ -49,35 +57,34 @@ function filterResponse(response) {
   return response;
 }
 
-
 function insertReplyText(replyText) {
-  const filteredText = filterResponse(replyText);
-  const replyInput = document.querySelector('[data-testid="tweetTextarea_0"]');
+  const filteredText = filterResponse(replyText); // Filter the response text
+  const replyInput = document.querySelector('[data-testid="tweetTextarea_0"]'); // Target the tweet text area
+
   if (replyInput) {
+    replyInput.focus(); // Focus the text area
+
+    // Clear the input field
+    replyInput.value = ""; // Directly clear the text area value
+
+    // Create a new ClipboardEvent to simulate pasting the filtered text
     const dataTransfer = new DataTransfer();
     dataTransfer.setData("text/plain", filteredText);
-    replyInput.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dataTransfer, bubbles: true, cancelable: true }));
+
+    replyInput.dispatchEvent(
+      new ClipboardEvent("paste", {
+        clipboardData: dataTransfer,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+
+    console.log("New text inserted successfully:", filteredText);
+  } else {
+    console.error("Reply input field not found!");
   }
 }
 
-
-function showErrorInButton(message) {
-  const generateButton = document.querySelector(".generate-reply-btn");
-
-  if (generateButton) {
-    // Show the error message in the button
-    generateButton.textContent = message;
-    generateButton.style.backgroundColor = "red";  // Error color
-    generateButton.disabled = true;  // Disable the button during error state
-
-    // After 5 seconds, reset the button to its original state
-    setTimeout(() => {
-      generateButton.textContent = "Generate";
-      generateButton.style.backgroundColor = "#1da1f2";  // Normal color
-      generateButton.disabled = false;  // Re-enable the button
-    }, 5000);
-  }
-}
 
 function appendToneSelector(toolbar) {
   const container = document.createElement("div");
@@ -103,78 +110,94 @@ function appendToneSelector(toolbar) {
       <option value="negative">negative</option>
     </select>
     <button class="generate-reply-btn animate-click">Generate</button>
-    <button class="stop-btn" style="display: none;">🛑</button>
+    <button class="stop-btn" style="display: none;">🛑 Stop</button>
   `;
   toolbar.appendChild(container);
 
-  const generateBtn = container.querySelector(".generate-reply-btn");
-  const stopBtn = container.querySelector(".stop-btn");
+  const generateButton = container.querySelector(".generate-reply-btn");
+  const stopButton = container.querySelector(".stop-btn");
 
   let isGenerating = false;
-  let controller; // To store the AbortController instance
+  let controller; // For aborting the request
 
-  generateBtn.addEventListener("click", async () => {
-    if (isGenerating) return; // Prevent multiple clicks
+  generateButton.addEventListener("click", async () => {
+    if (isGenerating) return;
 
     isGenerating = true;
-    generateBtn.disabled = true; // Disable the button
-    generateBtn.textContent = "Generating..."; // Update button text
-    stopBtn.style.display = "inline-block"; // Show the Stop button
+    generateButton.textContent = "Generating...";
+    generateButton.disabled = true;
+    stopButton.style.display = "inline-block";
 
     const tone = document.getElementById("toneSelect").value;
     const length = document.getElementById("lengthSelect").value;
     const tweetContext = getTweetContext();
     const { accountUserName, accountName } = getReplyAccountDetails();
 
-    // Create a new AbortController to handle cancellation
     controller = new AbortController();
     const signal = controller.signal;
 
-    chrome.runtime.sendMessage({
-      action: "generateReply",
-      text: tweetContext,
-      tone: tone,
-      lang: "same as tweet",
-      length: length,
-      accountName: accountName,
-      accountUserName: accountUserName,
-      signal: signal, // Pass the signal to the request
-    }, (response) => {
-      if (response && response.reply) {
-        insertReplyText(response.reply);
-        resetButtons();
-      } else {
-        showError(generateBtn, "Error generating reply. Please try again.");
-        resetButtons();
+    chrome.runtime.sendMessage(
+      {
+        action: "generateReply",
+        text: tweetContext,
+        tone: tone,
+        lang: "same as tweet",
+        length: length,
+        accountName: accountName,
+        accountUserName: accountUserName,
+      },
+      (response) => {
+        isGenerating = false;
+        generateButton.disabled = false;
+        generateButton.textContent = "Generate";
+        stopButton.style.display = "none";
+
+        if (response?.error) {
+          showErrorInButton(response.error);
+        } else if (response?.reply) {
+          insertReplyText(response.reply);
+        }
       }
-    });
+    );
   });
 
-  stopBtn.addEventListener("click", () => {
+  stopButton.addEventListener("click", () => {
     if (controller) {
-      controller.abort(); // Abort the ongoing request
-      resetButtons(); // Reset the buttons
-      showError(generateBtn, "Process stopped."); // Show the stop message
+      controller.abort();
+      stopErrorInButton("Generation Stopped.");
+      stopButton.style.display = "none";
     }
   });
+}
 
-  function resetButtons() {
-    isGenerating = false;
-    generateBtn.disabled = false; // Enable the button
-    generateBtn.textContent = "Generate"; // Reset button text
-    stopBtn.style.display = "none"; // Hide the Stop button
-  }
 
-  // Function to show error message on the button
-  function showError(button, message) {
-    button.style.backgroundColor = "#ff4d4d"; // Red background color
-    button.textContent = message; // Show the error message on the button
+function stopErrorInButton(message) {
+  const generateButton = document.querySelector(".generate-reply-btn");
+  if (generateButton) {
+    generateButton.textContent = message;
+    generateButton.style.backgroundColor = "red";
+    generateButton.disabled = true;
 
-    // After 5 seconds, reset the button
     setTimeout(() => {
-      button.style.backgroundColor = "#ffffff"; // Reset to original color
-      button.textContent = "Generate"; // Reset button text
-    }, 5000); // Error message disappears after 5 seconds
+      generateButton.textContent = "Generate";
+      generateButton.style.backgroundColor = "#ffffff";
+      generateButton.disabled = false;
+    }, 700);
+  }
+}
+
+function showErrorInButton(message) {
+  const generateButton = document.querySelector(".generate-reply-btn");
+  if (generateButton) {
+    generateButton.textContent = message;
+    generateButton.style.backgroundColor = "red";
+    generateButton.disabled = true;
+
+    setTimeout(() => {
+      generateButton.textContent = "Generate";
+      generateButton.style.backgroundColor = "#ffffff";
+      generateButton.disabled = false;
+    }, 5000);
   }
 }
 
