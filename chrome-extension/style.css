@@ -1,95 +1,69 @@
-/* Base styling for the popup */
-body {
-  font-family: Arial, sans-serif;
-  background-color: #1c1c1c; /* Dark background */
-  color: #fff;
-  
-  padding: 5px;
-  margin: 0;
-  box-sizing: border-box;
-}
-
-h2 {
-  font-size: 12px;
-  margin-bottom: 20px;
-  text-align: center;
-  color: #1da1f2; /* Twitter blue color */
-}
-
 /* Container for tone selector dropdown and generate button */
 .tone-selector-container {
   display: flex;
   flex-direction: row;
   gap: 5px;
-  margin-top: 20px;
-  border-radius: 20px;
+  margin-top: 40px;
+  padding: 40px 0px 20px 0px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #2f3336;
+  align-items: center;
+  overflow-y: auto;
 }
 
 /* Styling for the tone selection dropdown */
 #toneSelect, #langSelect, #lengthSelect {
   padding: 8px 18px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: bold;
   font-family: 'Chirp-Regular', sans-serif;
   margin-bottom: 10px;
   border-radius: 25px;
-  border: 1px solid #fff;
-  background-color: #000;
-  color: #fff;
+  border: none;
+  background-color: Transparent;
+  color: #1da1f2;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  
-  /* Ensure the dropdown opens only downward */
-  overflow: hidden;
-  max-height: 4em; /* Limit height to 4 options */
+  transition: background-color 1s ease, color 1s ease;
 }
 
-/* Limit the height of the dropdown to 4 options and add a scrollbar for the rest */
-#toneSelect:focus, #langSelect:focus, #lengthSelect:focus {
-  /* When the dropdown is focused, limit the height to 4 options and enable scrolling */
-  max-height: 4em; /* 4 options visible */
-  overflow-y: auto; /* Add vertical scrollbar */
+#lengthSelect {
+  padding: 8px 18px 8px 0px;
 }
 
-/* Style for the scrollbar */
-#toneSelect::-webkit-scrollbar, #langSelect::-webkit-scrollbar, #lengthSelect::-webkit-scrollbar {
-  width: 8px;
+#lengthSelect:hover {
+  padding: 8px 18px;
 }
-
-#toneSelect::-webkit-scrollbar-thumb, #langSelect::-webkit-scrollbar-thumb, #lengthSelect::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-#toneSelect::-webkit-scrollbar-thumb:hover, #langSelect::-webkit-scrollbar-thumb:hover, #lengthSelect::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
 
 /* Hover effect for the dropdown */
-#toneSelect:hover, #toneSelect:focus, #toneSelect:focus-within, 
-#langSelect:hover, #langSelect:focus, #langSelect:focus-within, 
-#lengthSelect:hover, #lengthSelect:focus, #lengthSelect:focus-within {
-  background-color: #0e0e0e;
+#toneSelect:hover, #langSelect:hover, #lengthSelect:hover {
+background-color: #1da0f26f;
+color: #1da1f2;
 }
+
+#toneSelect:focus, #toneSelect:focus-within, #langSelect:focus, #langSelect:focus-within, #lengthSelect:focus, #lengthSelect:focus-within {
+background-color: #000;
+border: 1px solid #000;
+border-radius: 20px;
+color: #1da1f2;
+}
+
 
 /* Styling for the generate reply button */
 .generate-reply-btn {
-  padding: 12px 18px;
+  padding: 8px 18px;
+  font-size: 16px;
   font-family: 'Chirp-Regular', sans-serif;
-  font-size: 14px;
   font-weight: bolder;
-  border-radius: 25px;
-  background-color: #ffffff; /* White background for button */
-  color: #000000; /* Black text color */
+  border-radius: 20px;
+  background-color: transparent;
+  color: #1da1f2;
   cursor: pointer;
   text-align: right;
   border: none;
   position: absolute;
   right: 0;
-  bottom: 0;
-  margin-bottom: 5px;
-  transition: background-color 0.3s ease, transform 0.1s ease;
+  transition: background-color 1s ease, transform 1s ease;
 }
 
 .generate-reply-btn.error {
@@ -98,41 +72,29 @@ h2 {
   pointer-events: none;
 }
 
-/* Hover effect for the button */
+/* Hover effect for generate reply button */
 .generate-reply-btn:hover {
-  background-color: #d3d3d3; /* Light grey on hover */
-}
-
-/* Add some space above the button for clarity */
-.tone-selector-container {
-  margin-top: 4px;
-}
-
-
-/* Spacing for the dropdown container */
-.tone-selector-container {
-  width: 100%;
-  margin-top: 10px;
+  background-color: #1da0f26f;
+color: #1da1f2;
 }
 
 /* Styling for the Stop button */
 .stop-btn {
-  background-color: #ffffff; /* Red background */
+  background-color: #ffffff;
   color: #ff4d4d;
-  padding: 6px 12px;
+  padding: 8px 18px;
   border-radius: 20px;
-  font-size: 10px;
+  font-size: 16px;
   font-weight: bold;
   font-family: 'Chirp-Regular', sans-serif;
   border: none;
   cursor: pointer;
-  margin-bottom: 5px;
   transition: background-color 0.3s ease, transform 0.1s ease;
-  display: none; /* Hidden by default */
+  display: none;
 }
 
 /* Hover effect for the Stop button */
 .stop-btn:hover {
-  background-color: #ff4d4d; /* Light red on hover */
+  background-color: #ff4d4d; 
   color: #ffffff;
 }

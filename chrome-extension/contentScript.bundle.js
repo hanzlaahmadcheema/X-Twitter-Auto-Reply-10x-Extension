@@ -58,16 +58,14 @@ function filterResponse(response) {
 }
 
 function insertReplyText(replyText) {
-  const filteredText = filterResponse(replyText); // Filter the response text
-  const replyInput = document.querySelector('[data-testid="tweetTextarea_0"]'); // Target the tweet text area
+  const filteredText = filterResponse(replyText);
+  const replyInput = document.querySelector('[data-testid="tweetTextarea_0"]');
 
   if (replyInput) {
-    replyInput.focus(); // Focus the text area
+    replyInput.focus();
 
-    // Clear the input field
-    replyInput.value = ""; // Directly clear the text area value
+    replyInput.value = "";
 
-    // Create a new ClipboardEvent to simulate pasting the filtered text
     const dataTransfer = new DataTransfer();
     dataTransfer.setData("text/plain", filteredText);
 
@@ -91,24 +89,30 @@ function appendToneSelector(toolbar) {
   container.className = "tone-selector-container";
   container.innerHTML = `
     <select id="lengthSelect">
-      <option value="limited to only 1.5 line. should be shortest reply">1 Line</option>
-      <option value="limited to 100-175 characters">100-175 Char</option>
+      <option value="Reply according to the tweet's context."> As Tweet </option>
+      <option value="limited to 75-225 characters">75-225 CH</option>
       <option value="restrict to only 1-2 lines">1-2 Lines</option>
       <option value="restrict to just 1-3 lines">1-3 Lines</option>
       <option value="brief">Brief</option>
     </select>
-    <select id="toneSelect">
+    <select id="toneSelect" onmousedown="if(this.options.length>4){this.size=4;}" onchange="this.blur()"  onblur="this.size=0;">
       <option value="casual">Casual</option>
-      <option value="straightforward">Straightforward</option>
+      <option value="straightforward">Straight</option>
       <option value="witty">Witty</option>
       <option value="friendly">Friendly</option>
-      <option value="professional">Professional</option>
-      <option value="humorous">Humorous</option>
-      <option value="supportive">Supportive</option>
+      <option value="professional">Profesnl</option>
+      <option value="humorous">Humrous</option>
+      <option value="supportive">Suportive</option>
       <option value="curious">Curious</option>
-      <option value="encouraging">Encouraging</option> 
-      <option value="negative">negative</option>
+      <option value="encouraging">Encourag</option> 
+      <option value="negative">Negative</option>
     </select>
+    <!--<select id="langSelect">
+      <option value="reply should be in same language as tweet">Same</option>
+      <option value="reply in english">English</option>
+      <option value="reply in Urdu language">Urdu</option>
+      <option value="reply in roman Urdu">Roman</option>
+    </select>-->
     <button class="generate-reply-btn animate-click">Generate</button>
     <button class="stop-btn" style="display: none;">🛑 Stop</button>
   `;
@@ -118,7 +122,7 @@ function appendToneSelector(toolbar) {
   const stopButton = container.querySelector(".stop-btn");
 
   let isGenerating = false;
-  let controller; // For aborting the request
+  let controller;
 
   generateButton.addEventListener("click", async () => {
     if (isGenerating) return;
@@ -130,6 +134,7 @@ function appendToneSelector(toolbar) {
 
     const tone = document.getElementById("toneSelect").value;
     const length = document.getElementById("lengthSelect").value;
+    
     const tweetContext = getTweetContext();
     const { accountUserName, accountName } = getReplyAccountDetails();
 
@@ -141,7 +146,7 @@ function appendToneSelector(toolbar) {
         action: "generateReply",
         text: tweetContext,
         tone: tone,
-        lang: "same as tweet",
+        lang: "reply should be in same language as tweet",
         length: length,
         accountName: accountName,
         accountUserName: accountUserName,
@@ -176,11 +181,13 @@ function stopErrorInButton(message) {
   if (generateButton) {
     generateButton.textContent = message;
     generateButton.style.backgroundColor = "red";
+    generateButton.style.color = "#fff";
     generateButton.disabled = true;
 
     setTimeout(() => {
       generateButton.textContent = "Generate";
-      generateButton.style.backgroundColor = "#ffffff";
+      generateButton.style.backgroundColor = "#000";
+      generateButton.style.color = "#1da1f2";
       generateButton.disabled = false;
     }, 700);
   }
@@ -191,11 +198,13 @@ function showErrorInButton(message) {
   if (generateButton) {
     generateButton.textContent = message;
     generateButton.style.backgroundColor = "red";
+    generateButton.style.color = "#fff";
     generateButton.disabled = true;
 
     setTimeout(() => {
       generateButton.textContent = "Generate";
-      generateButton.style.backgroundColor = "#ffffff";
+      generateButton.style.backgroundColor = "#000";
+      generateButton.style.color = "#1da1f2";
       generateButton.disabled = false;
     }, 5000);
   }
