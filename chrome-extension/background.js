@@ -8,14 +8,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       accountName
     } = message;
 
-    chrome.storage.sync.get("apiKey", (data) => {
+    chrome.storage.sync.get(["apiKey", "geminiModel"], (data) => {
       const apiKey = data.apiKey;
+      const geminiModel = data.geminiModel;
 
       if (!apiKey) {
         console.error("Error: API key not found.");
-        sendResponse({
-          error: "Error: API key not set. Please enter your API key in the extension settings in the popup."
-        });
+        sendResponse({ error: "Error: API key not set. Please enter your API key in the extension settings in the popup." });
+        return;
+      }
+
+      if (!geminiModel) {
+        console.error("Error: Model not selected.");
+        sendResponse({ error: "Error: Model not set. Please select model in the extension settings in the popup." });
         return;
       }
 
@@ -41,7 +46,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }]
       };
 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-exp-1206:generateContent?key=${apiKey}`;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
 
       fetch(apiUrl, {
           method: "POST",

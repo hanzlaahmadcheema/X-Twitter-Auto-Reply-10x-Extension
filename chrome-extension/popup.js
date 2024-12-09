@@ -1,23 +1,23 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const saveApiKeyBtn = document.getElementById("saveApiKeyBtn");
   const apiKeyInput = document.getElementById("apiKey");
+  const modelSelect = document.getElementById("modelSelect");
+  const saveButton = document.getElementById("saveSettingsBtn");
   const status = document.getElementById("status");
 
-  chrome.storage.sync.get("apiKey", (data) => {
-    if (data.apiKey) {
-      apiKeyInput.value = data.apiKey;
-    }
+  // Restore saved settings
+  chrome.storage.sync.get(["apiKey", "geminiModel"], (data) => {
+    if (data.apiKey) apiKeyInput.value = data.apiKey;
+    if (data.geminiModel) modelSelect.value = data.geminiModel;
   });
 
-  saveApiKeyBtn.addEventListener("click", () => {
-    const apiKey = apiKeyInput.value.trim();
-    if (apiKey) {
-      chrome.storage.sync.set({ apiKey }, () => {
-        status.textContent = "API Key saved successfully!";
-        setTimeout(() => (status.textContent = ""), 2000);
-      });
-    } else {
-      status.textContent = "Please enter a valid API key.";
-    }
+  // Save settings
+  saveButton.addEventListener("click", () => {
+    const apiKey = apiKeyInput.value;
+    const geminiModel = modelSelect.value;
+
+    chrome.storage.sync.set({ apiKey, geminiModel }, () => {
+      status.textContent = "Settings saved!";
+      setTimeout(() => (status.textContent = ""), 2000);
+    });
   });
 });

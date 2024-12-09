@@ -11,7 +11,18 @@
     <h2>Extension Settings</h2>
     <label for="apiKey">API Key:</label>
     <input type="text" id="apiKey" placeholder="Enter your API Key">
-    <button id="saveApiKeyBtn">Save API Key</button>
+    
+    <label for="modelSelect">Select Gemini Model:</label>
+    <br>
+    <select id="modelSelect" name="Model">
+      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+      <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash Latest</option>
+      <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8b</option>
+      <option value="gemini-exp-1121">Gemini Exp 1121</option>
+      <option value="gemini-exp-1206">Gemini Exp 1206</option>
+    </select>
+    
+    <button id="saveSettingsBtn">Save Settings</button>
     <p id="status"></p>
   </div>
   <script src="popup.js"></script>

@@ -95,7 +95,7 @@ function appendToneSelector(toolbar) {
       <option value="restrict to just 1-3 lines">1-3 Lines</option>
       <option value="brief">Brief</option>
     </select>
-    <select id="toneSelect" onmousedown="if(this.options.length>4){this.size=4;}" onchange="this.blur()"  onblur="this.size=0;">
+    <select id="toneSelect">
       <option value="casual">Casual</option>
       <option value="straightforward">Straight</option>
       <option value="witty">Witty</option>
