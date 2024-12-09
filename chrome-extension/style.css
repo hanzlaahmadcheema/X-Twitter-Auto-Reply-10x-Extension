@@ -38,7 +38,7 @@
 /* Hover effect for the dropdown */
 #toneSelect:hover, #langSelect:hover, #lengthSelect:hover {
 background-color: #1da0f26f;
-color: #1da1f2;
+color: #000;
 }
 
 #toneSelect:focus, #toneSelect:focus-within, #langSelect:focus, #langSelect:focus-within, #lengthSelect:focus, #lengthSelect:focus-within {
