@@ -3,14 +3,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const apiKeyInput = document.getElementById("apiKey");
   const status = document.getElementById("status");
 
-  // Restore the saved API key if available
   chrome.storage.sync.get("apiKey", (data) => {
     if (data.apiKey) {
       apiKeyInput.value = data.apiKey;
     }
   });
 
-  // Save the API key
   saveApiKeyBtn.addEventListener("click", () => {
     const apiKey = apiKeyInput.value.trim();
     if (apiKey) {

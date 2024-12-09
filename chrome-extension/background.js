@@ -1,19 +1,29 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "generateReply") {
-    const { text, tone, lang, length, accountName } = message;
+    const {
+      text,
+      tone,
+      lang,
+      length,
+      accountName
+    } = message;
 
     chrome.storage.sync.get("apiKey", (data) => {
       const apiKey = data.apiKey;
 
       if (!apiKey) {
         console.error("Error: API key not found.");
-        sendResponse({ error: "Error: API key not set. Please enter your API key in the extension settings in the popup." });
+        sendResponse({
+          error: "Error: API key not set. Please enter your API key in the extension settings in the popup."
+        });
         return;
       }
 
       const promptTemplate = tonePrompts[tone];
       if (!promptTemplate) {
-        sendResponse({ error: "Error: Invalid tone selected." });
+        sendResponse({
+          error: "Error: Invalid tone selected."
+        });
         return;
       }
 
@@ -24,27 +34,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         .replace("{accountName}", accountName || "User");
 
       const payload = {
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
-        ]
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }]
       };
 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-pro:generateContent?key=${apiKey}`;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-exp-1206:generateContent?key=${apiKey}`;
 
-      // Fetch request for Gemini API
       fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      })
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        })
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -54,24 +59,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         .then((data) => {
           console.log("Full API Response:", data);
 
-          if (!data?.candidates || data.candidates.length === 0) {
-            console.error("Invalid or empty candidates field:", data);
-            sendResponse({ error: "Error: No AI response generated. Please try again." });
+          if (!data?.candidates || data.candidates.length === 0 || !data.candidates[0]?.content?.parts[0]?.text) {
+            const errorMessage = "Error: AI response missing.";
+            console.error(errorMessage);
+            sendResponse({
+              error: errorMessage
+            });
             return;
           }
 
-          const generatedText = data.candidates[0]?.content?.parts[0]?.text || "Error: AI response missing.";
+          const generatedText = data.candidates[0].content.parts[0].text;
           console.log("Generated Text:", generatedText);
 
-          sendResponse({ reply: generatedText });
+          sendResponse({
+            reply: generatedText
+          });
         })
         .catch((error) => {
           console.error("API request failed:", error);
-          sendResponse({ error: "Error generating AI response. Please check your API key and connection." });
+          sendResponse({
+            error: "Error generating AI response. Please check your API key and connection."
+          });
         });
     });
 
-    return true;  // Keeps the sendResponse channel open for async calls
+    return true;
   }
 });
 
