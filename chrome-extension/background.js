@@ -11,7 +11,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.storage.sync.get(["apiKeys", "selectedApiKey", "geminiModel"], (data) => {
       const { selectedApiKey, geminiModel } = data;
       const apiKey = selectedApiKey;
-      
+
 
       if (!apiKey) {
         console.error("Error: API key not found.");

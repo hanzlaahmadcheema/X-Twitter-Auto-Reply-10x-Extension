@@ -1,25 +1,23 @@
-/* General styles */
 body {
   margin: 0;
   padding: 0;
   font-family: Arial, sans-serif;
-  background-color: #000; /* Black background */
-  color: #fff; /* White text for readability */
+  background-color: #000;
+  color: #fff;
 }
 
 .popup-container {
-  max-width: 500px; /* Wider container */
-  max-width: 500px; /* Wider container */
+  max-width: 500px;
+  max-width: 500px;
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
-  margin-right: 20px; /* Added margin from the right side */
+  margin-right: 20px;
 }
 
-/* Labels and headings */
 .modelSelectLabel, .newApiKeyLabel, .SavedApiKey {
   font-weight: bold;
-  color: #1da1f2; /* Accent color */
+  color: #1da1f2;
   margin-bottom: 8px;
   display: block;
   font-size: 14px;
@@ -31,54 +29,50 @@ body {
 
 
 .SavedApiKey {
-  margin-top: 20px; /* Spacing between sections */
+  margin-top: 20px;
   margin-bottom: 10px;
 }
 
-/* Input styles */
-input[type="text"] {
+#newApiKey[type="text"] {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
   border: 1px solid #444;
   border-radius: 5px;
-  background-color: #222; /* Darker input background */
+  background-color: #222; 
   color: #fff;
 }
 
-input[type="text"]::placeholder {
-  color: #888; /* Subtle placeholder color */
+#newApiKey[type="text"]::placeholder {
+  color: #888; 
 }
 
-/* Button styles (icon only) */
-/* General Button Styling */
 #saveSettingsBtn, #addApiKeyBtn {
   background-color: #1da1f2;
   color: #fff;
   border: none;
   padding: 10px;
   margin: 10px 0;
-  border-radius: 50%; /* Circular buttons */
+  border-radius: 50%;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px; /* Icon size */
+  font-size: 20px;
   width: 40px;
   height: 40px;
   transition: background-color 0.3s ease;
 }
 
 #saveSettingsBtn:hover, #addApiKeyBtn:hover {
-  background-color: #1485c4; /* Slightly darker on hover */
+  background-color: #1485c4;
 }
 
 #saveSettingsBtn i, #addApiKeyBtn i {
-  pointer-events: none; /* Ensure icon is non-interactive */
+  pointer-events: none;
 }
 
 
-/* Dropdown styles */
 #modelSelect {
   width: 100%;
   padding: 10px;
@@ -87,7 +81,7 @@ input[type="text"]::placeholder {
   border-radius: 5px;
   background-color: #222;
   color: #fff;
-  appearance: none; /* Removes default dropdown arrow */
+  appearance: none;
   cursor: pointer;
 }
 
@@ -96,49 +90,45 @@ input[type="text"]::placeholder {
   color: #fff;
 }
 
-/* Status paragraph */
 #status {
   margin-top: 20px;
-  color: #1da1f2; /* Accent color for messages */
+  color: #1da1f2;
   font-style: italic;
 }
 
-/* Saved API keys container */
 #apiKeysContainer {
   margin-top: 10px;
   padding: 10px;
-  background-color: #111; /* Dark background for keys section */
+  background-color: #111;
   border: 1px solid #444;
   border-radius: 5px;
-  max-height: 150px; /* Scrollable container */
+  max-height: 150px;
   overflow-y: auto;
 }
 
-/* Scrollbar design */
 #apiKeysContainer::-webkit-scrollbar {
   width: 8px;
 }
 
 #apiKeysContainer::-webkit-scrollbar-track {
-  background: #222; /* Darker background for scrollbar track */
+  background: #222; 
   border-radius: 4px;
 }
 
 #apiKeysContainer::-webkit-scrollbar-thumb {
-  background: #1da1f2; /* Accent color for scrollbar */
+  background: #1da1f2;
   border-radius: 4px;
 }
 
 #apiKeysContainer::-webkit-scrollbar-thumb:hover {
-  background: #1485c4; /* Darker accent on hover */
+  background: #1485c4;
 }
 
-/* API Key Item Styles */
 .api-key-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #111; /* Dark background for API keys */
+  background-color: #111; 
   padding: 10px;
   margin-bottom: 10px;
   border-radius: 5px;
@@ -154,11 +144,10 @@ input[type="text"]::placeholder {
   color: #fff;
 }
 
-/* Delete Button Styling */
 .delete-api-key-btn {
   background-color: transparent;
   border: none;
-  color: #1da1f2; /* Accent color for icon */
+  color: #1da1f2;
   cursor: pointer;
   font-size: 16px;
   padding: 5px;
@@ -167,18 +156,17 @@ input[type="text"]::placeholder {
 }
 
 .delete-api-key-btn:hover {
-  background-color: #222; /* Subtle hover effect */
-  color: #1485c4; /* Slightly darker accent color */
+  background-color: #222;
+  color: #1485c4;
 }
 
 .delete-api-key-btn i {
-  pointer-events: none; /* Prevent issues with clicking on icon */
+  pointer-events: none; 
 }
 
-/* Center Save Button */
 #saveSettingsBtn {
   display: block;
-  margin: 20px auto 0; /* Centered horizontally and added spacing */
+  margin: 20px auto 0;
   padding: 12px 20px;
   border-radius: 8px;
   width: fit-content;
