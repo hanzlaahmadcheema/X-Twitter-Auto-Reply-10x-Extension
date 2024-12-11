@@ -98,13 +98,13 @@ const tonePrompts = {
 
   negative: "Critically respond to this tweet with respectful disagreement. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
 
-  casual: "Write a casual reply to this tweet in a friendly and light-hearted tone. Avoid overly formal language. Text: '{text}'. Author: {accountName}. Exclude hashtags, emojis, and mentions. Language: {lang}. Response length: {length}. Keep it gender-neutral and avoid excitement words like 'Wow' or 'Awesome'.",
+  casual: "Compose an informal, amicable response to this tweet, eschewing overly formal diction. Text: '{text}'. Author: {accountName}. Exclude hashtags, emojis, and mentions. Language: {lang}. Response length: {length}. Keep it gender-neutral and avoid excitement words like 'Wow' or 'Awesome'.",
 
   friendly: "Respond warmly and positively to this tweet. Make your reply welcoming and approachable. Text: '{text}'. Author: {accountName}. Avoid hashtags, emojis, or mentions. Language: {lang}. Response length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
 
   professional: "Craft a professional and respectful response to this tweet. Maintain a formal and concise tone. Text: '{text}'. Author: {accountName}. Exclude hashtags, emojis, or mentions. Language: {lang}. Response length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
 
-  humorous: "Add a touch of humor in your response to this tweet. Keep it witty but respectful. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
+  humorous: "Sprinkle some humor into your reply to this tweet. Aim for clever wit while keeping it respectful and light-hearted. Text: '{text}'. Author: {accountName}. No hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Keep it gender-neutral. Avoid interjections like 'Wow' or 'Huh'.",
 
   supportive: "Reply to this tweet with empathy and encouragement. Text: '{text}'. Author: {accountName}. Avoid hashtags, emojis, or mentions. Language: {lang}. Length: {length}. Use gender-neutral language. Avoid interjections like 'Wow' or 'Huh'.",
 
