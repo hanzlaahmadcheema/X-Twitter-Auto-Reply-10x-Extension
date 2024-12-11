@@ -89,7 +89,7 @@ function appendToneSelector(toolbar) {
   container.className = "tone-selector-container";
   container.innerHTML = `
     <select id="lengthSelect">
-      <option value="Reply according to the tweet's context."> As Tweet </option>
+      <option value="Reply according to the tweet's context.">As Tweet</option>
       <option value="limited to 75-225 characters">75-225 CH</option>
       <option value="restrict to only 1-2 lines">1-2 Lines</option>
       <option value="restrict to just 1-3 lines">1-3 Lines</option>
@@ -107,22 +107,33 @@ function appendToneSelector(toolbar) {
       <option value="encouraging">Encourag</option> 
       <option value="negative">Negative</option>
     </select>
-    <!--<select id="langSelect">
-      <option value="reply should be in same language as tweet">Same</option>
-      <option value="reply in english">English</option>
-      <option value="reply in Urdu language">Urdu</option>
-      <option value="reply in roman Urdu">Roman</option>
-    </select>-->
     <button class="generate-reply-btn animate-click">Generate</button>
     <button class="stop-btn" style="display: none;">🛑 Stop</button>
   `;
   toolbar.appendChild(container);
 
+  const toneSelect = container.querySelector("#toneSelect");
+  const lengthSelect = container.querySelector("#lengthSelect");
   const generateButton = container.querySelector(".generate-reply-btn");
   const stopButton = container.querySelector(".stop-btn");
 
   let isGenerating = false;
   let controller;
+
+  // Restore last selected values
+  chrome.storage.sync.get(["lastTone", "lastLength"], (data) => {
+    if (data.lastTone) toneSelect.value = data.lastTone;
+    if (data.lastLength) lengthSelect.value = data.lastLength;
+  });
+
+  // Save selections on change
+  toneSelect.addEventListener("change", () => {
+    chrome.storage.sync.set({ lastTone: toneSelect.value });
+  });
+
+  lengthSelect.addEventListener("change", () => {
+    chrome.storage.sync.set({ lastLength: lengthSelect.value });
+  });
 
   generateButton.addEventListener("click", async () => {
     if (isGenerating) return;
@@ -132,9 +143,8 @@ function appendToneSelector(toolbar) {
     generateButton.disabled = true;
     stopButton.style.display = "inline-block";
 
-    const tone = document.getElementById("toneSelect").value;
-    const length = document.getElementById("lengthSelect").value;
-    
+    const tone = toneSelect.value;
+    const length = lengthSelect.value;
     const tweetContext = getTweetContext();
     const { accountUserName, accountName } = getReplyAccountDetails();
 
@@ -169,28 +179,10 @@ function appendToneSelector(toolbar) {
   stopButton.addEventListener("click", () => {
     if (controller) {
       controller.abort();
-      stopErrorInButton("Generation Stopped.");
+      showErrorInButton("Generation Stopped.");
       stopButton.style.display = "none";
     }
   });
-}
-
-
-function stopErrorInButton(message) {
-  const generateButton = document.querySelector(".generate-reply-btn");
-  if (generateButton) {
-    generateButton.textContent = message;
-    generateButton.style.backgroundColor = "red";
-    generateButton.style.color = "#fff";
-    generateButton.disabled = true;
-
-    setTimeout(() => {
-      generateButton.textContent = "Generate";
-      generateButton.style.backgroundColor = "#000";
-      generateButton.style.color = "#1da1f2";
-      generateButton.disabled = false;
-    }, 700);
-  }
 }
 
 function showErrorInButton(message) {
@@ -207,6 +199,23 @@ function showErrorInButton(message) {
       generateButton.style.color = "#1da1f2";
       generateButton.disabled = false;
     }, 5000);
+  }
+}
+
+function stopErrorInButton(message) {
+  const generateButton = document.querySelector(".generate-reply-btn");
+  if (generateButton) {
+    generateButton.textContent = message;
+    generateButton.style.backgroundColor = "orange";
+    generateButton.style.color = "#fff";
+    generateButton.disabled = true;
+
+    setTimeout(() => {
+      generateButton.textContent = "Generate";
+      generateButton.style.backgroundColor = "#000";
+      generateButton.style.color = "#1da1f2";
+      generateButton.disabled = false;
+    }, 2000);
   }
 }
 
