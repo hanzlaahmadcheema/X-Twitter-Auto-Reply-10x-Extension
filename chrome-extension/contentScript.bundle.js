@@ -102,10 +102,26 @@ function appendToneSelector(toolbar) {
       <option value="friendly">Friendly</option>
       <option value="professional">Profesnl</option>
       <option value="humorous">Humrous</option>
+      <option value="joking">Joking</option>
+      <option value="sarcastic">Sarcastic</option>
+      <option value="quirky">Quirky</option>
       <option value="supportive">Suportive</option>
+      <option value="optimistic">Optimistic</option>
+      <option value="empathetic">Empathetic</option>
+      <option value="agreeable">Agreeable</option>
+      <option value="grateful">Grateful</option>
+      <option value="inspirational">Inspirational</option>
+      <option value="insightful">Insightful</option>
+      <option value="informative">Informative</option>
       <option value="curious">Curious</option>
       <option value="encouraging">Encourag</option> 
       <option value="negative">Negative</option>
+      <option value="critical">Critical</option>
+      <option value="neutral">Neutral</option>
+      <option value="polite">Polite</option>
+      <option value="reflective">Reflective</option>
+      <option value="engaging">Engaging</option>
+      <option value="playful">Playful</option>
     </select>
     <button class="generate-reply-btn animate-click">Generate</button>
     <button class="stop-btn" style="display: none;">🛑 Stop</button>
