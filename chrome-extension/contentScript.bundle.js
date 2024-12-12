@@ -172,7 +172,7 @@ function appendToneSelector(toolbar) {
         action: "generateReply",
         text: tweetContext,
         tone: tone,
-        lang: "reply should be in same language as tweet",
+        lang: "should be in same language as tweet",
         length: length,
         accountName: accountName,
         accountUserName: accountUserName,
