@@ -89,10 +89,10 @@ function appendToneSelector(toolbar) {
   container.className = "tone-selector-container";
   container.innerHTML = `
     <select id="lengthSelect">
-      <option value="Reply according to the tweet's context.">As Tweet</option>
-      <option value="limited to 75-225 characters">75-225 CH</option>
-      <option value="restrict to only 1-2 lines">1-2 Lines</option>
-      <option value="restrict to just 1-3 lines">1-3 Lines</option>
+      <option value="length according to the tweet's length.">As Tweet</option>
+      <option value="75-225 characters">75-225 CH</option>
+      <option value="1-2 lines">1-2 Lines</option>
+      <option value="1-3 lines">1-3 Lines</option>
       <option value="brief">Brief</option>
     </select>
     <select id="toneSelect">
