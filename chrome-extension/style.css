@@ -34,7 +34,7 @@
 
 /* Hover effect for the dropdown */
 #toneSelect:hover, #langSelect:hover, #lengthSelect:hover {
-background-color: #transparent;
+background-color: transparent;
 color: #FFFFFF;
 }
 
@@ -71,7 +71,7 @@ color: #1da1f2;
 
 /* Hover effect for generate reply button */
 .generate-reply-btn:hover {
-  background-color: #transparent;
+  background-color: transparent;
 color: #FFFFFF;
 }
 

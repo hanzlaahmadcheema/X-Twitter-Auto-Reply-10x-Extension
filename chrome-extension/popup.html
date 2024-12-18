@@ -17,18 +17,39 @@
   
     <h3 class="SavedApiKey">Saved API Keys:</h3>
     <div id="apiKeysContainer"></div>
-  
-    <label class="modelSelectLabel" for="modelSelect">Select Gemini Model:</label>
-    <br>
-    <select id="modelSelect" name="Model">
-      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-      <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash Latest</option>
-      <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8b</option>
-      <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
-      <option value="gemini-exp-1121">Gemini Exp 1121</option>
-      <option value="gemini-exp-1206">Gemini Exp 1206</option>
-    </select>
-    <br>
+    <label class="modelSelectLabel">Select Model:</label>
+    <div>
+      <label>
+        <input type="radio" name="model" value="gemini" checked> Gemini
+      </label>
+      <label>
+        <input type="radio" name="model" value="grok"> Grok
+      </label>
+    </div>
+    <!-- Gemini Models -->
+    <div id="geminiOptions">
+      <label class="modelSelectLabel" for="geminiModelSelect">Select Gemini Model:</label>
+      <br>
+      <select id="geminiModelSelect" name="GeminiModel">
+        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+        <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash Latest</option>
+        <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8b</option>
+        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
+        <option value="gemini-exp-1121">Gemini Exp 1121</option>
+        <option value="gemini-exp-1206">Gemini Exp 1206</option>
+      </select>
+    </div>
+    <!-- Grok Models -->
+    <div id="grokOptions" style="display: none;">
+      <label class="modelSelectLabel" for="grokModelSelect">Select Grok Model:</label>
+      <br>
+      <select id="grokModelSelect" name="GrokModel">
+        <option value="grok-beta">Grok Beta</option>
+        <option value="grok-vision-beta">Grok Vision Beta</option>
+        <option value="grok-2-vision-1212">Grok 2 Vision 1212</option>
+        <option value="grok-2-1212">Grok 2 1212</option>
+      </select>
+    </div>
     <button id="saveSettingsBtn" title="Save Settings">
       <i class="fas fa-save"></i>
     </button>

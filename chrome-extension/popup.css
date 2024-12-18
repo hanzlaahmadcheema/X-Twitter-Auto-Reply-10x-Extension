@@ -7,7 +7,7 @@ body {
 }
 
 .popup-container {
-  max-width: 500px;
+  width: 400px;
   max-width: 500px;
   margin: 0 auto;
   padding: 20px;
@@ -73,7 +73,7 @@ body {
 }
 
 
-#modelSelect {
+#geminiModelSelect, #grokModelSelect {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
@@ -85,7 +85,7 @@ body {
   cursor: pointer;
 }
 
-#modelSelect option {
+#geminiModelSelect option, #grokModelSelect option {
   background-color: #222;
   color: #fff;
 }
@@ -172,3 +172,4 @@ body {
   width: fit-content;
   font-weight: bold;
 }
+
