@@ -89,29 +89,29 @@ function appendToneSelector(toolbar) {
   container.className = "tone-selector-container";
   container.innerHTML = `
     <select id="lengthSelect">
-      <option value="length according to the tweet's length.">As Tweet</option>
+      <option value="length according to the tweet's length">As Tweet</option>
       <option value="5-150 characters">5-150 CH</option>
       <option value="5-200 characters">5-200 CH</option>
       <option value="5-250 characters">5-250 CH</option>
       <option value="brief">Brief</option>
     </select>
     <select id="toneSelect">
-      <option value="casual">Casual</option>
-      <option value="quirky">Quirky</option>
-      <option value="joking">Joking</option>
-      <option value="negative">Negative</option>
-      <option value="sarcastic">Sarcastic</option>
-      <option value="straightforward">Straight</option>
-      <option value="witty">Witty</option>
-      <option value="friendly">Friendly</option>
-      <option value="professional">Profesnl</option>
-      <option value="humorous">Humrous</option>
-      <option value="neutral">Neutral</option> 
-      <option value="supportive">Suportive</option>
-      <option value="curious">Curious</option>
-      <option value="critical">Critical</option>
-      <option value="engaging">Engaging</option>
       <option value="playful">Playful</option>
+      <option value="engaging">Engaging</option>
+      <option value="critical">Critical</option>
+      <option value="curious">Curious</option>
+      <option value="supportive">Suportive</option>
+      <option value="neutral">Neutral</option>
+      <option value="humorous">Humrous</option>
+      <option value="professional">Profesnl</option>
+      <option value="friendly">Friendly</option>
+      <option value="witty">Witty</option>
+      <option value="straightforward">Straight</option>
+      <option value="sarcastic">Sarcastic</option>
+      <option value="negative">Negative</option>
+      <option value="joking">Joking</option>
+      <option value="quirky">Quirky</option>
+      <option value="casual">Casual</option>
       <!--<option value="empathetic">Empathetic</option>
       <option value="agreeable">Agreeable</option>
       <option value="grateful">Grateful</option>
@@ -123,6 +123,7 @@ function appendToneSelector(toolbar) {
       <option value="optimistic">Optimistic</option>
       <option value="polite">Polite</option>-->
     </select>
+    <textarea id="customPrompt" placeholder="Custom Prompt"></textarea>
     <button class="generate-reply-btn animate-click">Generate</button>
     <button class="stop-btn" style="display: none;">🛑 Stop</button>
   `;
@@ -130,6 +131,7 @@ function appendToneSelector(toolbar) {
 
   const toneSelect = container.querySelector("#toneSelect");
   const lengthSelect = container.querySelector("#lengthSelect");
+  const customPromptTextarea = container.querySelector("#customPrompt");
   const generateButton = container.querySelector(".generate-reply-btn");
   const stopButton = container.querySelector(".stop-btn");
 
@@ -161,6 +163,7 @@ function appendToneSelector(toolbar) {
 
     const tone = toneSelect.value;
     const length = lengthSelect.value;
+    const customPrompt = customPromptTextarea.value.trim();
     const tweetContext = getTweetContext();
     const { accountUserName, accountName } = getReplyAccountDetails();
 
@@ -171,6 +174,7 @@ function appendToneSelector(toolbar) {
       {
         action: "generateReply",
         text: tweetContext,
+        customPrompt: customPrompt,
         tone: tone,
         lang: "should be in same language as tweet",
         length: length,

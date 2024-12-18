@@ -9,14 +9,6 @@
 </head>
 <body>
   <div class="popup-container">
-    <label class="newApiKeyLabel" for="newApiKey">Add New API Key:</label>
-    <input type="text" id="newApiKey" placeholder="Enter a new API Key">
-    <button id="addApiKeyBtn" title="Add API Key">
-      <i class="fas fa-plus"></i>
-    </button>
-  
-    <h3 class="SavedApiKey">Saved API Keys:</h3>
-    <div id="apiKeysContainer"></div>
     <label class="modelSelectLabel">Select Model:</label>
     <div>
       <label>
@@ -25,7 +17,15 @@
       <label>
         <input type="radio" name="model" value="grok"> Grok
       </label>
-    </div>
+    </div>  
+    <label class="newApiKeyLabel" for="newApiKey">Add New API Key:</label>
+    <input type="text" id="newApiKey" placeholder="Enter a new API Key">
+    <button id="addApiKeyBtn" title="Add API Key">
+      <i class="fas fa-plus"></i>
+    </button>
+  
+    <h3 class="SavedApiKey">Saved API Keys:</h3>
+    <div id="apiKeysContainer"></div>
     <!-- Gemini Models -->
     <div id="geminiOptions">
       <label class="modelSelectLabel" for="geminiModelSelect">Select Gemini Model:</label>
