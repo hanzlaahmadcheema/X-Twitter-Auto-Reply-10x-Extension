@@ -164,6 +164,20 @@ body {
   pointer-events: none; 
 }
 
+.edit-api-key-btn {
+  background-color: transparent;
+  border: none;
+  color: #1da1f2;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 5px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.edit-api-key-btn i {
+  pointer-events: none; 
+}
 #saveSettingsBtn {
   display: block;
   margin: 20px auto 0;

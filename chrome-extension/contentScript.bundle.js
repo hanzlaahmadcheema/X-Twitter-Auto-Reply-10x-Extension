@@ -124,7 +124,7 @@ function appendToneSelector(toolbar) {
       <option value="polite">Polite</option>-->
     </select>
     <textarea id="customPrompt" placeholder="Custom Prompt"></textarea>
-    <button class="generate-reply-btn animate-click">Generate</button>
+    <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">Generate</button>
     <button class="stop-btn" style="display: none;">🛑 Stop</button>
   `;
   toolbar.appendChild(container);

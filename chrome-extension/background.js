@@ -9,7 +9,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ error: "API key not set. Please select an API key." });
           return;
         }
-
+        console.log(selectedApiKey);
         const tonePrompt = tonePrompts[message.tone];
         if (!tonePrompt) {
           sendResponse({ error: "Invalid tone selected." });
