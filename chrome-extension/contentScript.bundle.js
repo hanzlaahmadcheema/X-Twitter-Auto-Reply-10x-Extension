@@ -139,9 +139,11 @@ function appendToneSelector(toolbar) {
   let controller;
 
   // Restore last selected values
-  chrome.storage.sync.get(["lastTone", "lastLength"], (data) => {
+  chrome.storage.sync.get(["lastTone", "lastLength", "selectedColor"], (data) => {
     if (data.lastTone) toneSelect.value = data.lastTone;
     if (data.lastLength) lengthSelect.value = data.lastLength;
+    const defaultColor = data.selectedColor || "#1da1f2";
+    applyColor(defaultColor);
   });
 
   // Save selections on change
@@ -195,7 +197,28 @@ function appendToneSelector(toolbar) {
       }
     );
   });
-
+  function applyColor(color) {
+    // Update the CSS variable for the selected color
+    document.documentElement.style.setProperty("--model-color", color);
+  
+    // Apply the color to specific elements in the toolbar
+    const toolbar = document.querySelector(".tone-selector-container");
+    if (toolbar) {
+      toolbar.style.borderColor = color; // Example: Set the border color of the toolbar
+    }
+  
+    const generateButton = document.querySelector(".generate-reply-btn");
+    if (generateButton) {
+      generateButton.style.backgroundColor = color;
+      generateButton.style.color = "#fff"; // Ensure text remains readable
+    }
+  
+    const customPromptTextarea = document.querySelector("#customPrompt");
+    if (customPromptTextarea) {
+      customPromptTextarea.style.borderColor = color; // Set border color for text area
+    }
+  }
+  
   stopButton.addEventListener("click", () => {
     if (controller) {
       controller.abort();
