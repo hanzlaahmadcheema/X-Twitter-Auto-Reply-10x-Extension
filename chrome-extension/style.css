@@ -19,7 +19,7 @@
   border-radius: 25px;
   border: none;
   background-color: Transparent;
-  color: #1da1f2;
+  color: var(--model-color, #1da1f2);
   cursor: pointer;
   transition: background-color 1s ease, color 1s ease;
 }
@@ -34,17 +34,16 @@
 
 /* Hover effect for the dropdown */
 #toneSelect:hover, #langSelect:hover, #lengthSelect:hover {
-background-color: transparent;
-color: #FFFFFF;
+  background-color: transparent;
+  color: #FFFFFF;
 }
 
 #toneSelect:focus, #toneSelect:focus-within, #langSelect:focus, #langSelect:focus-within, #lengthSelect:focus, #lengthSelect:focus-within {
-background-color: #000;
-border: 1px solid #000;
-border-radius: 20px;
-color: #1da1f2;
+  background-color: #000;
+  border: 1px solid #000;
+  border-radius: 20px;
+  color: var(--model-color, #1da1f2);
 }
-
 
 /* Styling for the generate reply button */
 .generate-reply-btn {
@@ -54,7 +53,7 @@ color: #1da1f2;
   font-weight: bolder;
   border-radius: 40px;
   background-color: transparent;
-  color: #1da1f2;
+  color: var(--model-color, #1da1f2);
   cursor: pointer;
   text-align: right;
   border: none;
@@ -72,7 +71,7 @@ color: #1da1f2;
 /* Hover effect for generate reply button */
 .generate-reply-btn:hover {
   background-color: transparent;
-color: #FFFFFF;
+  color: #FFFFFF;
 }
 
 /* Styling for the Stop button */
@@ -96,11 +95,11 @@ color: #FFFFFF;
   color: #ffffff;
 }
 
-textarea{
+textarea {
   font-family: 'Chirp-Regular', sans-serif;
   font-size: 16px;
   font-weight: bold;
-  color: #1da1f2;
+  color: var(--model-color, #1da1f2);
   background-color: transparent;
   border: none;
   resize: none;

@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Extension Settings</title>
   <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="style.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 </head>
 <body>
   <div class="popup-container">
     <label class="modelSelectLabel">Select Model:</label>
-    <div>
+    <div class="modelSelect">
       <label>
         <input type="radio" name="model" value="gemini" checked> Gemini
       </label>
@@ -50,6 +51,8 @@
         <option value="grok-2-1212">Grok 2 1212</option>
       </select>
     </div>
+    <label class="colorSelectLabel" for="colorSelect">Select Color:</label>
+    <input type="color" id="colorSelect" name="colorSelect" value="#1da1f2">
     <button id="saveSettingsBtn" title="Save Settings">
       <i class="fas fa-save"></i>
     </button>

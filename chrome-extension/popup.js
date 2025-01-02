@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const apiKeysContainer = document.getElementById("apiKeysContainer");
   const geminiModelSelect = document.getElementById("geminiModelSelect");
   const grokModelSelect = document.getElementById("grokModelSelect");
+  const colorSelect = document.getElementById("colorSelect");
   const saveSettingsBtn = document.getElementById("saveSettingsBtn");
   const status = document.getElementById("status");
 
@@ -11,9 +12,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Restore saved settings
   chrome.storage.sync.get(
-    ["apiKeys", "selectedApiKey", "selectedModel", "geminiModel", "grokModel"],
+    ["apiKeys", "selectedApiKey", "selectedModel", "geminiModel", "grokModel", "selectedColor"],
     (data) => {
-      const { apiKeys, selectedApiKey, selectedModel: storedModel, geminiModel, grokModel } = data;
+      const { apiKeys, selectedApiKey, selectedModel: storedModel, geminiModel, grokModel, selectedColor } = data;
 
       if (apiKeys) renderApiKeys(apiKeys, selectedApiKey, storedModel || "gemini");
 
@@ -26,8 +27,15 @@ document.addEventListener("DOMContentLoaded", () => {
       // Restore Gemini and Grok model selections
       if (geminiModel) geminiModelSelect.value = geminiModel;
       if (grokModel) grokModelSelect.value = grokModel;
+
+      // Restore selected color
+      if (selectedColor) {
+        colorSelect.value = selectedColor;
+        updateColor(selectedColor);
+      }
     }
   );
+
   // Add new API key
   addApiKeyBtn.addEventListener("click", () => {
     const newApiKey = newApiKeyInput.value.trim();
@@ -66,10 +74,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedApiKey = document.querySelector('input[name="apiKey"]:checked')?.value;
     const geminiModel = geminiModelSelect.value;
     const grokModel = grokModelSelect.value;
+    const selectedColor = colorSelect.value;
 
     chrome.storage.sync.set(
-      { selectedApiKey, selectedModel, geminiModel, grokModel },
+      { selectedApiKey, selectedModel, geminiModel, grokModel, selectedColor },
       () => {
+        updateColor(selectedColor);
         status.textContent = "Settings saved!";
         setTimeout(() => (status.textContent = ""), 2000);
       }
@@ -205,5 +215,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     renderApiKeysForSelectedModel(model); // Refresh API keys
+  }
+
+  // Update color in CSS
+  function updateColor(color) {
+    document.documentElement.style.setProperty('--model-color', color);
   }
 });

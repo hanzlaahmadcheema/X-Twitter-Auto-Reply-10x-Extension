@@ -15,18 +15,22 @@ body {
   margin-right: 20px;
 }
 
-.modelSelectLabel, .newApiKeyLabel, .SavedApiKey {
+.modelSelectLabel, .newApiKeyLabel, .SavedApiKey, .colorSelectLabel {
   font-weight: bold;
-  color: #1da1f2;
+  color: var(--model-color, #1da1f2);
+  margin-top: 20px;
   margin-bottom: 8px;
   display: block;
-  font-size: 14px;
+  font-size: 16px;
 }
 
-.modelSelectLabel {
-  margin-top: 20px;
+.modelSelect{
+  margin: 20px 0px 20px 50px;
 }
 
+.modelSelect label {
+  margin-left: 50px;
+}
 
 .SavedApiKey {
   margin-top: 20px;
@@ -34,9 +38,9 @@ body {
 }
 
 #newApiKey[type="text"] {
-  width: 100%;
+  width: 70%;
   padding: 10px;
-  margin: 10px 0;
+  margin: 10px 35px 10px 0px;
   border: 1px solid #444;
   border-radius: 5px;
   background-color: #222; 
@@ -48,7 +52,7 @@ body {
 }
 
 #saveSettingsBtn, #addApiKeyBtn {
-  background-color: #1da1f2;
+  background-color: var(--model-color, #1da1f2);
   color: #fff;
   border: none;
   padding: 10px;
@@ -65,7 +69,7 @@ body {
 }
 
 #saveSettingsBtn:hover, #addApiKeyBtn:hover {
-  background-color: #1485c4;
+  background-color: var(--model-color, #1485c4);
 }
 
 #saveSettingsBtn i, #addApiKeyBtn i {
@@ -92,7 +96,7 @@ body {
 
 #status {
   margin-top: 20px;
-  color: #1da1f2;
+  color: var(--model-color, #1da1f2);
   font-style: italic;
 }
 
@@ -116,12 +120,12 @@ body {
 }
 
 #apiKeysContainer::-webkit-scrollbar-thumb {
-  background: #1da1f2;
+  background: var(--model-color, #1da1f2);
   border-radius: 4px;
 }
 
 #apiKeysContainer::-webkit-scrollbar-thumb:hover {
-  background: #1485c4;
+  background: var(--model-color, #1485c4);
 }
 
 .api-key-item {
@@ -147,7 +151,7 @@ body {
 .delete-api-key-btn {
   background-color: transparent;
   border: none;
-  color: #1da1f2;
+  color: var(--model-color, #1da1f2);
   cursor: pointer;
   font-size: 16px;
   padding: 5px;
@@ -157,7 +161,7 @@ body {
 
 .delete-api-key-btn:hover {
   background-color: #222;
-  color: #1485c4;
+  color: var(--model-color, #1485c4);
 }
 
 .delete-api-key-btn i {
@@ -167,7 +171,7 @@ body {
 .edit-api-key-btn {
   background-color: transparent;
   border: none;
-  color: #1da1f2;
+  color: var(--model-color, #1da1f2);
   cursor: pointer;
   font-size: 16px;
   padding: 5px;
@@ -178,12 +182,30 @@ body {
 .edit-api-key-btn i {
   pointer-events: none; 
 }
+
+.api-key-item input:checked + span {
+  font-weight: bold;
+  color: var(--model-color, #1da1f2);
+}
+
+#colorSelect {
+  display: block;
+  margin: 20px auto;
+  width: 50%;
+}
 #saveSettingsBtn {
   display: block;
-  margin: 20px auto 0;
+  margin: 40px auto;
   padding: 12px 20px;
   border-radius: 8px;
   width: fit-content;
   font-weight: bold;
 }
 
+#saveSettingsBtn:hover {
+  background-color: var(--model-color, #1485c4);
+}
+
+#status {
+  text-align: center;
+}
