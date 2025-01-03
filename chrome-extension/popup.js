@@ -4,34 +4,47 @@ document.addEventListener("DOMContentLoaded", () => {
   const apiKeysContainer = document.getElementById("apiKeysContainer");
   const geminiModelSelect = document.getElementById("geminiModelSelect");
   const grokModelSelect = document.getElementById("grokModelSelect");
-  const colorSelect = document.getElementById("colorSelect");
   const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+  const geminiRadio = document.getElementById("geminiRadio");
+  const grokRadio = document.getElementById("grokRadio");
+  const geminiOptions = document.getElementById("geminiOptions");
+  const grokOptions = document.getElementById("grokOptions");
+  const colorSelect = document.getElementById("colorSelect");
   const status = document.getElementById("status");
 
-  let selectedModel = "gemini"; // Default to Gemini
+  let state = {
+    selectedModel: "gemini", // Default model
+    selectedApiKey: "",
+    geminiModel: "",
+    grokModel: "",
+    apiKeys: [],
+  };
 
   // Restore saved settings
   chrome.storage.sync.get(
-    ["apiKeys", "selectedApiKey", "selectedModel", "geminiModel", "grokModel", "selectedColor"],
+    ["selectedModel", "selectedApiKey", "geminiModel", "grokModel", "apiKeys", "selectedColor"],
     (data) => {
-      const { apiKeys, selectedApiKey, selectedModel: storedModel, geminiModel, grokModel, selectedColor } = data;
+      state = { ...state, ...data };
 
-      if (apiKeys) renderApiKeys(apiKeys, selectedApiKey, storedModel || "gemini");
+      // Restore selected model
+      document.querySelector(`input[name="model"][value="${state.selectedModel}"]`).checked = true;
+      toggleModelSpecificOptions(state.selectedModel);
 
-      if (storedModel) {
-        selectedModel = storedModel; // Update local variable
-        document.querySelector(`input[name="model"][value="${selectedModel}"]`).checked = true;
-        toggleModelSpecificOptions(selectedModel); // Display correct dropdown
+      // Render API keys for selected model
+      renderApiKeys(state.apiKeys, state.selectedApiKey, state.selectedModel);
+
+      // Restore model-specific selections
+      if (state.selectedModel === "gemini" && state.geminiModel) {
+        geminiModelSelect.value = state.geminiModel;
+      }
+      if (state.selectedModel === "grok" && state.grokModel) {
+        grokModelSelect.value = state.grokModel;
       }
 
-      // Restore Gemini and Grok model selections
-      if (geminiModel) geminiModelSelect.value = geminiModel;
-      if (grokModel) grokModelSelect.value = grokModel;
-
       // Restore selected color
-      if (selectedColor) {
-        colorSelect.value = selectedColor;
-        updateColor(selectedColor);
+      if (state.selectedColor) {
+        colorSelect.value = state.selectedColor;
+        updateColor(state.selectedColor);
       }
     }
   );
@@ -77,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedColor = colorSelect.value;
 
     chrome.storage.sync.set(
-      { selectedApiKey, selectedModel, geminiModel, grokModel, selectedColor },
+      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, grokModel, selectedColor },
       () => {
         updateColor(selectedColor);
         status.textContent = "Settings saved!";
@@ -89,44 +102,46 @@ document.addEventListener("DOMContentLoaded", () => {
   // Handle model selection changes
   document.querySelectorAll('input[name="model"]').forEach((radio) => {
     radio.addEventListener("change", (e) => {
-      selectedModel = e.target.value;
-      chrome.storage.sync.set({ selectedModel }, () => {
-        toggleModelSpecificOptions(selectedModel);
-        renderApiKeysForSelectedModel(selectedModel);
+      state.selectedModel = e.target.value;
+      chrome.storage.sync.set({ selectedModel: state.selectedModel }, () => {
+        toggleModelSpecificOptions(state.selectedModel);
+        renderApiKeysForSelectedModel(state.selectedModel);
       });
     });
   });
 
-  // Save Gemini model selection
+  // Save model selections
   geminiModelSelect.addEventListener("change", () => {
-    chrome.storage.sync.set({ geminiModel: geminiModelSelect.value });
+    state.geminiModel = geminiModelSelect.value;
+    chrome.storage.sync.set({ geminiModel: state.geminiModel });
   });
 
-  // Save Grok model selection
   grokModelSelect.addEventListener("change", () => {
-    chrome.storage.sync.set({ grokModel: grokModelSelect.value });
+    state.grokModel = grokModelSelect.value;
+    chrome.storage.sync.set({ grokModel: state.grokModel });
   });
 
   // Render API keys for selected model
   function renderApiKeysForSelectedModel(model) {
     chrome.storage.sync.get("apiKeys", (data) => {
-      const apiKeys = data.apiKeys || [];
-      const filteredKeys = apiKeys.filter((key) => key.model === model);
-      renderApiKeys(filteredKeys, null, model);
+      renderApiKeys(data.apiKeys || [], state.selectedApiKey, model);
     });
   }
 
   // Render API keys
   function renderApiKeys(apiKeys, selectedApiKey, model) {
-    apiKeysContainer.innerHTML = ""; // Clear the container
-  
-    if (apiKeys.length > 0) {
-      apiKeys.forEach(({ key, name }) => {
+    apiKeysContainer.innerHTML = ""; // Clear container
+
+    const filteredKeys = apiKeys.filter((key) => key.model === model);
+    if (filteredKeys.length > 0) {
+      filteredKeys.forEach(({ key, name }) => {
         const keyDiv = document.createElement("div");
         keyDiv.className = "api-key-item";
-  
+
         keyDiv.innerHTML = `
-          <input type="radio" name="apiKey" value="${key}" ${key === selectedApiKey ? "checked" : ""}>
+          <input type="radio" name="apiKey" value="${key}" ${
+          key === selectedApiKey ? "checked" : ""
+        }>
           <span class="api-key-name">${name}</span>
           <button class="edit-api-key-btn" data-key="${key}" data-name="${name}">
             <i class="fas fa-edit"></i>
@@ -135,17 +150,10 @@ document.addEventListener("DOMContentLoaded", () => {
             <i class="fas fa-trash-alt"></i>
           </button>
         `;
-  
+
         apiKeysContainer.appendChild(keyDiv);
       });
-  
-      // Ensure the currently selected API key is highlighted
-      const selectedRadio = apiKeysContainer.querySelector(`input[value="${selectedApiKey}"]`);
-      if (selectedRadio) {
-        selectedRadio.checked = true;
-      }
-  
-      // Add event listener for editing API keys
+
       apiKeysContainer.querySelectorAll(".edit-api-key-btn").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           const keyToEdit = e.target.closest("button").dataset.key;
@@ -170,11 +178,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
   
-      // Add event listener for deleting API keys
+      
       apiKeysContainer.querySelectorAll(".delete-api-key-btn").forEach((btn) => {
         btn.addEventListener("click", (e) => {
-          const keyToDelete = e.target.closest("button").dataset.key;
-  
+          const keyToDelete = e.target.dataset.key;
           chrome.storage.sync.get("apiKeys", (data) => {
             const apiKeys = data.apiKeys.filter((api) => api.key !== keyToDelete);
             chrome.storage.sync.set({ apiKeys }, () => {
@@ -185,27 +192,13 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         });
       });
-  
-      // Add event listener to update selected API key
-      apiKeysContainer.querySelectorAll('input[name="apiKey"]').forEach((radio) => {
-        radio.addEventListener("change", (e) => {
-          const selectedApiKey = e.target.value;
-          chrome.storage.sync.set({ selectedApiKey }, () => {
-            status.textContent = "API key selection updated!";
-            setTimeout(() => (status.textContent = ""), 2000);
-          });
-        });
-      });
     } else {
       apiKeysContainer.innerHTML = "<p>No API keys available for this model.</p>";
     }
   }
-  
-  // Toggle model-specific options
-  function toggleModelSpecificOptions(model) {
-    const geminiOptions = document.getElementById("geminiOptions");
-    const grokOptions = document.getElementById("grokOptions");
 
+  // Toggle options based on selected model
+  function toggleModelSpecificOptions(model) {
     if (model === "gemini") {
       geminiOptions.style.display = "block";
       grokOptions.style.display = "none";
@@ -213,12 +206,10 @@ document.addEventListener("DOMContentLoaded", () => {
       geminiOptions.style.display = "none";
       grokOptions.style.display = "block";
     }
-
-    renderApiKeysForSelectedModel(model); // Refresh API keys
   }
 
-  // Update color in CSS
+  // Update color dynamically
   function updateColor(color) {
-    document.documentElement.style.setProperty('--model-color', color);
+    document.documentElement.style.setProperty("--model-color", color);
   }
 });
