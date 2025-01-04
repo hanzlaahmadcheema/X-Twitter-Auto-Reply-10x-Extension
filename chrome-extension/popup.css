@@ -15,13 +15,19 @@ body {
   margin-right: 20px;
 }
 
-.modelSelectLabel, .newApiKeyLabel, .SavedApiKey, .colorSelectLabel {
+.modelSelectLabel, .newApiKeyLabel, .SavedApiKey, .colorSelectLabel, .alarmLabel, .enableAlarmLabel {
   font-weight: bold;
   color: var(--model-color, #1da1f2);
   margin-top: 20px;
   margin-bottom: 8px;
   display: block;
   font-size: 16px;
+}
+.alarmTime {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  color: var(--model-color, #1da1f2);
+  font-size: 12px;
 }
 
 .modelSelect{
@@ -48,6 +54,24 @@ body {
 }
 
 #newApiKey[type="text"]::placeholder {
+  color: #888; 
+}
+
+.alarmTimelabel {
+  font-size: 14px;
+}
+
+#alarmTime[type="number"] {
+  width: 10%;
+  padding: 10px;
+  margin: 10px 0px 10px 10px;
+  border: 1px solid #444;
+  border-radius: 5px;
+  background-color: #222; 
+  color: #fff;
+}
+
+#alarmTime[type="number"]::placeholder {
   color: #888; 
 }
 
@@ -208,4 +232,22 @@ body {
 
 #status {
   text-align: center;
+}
+
+/* Design scrollbar*/
+/* width */
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 25px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: var(--model-color, #1da1f2);
+  border-radius: 25px;  
 }

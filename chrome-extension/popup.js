@@ -213,3 +213,26 @@ document.addEventListener("DOMContentLoaded", () => {
     document.documentElement.style.setProperty("--model-color", color);
   }
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  const alarmTimeInput = document.getElementById("alarmTime");
+  const enableAlarmCheckbox = document.getElementById("enableAlarm");
+
+  // Restore saved alarm settings
+  chrome.storage.sync.get(["alarmTime", "alarmEnabled"], (data) => {
+    alarmTimeInput.value = data.alarmTime || 1; // Default to 2 minutes
+    enableAlarmCheckbox.checked = data.alarmEnabled || false;
+  });
+
+  // Save alarm time
+  alarmTimeInput.addEventListener("input", () => {
+    const alarmTime = parseInt(alarmTimeInput.value, 10) || 2;
+    chrome.storage.sync.set({ alarmTime });
+  });
+
+  // Save alarm enable/disable state
+  enableAlarmCheckbox.addEventListener("change", () => {
+    const alarmEnabled = enableAlarmCheckbox.checked;
+    chrome.storage.sync.set({ alarmEnabled });
+  });
+});

@@ -154,6 +154,15 @@ function appendToneSelector(toolbar) {
   lengthSelect.addEventListener("change", () => {
     chrome.storage.sync.set({ lastLength: lengthSelect.value });
   });
+  
+  generateButton.addEventListener("click", () => {
+    chrome.storage.sync.get(["alarmTime", "alarmEnabled"], (data) => {
+      if (data.alarmEnabled) {
+        const alarmTime = (data.alarmTime) * 60 * 1000; // Convert minutes to milliseconds
+        chrome.runtime.sendMessage({ action: "startAlarm", time: alarmTime });
+      }
+    });
+  });
 
   generateButton.addEventListener("click", async () => {
     if (isGenerating) return;
@@ -265,6 +274,8 @@ function stopErrorInButton(message) {
     }, 2000);
   }
 }
+
+
 
 function appendAsidepanel(toolbar2) {
   const asidePanel = document.createElement("div");

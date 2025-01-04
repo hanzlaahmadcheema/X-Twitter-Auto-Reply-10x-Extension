@@ -1,3 +1,6 @@
+let alarmTimeout;
+
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "generateReply") {
     chrome.storage.sync.get(
@@ -22,7 +25,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           .replace("{lang}", message.lang || "same language")
           .replace("{accountName}", message.accountName || "User")
           .replace("{customPrompt}", message.customPrompt);
-console.log(prompt);
+        console.log(prompt);
         let apiUrl, payload, headers;
 
         if (selectedModel === "gemini") {
@@ -79,6 +82,44 @@ console.log(prompt);
     );
 
     return true;
+  }
+  
+  if (message.action === "startAlarm") {
+    const { time } = message;
+    console.log("Starting alarm with time (ms):", time);
+
+    // Clear any existing alarms
+    clearTimeout(alarmTimeout);
+    console.log("Cleared previous alarms if any.");
+
+    // Set a new timer
+    alarmTimeout = setTimeout(() => {
+      console.log("Alarm triggered. Sending notification.");
+
+      // Show Chrome notification
+      chrome.notifications.create({
+        type: "image", // Use the "image" type for a larger notification
+        iconUrl: "icons/icon-128.png", // Your extension's icon
+        title: "Happy Birthday! Mamo 🎉", // Title text
+        message: "Wishing you a fantastic day filled with joy! Embrace the moments that make life beautiful. Enjoy your special day to the fullest! May your payout come next week!", // Message text
+        imageUrl: "images/x-notification-banner.png", // Replace with a larger image (700x400px recommended)
+        buttons: [
+          { title: "Thank You" }
+        ],
+        priority: 2, // Higher priority ensures it gets more attention
+      }, (notificationId) => {
+        console.log("Notification with a larger banner created:", notificationId);
+      });
+          
+    }, time);
+
+    sendResponse({ status: "Alarm set successfully." });
+  } else if (message.action === "stopAlarm") {
+    console.log("Stopping alarm.");
+    // Stop the alarm
+    clearTimeout(alarmTimeout);
+    console.log("Alarm stopped successfully.");
+    sendResponse({ status: "Alarm stopped successfully." });
   }
 });
 
