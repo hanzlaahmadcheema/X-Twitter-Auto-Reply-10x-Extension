@@ -158,7 +158,8 @@ function appendToneSelector(toolbar) {
   generateButton.addEventListener("click", () => {
     chrome.storage.sync.get(["alarmTime", "alarmEnabled"], (data) => {
       if (data.alarmEnabled) {
-        const alarmTime = 1000; // Convert minutes to milliseconds
+        // convert minutes into miliseconds
+        const alarmTime = data.alarmTime * 60000;
         chrome.runtime.sendMessage({ action: "startAlarm", time: alarmTime });
       }
     });
