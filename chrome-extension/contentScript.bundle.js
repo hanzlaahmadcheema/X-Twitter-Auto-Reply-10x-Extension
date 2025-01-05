@@ -301,4 +301,3 @@ const observer2 = new MutationObserver(() => {
 });
 
 observer.observe(document.body, { childList: true, subtree: true });
-observer2.observe(document.body, { childList: true, subtree: true });
