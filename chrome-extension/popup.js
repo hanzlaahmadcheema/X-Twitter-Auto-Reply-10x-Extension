@@ -9,6 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const grokRadio = document.getElementById("grokRadio");
   const geminiOptions = document.getElementById("geminiOptions");
   const grokOptions = document.getElementById("grokOptions");
+  const alarmTypeRadios = document.querySelectorAll('input[name="alarmType"]');
+  const alarmTimeInput = document.getElementById("alarmTime");
+  const enableAlarmCheckbox = document.getElementById("enableAlarm");
+  const stopAlarmButton = document.getElementById("stopAlarm");
   const colorSelect = document.getElementById("colorSelect");
   const status = document.getElementById("status");
 
@@ -208,31 +212,95 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  let alarmSettings = {
+    alarmType: "onGenerate", // Default to "Notify on Generate"
+    alarmTime: 5,           // Default time in minutes
+    alarmEnabled: false,    // Default alarm disabled
+  };
+
+  // Restore saved settings
+  chrome.storage.sync.get(["alarmType", "alarmTime", "alarmEnabled"], (data) => {
+    alarmSettings = { ...alarmSettings, ...data };
+
+    // Restore alarm type
+    document.querySelector(`input[name="alarmType"][value="${alarmSettings.alarmType}"]`).checked = true;
+
+    // Restore alarm time
+    alarmTimeInput.value = alarmSettings.alarmTime;
+
+    // Restore enable alarm checkbox
+    enableAlarmCheckbox.checked = alarmSettings.alarmEnabled;
+  });
+
+  // Save settings
+  saveSettingsBtn.addEventListener("click", () => {
+    const selectedAlarmType = document.querySelector('input[name="alarmType"]:checked').value;
+    const alarmTime = parseInt(alarmTimeInput.value, 10);
+    const alarmEnabled = enableAlarmCheckbox.checked;
+
+    // Update settings
+    chrome.storage.sync.set(
+      {
+        alarmType: selectedAlarmType,
+        alarmTime: alarmTime,
+        alarmEnabled: alarmEnabled,
+      },
+      () => {
+        status.textContent = "Alarm settings saved!";
+        setTimeout(() => (status.textContent = ""), 2000);
+
+        console.log("Alarm settings saved:", {
+          alarmType: selectedAlarmType,
+          alarmTime,
+          alarmEnabled,
+        });
+
+        // Start alarm if enabled
+        if (alarmEnabled) {
+          startAlarm(selectedAlarmType, alarmTime);
+        }
+      }
+    );
+  });
+
+  // Stop alarm functionality
+  stopAlarmButton.addEventListener("click", () => {
+    chrome.runtime.sendMessage({ action: "stopAlarm" }, () => {
+      console.log("Alarm stopped.");
+      status.textContent = "Alarm stopped!";
+      setTimeout(() => (status.textContent = ""), 2000);
+    });
+  });
+
+  // Start alarm based on type
+  function startAlarm(type, time) {
+    const timeInMs = time * 60000; // Convert minutes to milliseconds
+    if (type === "onGenerate") {
+      console.log("Alarm will trigger after generating reply.");
+    } else if (type === "interval") {
+      console.log("Continuous notification alarm set for:", time, "minutes.");
+    }
+
+    chrome.runtime.sendMessage({ action: "startAlarm", alarmType: type, time: timeInMs });
+  }
+
+  // Event listeners for debug logs
+  enableAlarmCheckbox.addEventListener("change", () => {
+    console.log("Alarm enabled status changed:", enableAlarmCheckbox.checked);
+  });
+
+  alarmTimeInput.addEventListener("input", () => {
+    console.log("Alarm time updated to (minutes):", alarmTimeInput.value);
+  });
+
+  alarmTypeRadios.forEach((radio) => {
+    radio.addEventListener("change", () => {
+      console.log("Alarm type selected:", radio.value);
+    });
+  });
+  
   // Update color dynamically
   function updateColor(color) {
     document.documentElement.style.setProperty("--model-color", color);
   }
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  const alarmTimeInput = document.getElementById("alarmTime");
-  const enableAlarmCheckbox = document.getElementById("enableAlarm");
-
-  // Restore saved alarm settings
-  chrome.storage.sync.get(["alarmTime", "alarmEnabled"], (data) => {
-    alarmTimeInput.value = data.alarmTime || 1; // Default to 2 minutes
-    enableAlarmCheckbox.checked = data.alarmEnabled || false;
-  });
-
-  // Save alarm time
-  alarmTimeInput.addEventListener("input", () => {
-    const alarmTime = parseInt(alarmTimeInput.value, 10) || 2;
-    chrome.storage.sync.set({ alarmTime });
-  });
-
-  // Save alarm enable/disable state
-  enableAlarmCheckbox.addEventListener("change", () => {
-    const alarmEnabled = enableAlarmCheckbox.checked;
-    chrome.storage.sync.set({ alarmEnabled });
-  });
 });

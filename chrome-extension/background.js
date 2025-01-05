@@ -1,5 +1,5 @@
 let alarmTimeout;
-
+let continuousAlarmInterval;
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "generateReply") {
@@ -85,43 +85,49 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   
   if (message.action === "startAlarm") {
-    const { time } = message;
-    console.log("Starting alarm with time (ms):", time);
+    const { time, type } = message;
+    console.log(`Starting alarm. Type: ${type} | Time: ${time}ms`);
 
-    // Clear any existing alarms
+    // Clear existing alarms or intervals
     clearTimeout(alarmTimeout);
-    console.log("Cleared previous alarms if any.");
+    clearInterval(continuousAlarmInterval);
+    console.log("Cleared previous alarms and intervals.");
 
-    // Set a new timer
-    alarmTimeout = setTimeout(() => {
-      console.log("Alarm triggered. Sending notification.");
-
-      // Show Chrome notification
-      chrome.notifications.create({
-        type: "image", // Use the "image" type for a larger notification
-        iconUrl: "icons/icon-128.png", // Your extension's icon
-        title: "Happy Birthday! Mamo 🎉", // Title text
-        message: "Wishing you a fantastic day filled with joy! Embrace the moments that make life beautiful. Enjoy your special day to the fullest! May your payout come next week!", // Message text
-        imageUrl: "images/x-notification-banner.png", // Replace with a larger image (700x400px recommended)
-        buttons: [
-          { title: "Thank You" }
-        ],
-        priority: 2, // Higher priority ensures it gets more attention
-      }, (notificationId) => {
-        console.log("Notification with a larger banner created:", notificationId);
-      });
-          
-    }, time);
-
-    sendResponse({ status: "Alarm set successfully." });
+    if (type === "onGenerate") {
+      // One-time notification
+      console.log("Setting a one-time alarm for 'Notify on Generate'.");
+      alarmTimeout = setTimeout(() => {
+        sendNotification();
+      }, time);
+    } else if (type === "interval") {
+      // Continuous notifications
+      console.log("Starting a continuous notification alarm.");
+      continuousAlarmInterval = setInterval(() => {
+        sendNotification();
+      }, time);
+    }
   } else if (message.action === "stopAlarm") {
-    console.log("Stopping alarm.");
-    // Stop the alarm
+    // Stop both one-time and continuous alarms
+    console.log("Stopping all alarms.");
     clearTimeout(alarmTimeout);
-    console.log("Alarm stopped successfully.");
-    sendResponse({ status: "Alarm stopped successfully." });
+    clearInterval(continuousAlarmInterval);
+    console.log("Alarms stopped successfully.");
   }
 });
+
+function sendNotification() {
+  chrome.notifications.create({
+    type: "image", // Use "image" for a larger notification banner
+    iconUrl: "icons/icon-128.png", // Replace with your extension's icon
+    title: "Time to Engage on Twitter!", // Notification title
+    message: "It's time to generate another reply and stay active!", // Notification message
+    imageUrl: "images/x-notification-banner.png", // Larger image for the notification
+    buttons: [{ title: "Got It!" }], // Button for user acknowledgment
+    priority: 2, // High priority for visibility
+  }, (notificationId) => {
+    console.log("Notification created with ID:", notificationId);
+  });
+}
 
 const tonePrompts = {  
   casual: "Craft a casual and conversational response to the tweet '{text}' by {accountName}. Keep the tone light and natural, ensuring it flows well. Avoid hashtags, emojis, and interjections like 'Wow' or 'Huh'. Use the {lang} language and keep it gender-neutral. Aim for a length of approximately {length}. Use the real-time context of the tweet to generate the response. {customPrompt}",

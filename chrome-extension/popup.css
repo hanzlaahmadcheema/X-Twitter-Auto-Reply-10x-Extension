@@ -15,7 +15,7 @@ body {
   margin-right: 20px;
 }
 
-.modelSelectLabel, .newApiKeyLabel, .SavedApiKey, .colorSelectLabel, .alarmLabel, .enableAlarmLabel {
+.modelSelectLabel, .newApiKeyLabel, .SavedApiKey, .colorSelectLabel, .alarmLabel, .enableAlarmLabel, .stopAlarmLabel {
   font-weight: bold;
   color: var(--model-color, #1da1f2);
   margin-top: 20px;
@@ -36,6 +36,11 @@ body {
 
 .modelSelect label {
   margin-left: 50px;
+}
+
+.modelSelect input:checked + span {
+  font-weight: bold;
+  color: var(--model-color, #1da1f2);
 }
 
 .SavedApiKey {
@@ -75,7 +80,12 @@ body {
   color: #888; 
 }
 
-#saveSettingsBtn, #addApiKeyBtn {
+.alarm-settings input:checked + span {
+  font-weight: bold;
+  color: var(--model-color, #1da1f2);
+}
+
+#saveSettingsBtn, #addApiKeyBtn, #stopAlarm {
   background-color: var(--model-color, #1da1f2);
   color: #fff;
   border: none;

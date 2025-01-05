@@ -155,16 +155,6 @@ function appendToneSelector(toolbar) {
     chrome.storage.sync.set({ lastLength: lengthSelect.value });
   });
   
-  generateButton.addEventListener("click", () => {
-    chrome.storage.sync.get(["alarmTime", "alarmEnabled"], (data) => {
-      if (data.alarmEnabled) {
-        // convert minutes into miliseconds
-        const alarmTime = data.alarmTime * 60000;
-        chrome.runtime.sendMessage({ action: "startAlarm", time: alarmTime });
-      }
-    });
-  });
-
   generateButton.addEventListener("click", async () => {
     if (isGenerating) return;
 
@@ -203,6 +193,37 @@ function appendToneSelector(toolbar) {
           showErrorInButton(response.error);
         } else if (response?.reply) {
           insertReplyText(response.reply);
+        
+          // Trigger the alarm if enabled
+          chrome.storage.sync.get(["alarmType", "alarmEnabled", "alarmTime"], (data) => {
+            console.log("Alarm settings retrieved from storage:", data);
+        
+            const { alarmType, alarmEnabled, alarmTime } = data;
+        
+            if (alarmEnabled) {
+              const timeInMs = alarmTime * 60000; // Convert minutes to milliseconds
+              console.log("Alarm enabled. Type:", alarmType, "| Time (ms):", timeInMs);
+        
+              // Trigger the appropriate alarm based on the selected type
+              if (alarmType === "onGenerate") {
+                console.log("Triggering 'Notify on Generate' alarm.");
+                chrome.runtime.sendMessage({
+                  action: "startAlarm",
+                  time: timeInMs,
+                  type: "onGenerate",
+                });
+              } else if (alarmType === "interval") {
+                console.log("Triggering 'Continuous Notification' alarm.");
+                chrome.runtime.sendMessage({
+                  action: "startAlarm",
+                  time: timeInMs,
+                  type: "interval",
+                });
+              }
+            } else {
+              console.log("Alarm is disabled. No notification will be triggered.");
+            }
+          });
         }
       }
     );
