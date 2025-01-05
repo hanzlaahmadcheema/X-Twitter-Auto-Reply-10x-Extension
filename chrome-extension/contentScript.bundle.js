@@ -205,26 +205,16 @@ function appendToneSelector(toolbar) {
               console.log("Alarm enabled. Type:", alarmType, "| Time (ms):", timeInMs);
         
               // Trigger the appropriate alarm based on the selected type
-              if (alarmType === "onGenerate") {
-                console.log("Triggering 'Notify on Generate' alarm.");
-                chrome.runtime.sendMessage({
-                  action: "startAlarm",
-                  time: timeInMs,
-                  type: "onGenerate",
-                });
-              } else if (alarmType === "interval") {
-                console.log("Triggering 'Continuous Notification' alarm.");
-                chrome.runtime.sendMessage({
-                  action: "startAlarm",
-                  time: timeInMs,
-                  type: "interval",
-                });
-              }
+              chrome.runtime.sendMessage({
+                action: "startAlarm",
+                time: timeInMs,
+                type: alarmType,
+              });
             } else {
               console.log("Alarm is disabled. No notification will be triggered.");
             }
           });
-        }
+        }        
       }
     );
   });

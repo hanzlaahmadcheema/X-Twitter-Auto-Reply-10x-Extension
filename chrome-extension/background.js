@@ -1,5 +1,6 @@
 let alarmTimeout;
 let continuousAlarmInterval;
+let currentAlarmType = null; // Track the active alarm type
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "generateReply") {
@@ -88,16 +89,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const { time, type } = message;
     console.log(`Starting alarm. Type: ${type} | Time: ${time}ms`);
 
+    // Check if the requested alarm type is already active
+    if (currentAlarmType === type) {
+      console.log(`Alarm of type "${type}" is already active. No need to restart.`);
+      return;
+    }
+
     // Clear existing alarms or intervals
     clearTimeout(alarmTimeout);
     clearInterval(continuousAlarmInterval);
     console.log("Cleared previous alarms and intervals.");
+
+    // Set the new alarm type
+    currentAlarmType = type;
 
     if (type === "onGenerate") {
       // One-time notification
       console.log("Setting a one-time alarm for 'Notify on Generate'.");
       alarmTimeout = setTimeout(() => {
         sendNotification();
+        currentAlarmType = null; // Reset the current alarm type after execution
       }, time);
     } else if (type === "interval") {
       // Continuous notifications
@@ -111,22 +122,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("Stopping all alarms.");
     clearTimeout(alarmTimeout);
     clearInterval(continuousAlarmInterval);
+    currentAlarmType = null; // Reset the current alarm type
     console.log("Alarms stopped successfully.");
   }
 });
 
 function sendNotification() {
-  chrome.notifications.create({
-    type: "image", // Use "image" for a larger notification banner
-    iconUrl: "icons/icon-128.png", // Replace with your extension's icon
-    title: "Time to Engage on Twitter!", // Notification title
-    message: "It's time to generate another reply and stay active!", // Notification message
-    imageUrl: "images/x-notification-banner.png", // Larger image for the notification
-    buttons: [{ title: "Got It!" }], // Button for user acknowledgment
-    priority: 2, // High priority for visibility
-  }, (notificationId) => {
-    console.log("Notification created with ID:", notificationId);
-  });
+  chrome.notifications.create(
+    {
+      type: "image", // Use "image" for a larger notification banner
+      iconUrl: "icons/icon-128.png", // Replace with your extension's icon
+      title: "Time to Engage on Twitter!", // Notification title
+      message: "It's time to generate another reply and stay active!", // Notification message
+      imageUrl: "images/x-notification-banner.png", // Larger image for the notification
+      buttons: [{ title: "Got It!" }], // Button for user acknowledgment
+      priority: 2, // High priority for visibility
+    },
+    (notificationId) => {
+      console.log("Notification created with ID:", notificationId);
+    }
+  );
 }
 
 const tonePrompts = {  

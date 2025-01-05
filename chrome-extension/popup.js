@@ -214,8 +214,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let alarmSettings = {
     alarmType: "onGenerate", // Default to "Notify on Generate"
-    alarmTime: 5,           // Default time in minutes
-    alarmEnabled: false,    // Default alarm disabled
+    alarmTime: 5, // Default time in minutes
+    alarmEnabled: false, // Default alarm disabled
   };
 
   // Restore saved settings
@@ -230,6 +230,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Restore enable alarm checkbox
     enableAlarmCheckbox.checked = alarmSettings.alarmEnabled;
+
+    console.log("Restored alarm settings:", alarmSettings);
   });
 
   // Save settings
@@ -254,37 +256,21 @@ document.addEventListener("DOMContentLoaded", () => {
           alarmTime,
           alarmEnabled,
         });
-
-        // Start alarm if enabled
-        if (alarmEnabled) {
-          startAlarm(selectedAlarmType, alarmTime);
-        }
       }
     );
   });
 
-  // Stop alarm functionality
+  // Handle "Stop Alarm" button click
   stopAlarmButton.addEventListener("click", () => {
     chrome.runtime.sendMessage({ action: "stopAlarm" }, () => {
-      console.log("Alarm stopped.");
       status.textContent = "Alarm stopped!";
       setTimeout(() => (status.textContent = ""), 2000);
+
+      console.log("Stop alarm request sent to background script.");
     });
   });
 
-  // Start alarm based on type
-  function startAlarm(type, time) {
-    const timeInMs = time * 60000; // Convert minutes to milliseconds
-    if (type === "onGenerate") {
-      console.log("Alarm will trigger after generating reply.");
-    } else if (type === "interval") {
-      console.log("Continuous notification alarm set for:", time, "minutes.");
-    }
-
-    chrome.runtime.sendMessage({ action: "startAlarm", alarmType: type, time: timeInMs });
-  }
-
-  // Event listeners for debug logs
+  // Debugging logs for user interactions
   enableAlarmCheckbox.addEventListener("change", () => {
     console.log("Alarm enabled status changed:", enableAlarmCheckbox.checked);
   });
@@ -298,7 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Alarm type selected:", radio.value);
     });
   });
-  
+
   // Update color dynamically
   function updateColor(color) {
     document.documentElement.style.setProperty("--model-color", color);
