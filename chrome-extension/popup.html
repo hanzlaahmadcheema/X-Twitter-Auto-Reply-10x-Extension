@@ -56,11 +56,11 @@
       <h3 class="alarmLabel">Alarm Settings</h3>
 
       <!-- Alarm Type Selection -->
+      <!-- <label>
+        <input type="checkbox" value="onGenerate" checked> Notify on Generate
+      </label> -->
       <label>
-        <input type="radio" name="alarmType" value="onGenerate" checked> Notify on Generate
-      </label>
-      <label>
-        <input type="radio" name="alarmType" value="interval"> Continuous Notification
+        <input type="checkbox" value="interval"> Continuous Notification
       </label>
       <br>
 
@@ -69,15 +69,15 @@
       <input type="number" id="alarmTime" min="1" value="5">
       
       <br>
-
-      <!-- Enable Alarm Checkbox -->
-      <label class="enableAlarmLabel">
-        <input type="checkbox" id="enableAlarm"> Enable Alarm
+      <label class="startAlarmLabel" for="startAlarm">
+        <button id="startAlarm" title="Start Alarm">
+          <i class="fas fa-play"></i>
+        </button> Start Alarm
       </label>
       <label class="stopAlarmLabel" for="stopAlarm">
-      <button id="stopAlarm" title="Stop all Alarms">
+      <button id="stopAlarm" title="Stop Alarm">
         <i class="fas fa-stop"></i>
-      </button> Stop All Alarms
+      </button> Stop Alarm
     </label>
     </div>
     <div>

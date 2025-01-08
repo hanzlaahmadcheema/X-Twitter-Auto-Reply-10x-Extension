@@ -96,6 +96,16 @@ function appendToneSelector(toolbar) {
       <option value="brief">Brief</option>
     </select>
     <select id="toneSelect">
+      <option value="empathetic">Empathetic</option>
+      <option value="agreeable">Agreeable</option>
+      <option value="grateful">Grateful</option>
+      <option value="inspirational">Inspirational</option>
+      <option value="insightful">Insightful</option>
+      <option value="informative">Informative</option>
+      <option value="encouraging">Encourag</option>
+      <option value="reflective">Reflective</option>
+      <option value="optimistic">Optimistic</option>
+      <option value="polite">Polite</option>
       <option value="playful">Playful</option>
       <option value="engaging">Engaging</option>
       <option value="critical">Critical</option>
@@ -112,16 +122,6 @@ function appendToneSelector(toolbar) {
       <option value="joking">Joking</option>
       <option value="quirky">Quirky</option>
       <option value="casual">Casual</option>
-      <!--<option value="empathetic">Empathetic</option>
-      <option value="agreeable">Agreeable</option>
-      <option value="grateful">Grateful</option>
-      <option value="inspirational">Inspirational</option>
-      <option value="insightful">Insightful</option>
-      <option value="informative">Informative</option>
-      <option value="encouraging">Encourag</option>
-      <option value="reflective">Reflective</option>
-      <option value="optimistic">Optimistic</option>
-      <option value="polite">Polite</option>-->
     </select>
     <textarea id="customPrompt" placeholder="Custom Prompt"></textarea>
     <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">Generate</button>
@@ -195,25 +195,25 @@ function appendToneSelector(toolbar) {
           insertReplyText(response.reply);
         
           // Trigger the alarm if enabled
-          chrome.storage.sync.get(["alarmType", "alarmEnabled", "alarmTime"], (data) => {
-            console.log("Alarm settings retrieved from storage:", data);
+          // chrome.storage.sync.get(["alarmType", "alarmEnabled", "alarmTime"], (data) => {
+          //   console.log("Alarm settings retrieved from storage:", data);
         
-            const { alarmType, alarmEnabled, alarmTime } = data;
+          //   const { alarmType, alarmEnabled, alarmTime } = data;
         
-            if (alarmEnabled) {
-              const timeInMs = alarmTime * 60000; // Convert minutes to milliseconds
-              console.log("Alarm enabled. Type:", alarmType, "| Time (ms):", timeInMs);
+          //   if (alarmEnabled) {
+          //     const timeInMs = alarmTime * 60000; // Convert minutes to milliseconds
+          //     console.log("Alarm enabled. Type:", alarmType, "| Time (ms):", timeInMs);
         
-              // Trigger the appropriate alarm based on the selected type
-              chrome.runtime.sendMessage({
-                action: "startAlarm",
-                time: timeInMs,
-                type: alarmType,
-              });
-            } else {
-              console.log("Alarm is disabled. No notification will be triggered.");
-            }
-          });
+          //     // Trigger the appropriate alarm based on the selected type
+          //     chrome.runtime.sendMessage({
+          //       action: "startAlarm",
+          //       time: timeInMs,
+          //       type: alarmType,
+          //     });
+          //   } else {
+          //     console.log("Alarm is disabled. No notification will be triggered.");
+          //   }
+          // });
         }        
       }
     );

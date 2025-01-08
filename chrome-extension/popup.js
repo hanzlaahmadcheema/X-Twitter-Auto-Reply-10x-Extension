@@ -9,9 +9,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const grokRadio = document.getElementById("grokRadio");
   const geminiOptions = document.getElementById("geminiOptions");
   const grokOptions = document.getElementById("grokOptions");
-  const alarmTypeRadios = document.querySelectorAll('input[name="alarmType"]');
+  const continuousNotificationCheckbox = document.querySelector('input[value="interval"]');
   const alarmTimeInput = document.getElementById("alarmTime");
-  const enableAlarmCheckbox = document.getElementById("enableAlarm");
+  const startAlarmButton = document.getElementById("startAlarm");
   const stopAlarmButton = document.getElementById("stopAlarm");
   const colorSelect = document.getElementById("colorSelect");
   const status = document.getElementById("status");
@@ -213,76 +213,70 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   let alarmSettings = {
-    alarmType: "onGenerate", // Default to "Notify on Generate"
     alarmTime: 5, // Default time in minutes
-    alarmEnabled: false, // Default alarm disabled
+    continuousNotification: false, // Default to notifications disabled
   };
 
   // Restore saved settings
-  chrome.storage.sync.get(["alarmType", "alarmTime", "alarmEnabled"], (data) => {
+  chrome.storage.sync.get(["alarmTime", "continuousNotification"], (data) => {
     alarmSettings = { ...alarmSettings, ...data };
-
-    // Restore alarm type
-    document.querySelector(`input[name="alarmType"][value="${alarmSettings.alarmType}"]`).checked = true;
 
     // Restore alarm time
     alarmTimeInput.value = alarmSettings.alarmTime;
 
-    // Restore enable alarm checkbox
-    enableAlarmCheckbox.checked = alarmSettings.alarmEnabled;
-
+    // Restore checkbox state
+    continuousNotificationCheckbox.checked = alarmSettings.continuousNotification;
     console.log("Restored alarm settings:", alarmSettings);
   });
 
-  // Save settings
-  saveSettingsBtn.addEventListener("click", () => {
-    const selectedAlarmType = document.querySelector('input[name="alarmType"]:checked').value;
+  // Save and start alarm on clicking "Start Alarm"
+  startAlarmButton.addEventListener("click", () => {
     const alarmTime = parseInt(alarmTimeInput.value, 10);
-    const alarmEnabled = enableAlarmCheckbox.checked;
+    const continuousNotification = continuousNotificationCheckbox.checked;
 
-    // Update settings
+    // Save settings
     chrome.storage.sync.set(
       {
-        alarmType: selectedAlarmType,
         alarmTime: alarmTime,
-        alarmEnabled: alarmEnabled,
+        continuousNotification: continuousNotification,
       },
       () => {
-        status.textContent = "Alarm settings saved!";
-        setTimeout(() => (status.textContent = ""), 2000);
-
         console.log("Alarm settings saved:", {
-          alarmType: selectedAlarmType,
           alarmTime,
-          alarmEnabled,
+          continuousNotification,
         });
+
+        if (continuousNotification) {
+          const timeInMs = alarmTime * 60000; // Convert minutes to milliseconds
+          chrome.runtime.sendMessage(
+            {
+              action: "startAlarm",
+              time: timeInMs,
+              type: "interval",
+            },
+            () => {
+              console.log("Continuous alarm started.");
+            }
+          );
+        }
       }
     );
   });
 
-  // Handle "Stop Alarm" button click
+  // Stop alarm on clicking "Stop Alarm"
   stopAlarmButton.addEventListener("click", () => {
     chrome.runtime.sendMessage({ action: "stopAlarm" }, () => {
-      status.textContent = "Alarm stopped!";
-      setTimeout(() => (status.textContent = ""), 2000);
-
-      console.log("Stop alarm request sent to background script.");
+      console.log("All alarms stopped.");
     });
   });
 
-  // Debugging logs for user interactions
-  enableAlarmCheckbox.addEventListener("change", () => {
-    console.log("Alarm enabled status changed:", enableAlarmCheckbox.checked);
-  });
-
+  // Event listeners for debugging
   alarmTimeInput.addEventListener("input", () => {
     console.log("Alarm time updated to (minutes):", alarmTimeInput.value);
   });
 
-  alarmTypeRadios.forEach((radio) => {
-    radio.addEventListener("change", () => {
-      console.log("Alarm type selected:", radio.value);
-    });
+  continuousNotificationCheckbox.addEventListener("change", () => {
+    console.log("Continuous notification enabled:", continuousNotificationCheckbox.checked);
   });
 
   // Update color dynamically

@@ -15,7 +15,7 @@ body {
   margin-right: 20px;
 }
 
-.modelSelectLabel, .newApiKeyLabel, .SavedApiKey, .colorSelectLabel, .alarmLabel, .enableAlarmLabel, .stopAlarmLabel {
+.modelSelectLabel, .newApiKeyLabel, .SavedApiKey, .colorSelectLabel, .alarmLabel, .enableAlarmLabel, .startAlarmLabel, .stopAlarmLabel {
   font-weight: bold;
   color: var(--model-color, #1da1f2);
   margin-top: 20px;
@@ -85,7 +85,7 @@ body {
   color: var(--model-color, #1da1f2);
 }
 
-#saveSettingsBtn, #addApiKeyBtn, #stopAlarm {
+#saveSettingsBtn, #addApiKeyBtn, #startAlarm, #stopAlarm {
   background-color: var(--model-color, #1da1f2);
   color: #fff;
   border: none;
@@ -106,7 +106,7 @@ body {
   background-color: var(--model-color, #1485c4);
 }
 
-#saveSettingsBtn i, #addApiKeyBtn i {
+#saveSettingsBtn i, #addApiKeyBtn i, #startAlarm i, #stopAlarm i {
   pointer-events: none;
 }
 
