@@ -93,11 +93,10 @@ function appendToneSelector(toolbar) {
       <option value="5-150 characters">5-150 CH</option>
       <option value="5-200 characters">5-200 CH</option>
       <option value="5-250 characters">5-250 CH</option>
-      <option value="brief">Brief</option>
+      <option value="5-325 characters">5-325 CH</option>
     </select>
     <select id="toneSelect">
       <option value="empathetic">Empathetic</option>
-      <option value="agreeable">Agreeable</option>
       <option value="grateful">Grateful</option>
       <option value="inspirational">Inspirational</option>
       <option value="insightful">Insightful</option>
@@ -110,18 +109,19 @@ function appendToneSelector(toolbar) {
       <option value="engaging">Engaging</option>
       <option value="critical">Critical</option>
       <option value="curious">Curious</option>
-      <option value="supportive">Suportive</option>
       <option value="neutral">Neutral</option>
       <option value="humorous">Humrous</option>
       <option value="professional">Profesnl</option>
+      <option value="supportive">Suportive</option>
+      <option value="agreeable">Agreeable</option>
+      <option value="sarcastic">Sarcastic</option>
+      <option value="negative">Negative</option>
+      <option value="casual">Casual</option>
       <option value="friendly">Friendly</option>
       <option value="witty">Witty</option>
       <option value="straightforward">Straight</option>
-      <option value="sarcastic">Sarcastic</option>
-      <option value="negative">Negative</option>
       <option value="joking">Joking</option>
       <option value="quirky">Quirky</option>
-      <option value="casual">Casual</option>
     </select>
     <textarea id="customPrompt" placeholder="Custom Prompt"></textarea>
     <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">Generate</button>
