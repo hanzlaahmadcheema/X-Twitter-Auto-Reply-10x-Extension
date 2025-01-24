@@ -4,6 +4,12 @@ This Chrome extension helps users efficiently engage on Twitter with customizabl
 
 ---
 
+## 📹 Demo Video
+
+<video src="video/demo.mp4" controls width="700"></video>
+
+---
+
 ## 📋 Features
 - **AI-Powered Reply Generation:**
   - Supports two models: **Gemini** and **Grok**.
@@ -36,6 +42,8 @@ Configure your settings:Add API keys for Gemini and Grok.
 Choose your preferred reply tone and length.
 Enable alarms for notifications.
 Generate replies directly from Twitter or use the alarm feature to stay active.
+
+---
 
 ## 📂 File Structure
 ```plaintext
