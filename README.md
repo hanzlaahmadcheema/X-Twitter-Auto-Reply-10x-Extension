@@ -6,7 +6,7 @@ This Chrome extension helps users efficiently engage on Twitter with customizabl
 
 ## 📹 Demo Video
 
-<video src="video/demo.mp4" controls width="700"></video>
+<video src="chrome-extension/video/demo.mp4" controls width="700"></video>
 
 ---
 
