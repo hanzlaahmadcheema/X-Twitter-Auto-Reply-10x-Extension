@@ -26,7 +26,7 @@ This Chrome extension helps users efficiently engage on Twitter with customizabl
 ## 🛠 Installation
 1. Clone this repository:
    ```bash
-   git clone [https://github.com/hanzlaahmadcheema/X-Twitter-Auto-Reply-10x-Extension.git](https://github.com/hanzlaahmadcheema/X-Twitter-Auto-Reply-10x-Extension.git)
+   git clone https://github.com/hanzlaahmadcheema/X-Twitter-Auto-Reply-10x-Extension.git
 Open Google Chrome and navigate to chrome://extensions/.
 Enable Developer Mode (toggle in the top-right corner).
 Click Load unpacked and select the extension folder.
@@ -37,16 +37,25 @@ Choose your preferred reply tone and length.
 Enable alarms for notifications.
 Generate replies directly from Twitter or use the alarm feature to stay active.
 
-📦 File Structure
-├── manifest.json          # Extension metadata
+## 📂 File Structure
+```plaintext
+├── manifest.json          # Metadata and configuration for the Chrome extension
 ├── background.js          # Service worker for alarms and notifications
-├── contentScript.js       # Handles interactions with Twitter
-├── popup.html             # User interface
-├── popup.js               # Logic for popup functionality
-├── icons/                 # Icons for the extension
-├── sounds/                # Alarm sounds
-├── images/                # Notification banner images
-└── styles/                # CSS for popup
+├── contentScript.js       # Injected script for interacting with Twitter
+├── popup.html             # HTML for the popup interface
+├── popup.js               # JavaScript for popup functionality
+├── styles/
+│   ├── popup.css          # Stylesheet for popup UI
+├── icons/                 # Extension icons
+│   ├── icon-16.png        # 16x16 icon
+│   ├── icon-48.png        # 48x48 icon
+│   ├── icon-128.png       # 128x128 icon
+├── sounds/
+│   ├── alarm.mp3          # Alarm sound file
+├── images/
+│   ├── x-notification-banner.png  # Notification banner image
+
+```
 
 📝 Configuration
 Alarm Settings
