@@ -6,8 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const openaiModelSelect = document.getElementById("openaiModelSelect");
   const grokModelSelect = document.getElementById("grokModelSelect");
   const saveSettingsBtn = document.getElementById("saveSettingsBtn");
-  const geminiRadio = document.getElementById("geminiRadio");
-  const grokRadio = document.getElementById("grokRadio");
   const geminiOptions = document.getElementById("geminiOptions");
   const openaiOptions = document.getElementById("openaiOptions");
   const grokOptions = document.getElementById("grokOptions");
@@ -22,13 +20,14 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedModel: "gemini", // Default model
     selectedApiKey: "",
     geminiModel: "",
+    openaiModel: "",
     grokModel: "",
     apiKeys: [],
   };
 
   // Restore saved settings
   chrome.storage.sync.get(
-    ["selectedModel", "selectedApiKey", "geminiModel", "grokModel", "apiKeys", "selectedColor"],
+    ["selectedModel", "selectedApiKey", "geminiModel", "openaiModel", "grokModel", "apiKeys", "selectedColor"],
     (data) => {
       state = { ...state, ...data };
 
@@ -65,8 +64,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const newApiKey = newApiKeyInput.value.trim();
 
     if (newApiKey) {
-      const model = prompt("Which model is this API key for? (gemini/grok)").toLowerCase();
-      if (model !== "gemini" && model !== "grok") {
+      const model = prompt("Which model is this API key for? (gemini/grok/openai)").toLowerCase();
+      if (model !== "gemini" && model !== "grok" && model !== "openai") {
         status.textContent = "Invalid model selected.";
         return;
       }
@@ -97,11 +96,12 @@ document.addEventListener("DOMContentLoaded", () => {
   saveSettingsBtn.addEventListener("click", () => {
     const selectedApiKey = document.querySelector('input[name="apiKey"]:checked')?.value;
     const geminiModel = geminiModelSelect.value;
+    const openaiModel = openaiModelSelect.value;
     const grokModel = grokModelSelect.value;
     const selectedColor = colorSelect.value;
 
     chrome.storage.sync.set(
-      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, grokModel, selectedColor },
+      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, openaiModel, grokModel, selectedColor },
       () => {
         updateColor(selectedColor);
         status.textContent = "Settings saved!";
@@ -215,20 +215,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Toggle options based on selected model
   function toggleModelSpecificOptions(model) {
-  if (model === "gemini") {
-    geminiOptions.style.display = "block";
-    grokOptions.style.display = "none";
-    openaiOptions.style.display = "none";
-  } else if (model === "grok") {
-    geminiOptions.style.display = "none";
-    grokOptions.style.display = "block";
-    openaiOptions.style.display = "none";
-  } else if (model === "openai") {
-    geminiOptions.style.display = "none";
-    grokOptions.style.display = "none";
-    openaiOptions.style.display = "block";
+    if (model === "gemini") {
+      geminiOptions.style.display = "block";
+      grokOptions.style.display = "none";
+      openaiOptions.style.display = "none";
+    } else if (model === "grok") {
+      geminiOptions.style.display = "none";
+      grokOptions.style.display = "block";
+      openaiOptions.style.display = "none";
+    } else if (model === "openai") {
+      geminiOptions.style.display = "none";
+      grokOptions.style.display = "none";
+      openaiOptions.style.display = "block";
+    }
   }
-}
 
   let alarmSettings = {
     alarmTime: 5, // Default time in minutes

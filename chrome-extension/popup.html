@@ -55,39 +55,29 @@
       </select>
     </div>
     <!-- OpenAI Models -->
-    <!-- OpenAI Models -->
-<div id="openaiOptions" style="display: none;">
-  <label class="modelSelectLabel" for="openaiModelSelect">Select OpenAI Model:</label>
-  <br>
-  <select id="openaiModelSelect" name="OpenAIModel">
-    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-    <option value="gpt-3.5-turbo-instruct">GPT-3.5 Turbo Instruct</option>
-    <option value="gpt-4">GPT-4</option>
-    <option value="gpt-4-turbo">GPT-4 Turbo</option>
-    <option value="gpt-4o">GPT-4o</option>
-    <option value="gpt-4o-mini">GPT-4o Mini</option>
-    <option value="text-babbage-002">Text Babbage 002</option>
-    <option value="text-davinci-002">Text Davinci 002</option>
-  </select>
-</div>
+    <div id="openaiOptions" style="display: none;">
+      <label class="modelSelectLabel" for="openaiModelSelect">Select OpenAI Model:</label>
+      <br>
+      <select id="openaiModelSelect" name="OpenAIModel">
+        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+        <option value="gpt-3.5-turbo-instruct">GPT-3.5 Turbo Instruct</option>
+        <option value="gpt-4">GPT-4</option>
+        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+        <option value="gpt-4o">GPT-4o</option>
+        <option value="gpt-4o-mini">GPT-4o Mini</option>
+        <option value="text-babbage-002">Text Babbage 002</option>
+        <option value="text-davinci-002">Text Davinci 002</option>
+      </select>
+    </div>
     <!-- Alarm Settings -->   
     <div class="alarm-settings">
       <h3 class="alarmLabel">Alarm Settings</h3>
-
-      <!-- Alarm Type Selection -->
-      <!-- <label>
-        <input type="checkbox" value="onGenerate" checked> Notify on Generate
-      </label> -->
       <label>
         <input type="checkbox" value="interval"> Continuous Notification
       </label>
       <br>
-
-      <!-- Alarm Time Setting -->
       <label class="alarmTimelabel" for="alarmTime">Set Time (minutes):</label>
       <input type="number" id="alarmTime" min="1" value="5">
-      
       <br>
       <label class="startAlarmLabel" for="startAlarm">
         <button id="startAlarm" title="Start Alarm">
