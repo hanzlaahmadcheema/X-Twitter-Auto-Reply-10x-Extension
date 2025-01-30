@@ -5,9 +5,9 @@ let currentAlarmType = null; // Track the active alarm type
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "generateReply") {
     chrome.storage.sync.get(
-      ["selectedApiKey", "selectedModel", "geminiModel", "grokModel"],
+      ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModelStored"],
       async (data) => {
-        const { selectedApiKey, selectedModel, geminiModel, grokModel } = data;
+        const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModelStored } = data;
 
         if (!selectedApiKey) {
           sendResponse({ error: "API key not set. Please select an API key." });
@@ -42,7 +42,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           payload = {
             messages: [
               {role: "system", content: "You are Grok, a chatbot for generating concise and contextually relevant replies to tweets in a Twitter extension." },
-                            { role: "user", content: prompt },
+              { role: "user", content: prompt },
             ],
             model: model,
             temperature: 0,
@@ -51,6 +51,48 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${selectedApiKey}`,
           };
+        } else if (selectedModel === "openai") {
+          const model = openaiModelStored || "gpt-3.5-turbo";
+          console.log(`Using OpenAI model: ${model}`); // Log OpenAI model
+          apiUrl = 'https://api.edenai.run/v2/text/generation';
+          payload = {
+            settings: `{"${selectedModel}": "${model}"}`,
+            response_as_dict: true,
+            attributes_as_list: false,
+            show_base_64: true,
+            show_original_response: false,
+            temperature: 0,
+            max_tokens: 1000,
+            providers: [`openai/${model}`],
+            text: prompt
+          };
+          headers = {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${selectedApiKey}`,
+          };
+        
+          fetch(apiUrl, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(payload)
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log('API Response:', data); // Log the full response for debugging
+            const responseData = data[`openai/${model}`];
+            if (responseData && responseData.standardized_response && responseData.standardized_response.generated_text) {
+              const replyText = responseData.standardized_response.generated_text;
+              console.log(replyText);
+              sendResponse({ reply: replyText });
+            } else {
+              sendResponse({ error: 'Error: No AI response received.' });
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            sendResponse({ error: 'Error generating AI response.' });
+          });
+          return; // Ensure the response is sent asynchronously
         } else {
           console.error("Error: Invalid model selected.");
           sendResponse({ error: "Error: Invalid model selected." });

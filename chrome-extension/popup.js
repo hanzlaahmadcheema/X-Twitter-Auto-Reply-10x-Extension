@@ -3,11 +3,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const addApiKeyBtn = document.getElementById("addApiKeyBtn");
   const apiKeysContainer = document.getElementById("apiKeysContainer");
   const geminiModelSelect = document.getElementById("geminiModelSelect");
+  const openaiModelSelect = document.getElementById("openaiModelSelect");
   const grokModelSelect = document.getElementById("grokModelSelect");
   const saveSettingsBtn = document.getElementById("saveSettingsBtn");
   const geminiRadio = document.getElementById("geminiRadio");
   const grokRadio = document.getElementById("grokRadio");
   const geminiOptions = document.getElementById("geminiOptions");
+  const openaiOptions = document.getElementById("openaiOptions");
   const grokOptions = document.getElementById("grokOptions");
   const continuousNotificationCheckbox = document.querySelector('input[value="interval"]');
   const alarmTimeInput = document.getElementById("alarmTime");
@@ -41,6 +43,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (state.selectedModel === "gemini" && state.geminiModel) {
         geminiModelSelect.value = state.geminiModel;
       }
+
+      if (state.selectedModel === "openai" && state.openaiModel) {
+        openaiModelSelect.value = state.openaiModel;
+      }
+
       if (state.selectedModel === "grok" && state.grokModel) {
         grokModelSelect.value = state.grokModel;
       }
@@ -118,6 +125,11 @@ document.addEventListener("DOMContentLoaded", () => {
   geminiModelSelect.addEventListener("change", () => {
     state.geminiModel = geminiModelSelect.value;
     chrome.storage.sync.set({ geminiModel: state.geminiModel });
+  });
+
+  openaiModelSelect.addEventListener("change", () => {
+    state.openaiModel = openaiModelSelect.value;
+    chrome.storage.sync.set({ openaiModel: state.openaiModel });
   });
 
   grokModelSelect.addEventListener("change", () => {
@@ -203,14 +215,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Toggle options based on selected model
   function toggleModelSpecificOptions(model) {
-    if (model === "gemini") {
-      geminiOptions.style.display = "block";
-      grokOptions.style.display = "none";
-    } else if (model === "grok") {
-      geminiOptions.style.display = "none";
-      grokOptions.style.display = "block";
-    }
+  if (model === "gemini") {
+    geminiOptions.style.display = "block";
+    grokOptions.style.display = "none";
+    openaiOptions.style.display = "none";
+  } else if (model === "grok") {
+    geminiOptions.style.display = "none";
+    grokOptions.style.display = "block";
+    openaiOptions.style.display = "none";
+  } else if (model === "openai") {
+    geminiOptions.style.display = "none";
+    grokOptions.style.display = "none";
+    openaiOptions.style.display = "block";
   }
+}
 
   let alarmSettings = {
     alarmTime: 5, // Default time in minutes

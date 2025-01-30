@@ -30,10 +30,6 @@ body {
   font-size: 12px;
 }
 
-.modelSelect{
-  margin: 20px 0px 20px 50px;
-}
-
 .modelSelect label {
   margin-left: 50px;
 }
@@ -111,7 +107,7 @@ body {
 }
 
 
-#geminiModelSelect, #grokModelSelect {
+#geminiModelSelect, #grokModelSelect, #openaiModelSelect {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
@@ -123,7 +119,7 @@ body {
   cursor: pointer;
 }
 
-#geminiModelSelect option, #grokModelSelect option {
+#geminiModelSelect option, #grokModelSelect option, #openaiModelSelect option {
   background-color: #222;
   color: #fff;
 }
