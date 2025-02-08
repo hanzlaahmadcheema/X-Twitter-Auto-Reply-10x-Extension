@@ -313,6 +313,10 @@ function copyTweetText(button, shareButton) {
       console.log("Tweet text copied to clipboard:", tweetText);
       button.textContent = "D";
       button.style.color = "red";
+      setTimeout(() => {
+        button.textContent = "C";
+        button.style.color = "";
+      }, 4000);
     }).catch(err => {
       console.error("Failed to copy tweet text:", err);
     });
