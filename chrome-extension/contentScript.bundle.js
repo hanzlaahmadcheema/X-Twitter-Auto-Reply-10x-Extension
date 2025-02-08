@@ -76,22 +76,24 @@ function insertReplyText(replyText) {
   }
 }
 
-function getTweetContextFromShareButton(shareButton) {
-  let tweetText = "";
-  const tweetContainer = shareButton.closest('[data-testid="tweet"]');
-  const mainTweetElement = tweetContainer ? tweetContainer.querySelector('[data-testid="tweetText"]') : null;
-  if (mainTweetElement) {
-    tweetText = mainTweetElement.innerText.trim();
-    console.log(tweetText);
-    return tweetText;
+function copyTweetText() {
+  const tweetText = getTweetContext();
+  if (tweetText) {
+    navigator.clipboard.writeText(tweetText).then(() => {
+      console.log("Tweet text copied to clipboard:", tweetText);
+    }).catch(err => {
+      console.error("Failed to copy tweet text:", err);
+    });
+  } else {
+    console.error("No tweet text found to copy!");
   }
-  return "";
 }
 
 function appendToneSelector(toolbar) {
   const container = document.createElement("div");
   container.className = "tone-selector-container";
   container.innerHTML = `
+      <textarea id="customPrompt" placeholder="Custom Prompt"></textarea>
     <select id="lengthSelect">
       <option value="length according to the tweet's length">As Tweet</option>
       <option value="5-150 characters">5-150 CH</option>
@@ -100,18 +102,18 @@ function appendToneSelector(toolbar) {
       <option value="5-325 characters">5-325 CH</option>
     </select>
     <select id="toneSelect">
-      <option value="empathetic">Empathetic</option>
+      <!--<option value="empathetic">Empath</option>
       <option value="grateful">Grateful</option>
-      <option value="inspirational">Inspirational</option>
+      <option value="inspirational">Inspire</option>
       <option value="insightful">Insightful</option>
-      <option value="informative">Informative</option>
-      <option value="encouraging">Encourag</option>
-      <option value="reflective">Reflective</option>
+      <option value="informative">Informa</option>
+      <option value="reflective">Reflect</option>
       <option value="optimistic">Optimistic</option>
+      <option value="critical">Critical</option>-->
+      <option value="encouraging">Encourag</option>
       <option value="polite">Polite</option>
       <option value="playful">Playful</option>
       <option value="engaging">Engaging</option>
-      <option value="critical">Critical</option>
       <option value="curious">Curious</option>
       <option value="neutral">Neutral</option>
       <option value="humorous">Humrous</option>
@@ -127,17 +129,62 @@ function appendToneSelector(toolbar) {
       <option value="joking">Joking</option>
       <option value="quirky">Quirky</option>
     </select>
-    <textarea id="customPrompt" placeholder="Custom Prompt"></textarea>
+    <button class="mic-btn" >M</button>
     <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">Generate</button>
-    <button class="stop-btn" style="display: none;">🛑 Stop</button>
+    <!--<button class="stop-btn" style="display: none;">🛑 Stop</button>-->
   `;
   toolbar.appendChild(container);
 
+  const micButton = container.querySelector(".mic-btn");
+    let recognition;
+
+  micButton.addEventListener("click", () => {
+    if (micButton.textContent === "M") {
+      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "ur-PK";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.start();
+      micButton.textContent = "D";
+      micButton.style.backgroundColor = "red";
+      console.log("Speech recognition started");
+
+      recognition.onresult = (event) => {
+        const speechResult = event.results[0][0].transcript;
+        insertReplyText(speechResult);
+        console.log("Speech recognition result:", speechResult);
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error detected: " + event.error);
+        if (event.error === "aborted") {
+          console.log("Speech recognition was aborted.");
+        } else {
+          console.log("An unexpected error occurred during speech recognition.");
+        }
+      };
+
+      recognition.onend = () => {
+        if (micButton.textContent === "D") {
+          recognition.start(); // Restart recognition if it ended unexpectedly
+        } else {
+          console.log("Speech recognition stopped");
+        }
+      };
+    } else {
+      recognition.stop();
+      micButton.textContent = "M";
+      micButton.style.backgroundColor = "";
+      console.log("Speech recognition manually stopped");
+    }
+  });
+
+  const customPromptTextarea = container.querySelector("#customPrompt");
   const toneSelect = container.querySelector("#toneSelect");
   const lengthSelect = container.querySelector("#lengthSelect");
-  const customPromptTextarea = container.querySelector("#customPrompt");
   const generateButton = container.querySelector(".generate-reply-btn");
-  const stopButton = container.querySelector(".stop-btn");
+  // const stopButton = container.querySelector(".stop-btn");
 
   let isGenerating = false;
   let controller;
@@ -164,8 +211,10 @@ function appendToneSelector(toolbar) {
 
     isGenerating = true;
     generateButton.textContent = "Generating...";
+    generateButton.style.backgroundColor = "red";
     generateButton.disabled = true;
-    stopButton.style.display = "inline-block";
+    // stopButton.style.display = "inline-block";
+
 
     const tone = toneSelect.value;
     const length = lengthSelect.value;
@@ -191,7 +240,11 @@ function appendToneSelector(toolbar) {
         isGenerating = false;
         generateButton.disabled = false;
         generateButton.textContent = "Generate";
-        stopButton.style.display = "none";
+        chrome.storage.sync.get(["selectedColor"], (data) => {
+          const defaultColor = data.selectedColor || "#1da1f2";
+          generateButton.style.backgroundColor = defaultColor;
+        });
+        // stopButton.style.display = "none";
 
         if (response?.error) {
           showErrorInButton(response.error);
@@ -225,7 +278,6 @@ function appendToneSelector(toolbar) {
 
 
   function applyColor(color) {
-    // Update the CSS variable for the selected color
     document.documentElement.style.setProperty("--model-color", color);
   
     // Apply the color to specific elements in the toolbar
@@ -246,13 +298,13 @@ function appendToneSelector(toolbar) {
     }
   }
   
-  stopButton.addEventListener("click", () => {
-    if (controller) {
-      controller.abort();
-      showErrorInButton("Generation Stopped.");
-      stopButton.style.display = "none";
-    }
-  });
+  // stopButton.addEventListener("click", () => {
+  //   if (controller) {
+  //     controller.abort();
+  //     showErrorInButton("Generation Stopped.");
+  //     stopButton.style.display = "none";
+  //   }
+  // });
 }
 
 function showErrorInButton(message) {
@@ -294,37 +346,15 @@ function stopErrorInButton(message) {
 }
 
 function insertCopyTweetButton() {
-  const shareButtons = document.querySelectorAll('[aria-label="Share post"]');
-  shareButtons.forEach((shareButton) => {
-    if (shareButton && !shareButton.parentNode.querySelector(".copy-tweet-btn")) {
-      const copyTweetButton = document.createElement("button");
-      copyTweetButton.className = "copy-tweet-btn";
-      copyTweetButton.textContent = "C";
-      copyTweetButton.addEventListener("click", () => copyTweetText(copyTweetButton, shareButton));
-      shareButton.parentNode.insertBefore(copyTweetButton, shareButton.nextSibling);
-    }
-  });
-}
-
-function copyTweetText(button, shareButton) {
-  const tweetText = getTweetContextFromShareButton(shareButton);
-  if (tweetText) {
-    navigator.clipboard.writeText(tweetText).then(() => {
-      console.log("Tweet text copied to clipboard:", tweetText);
-      button.textContent = "D";
-      button.style.color = "red";
-      setTimeout(() => {
-        button.textContent = "C";
-        button.style.color = "";
-      }, 4000);
-    }).catch(err => {
-      console.error("Failed to copy tweet text:", err);
-    });
-  } else {
-    console.error("No tweet text found to copy!");
+  const shareButton = document.querySelector('[aria-label="Share post"]');
+  if (shareButton && !document.querySelector(".copy-tweet-btn")) {
+    const copyTweetButton = document.createElement("button");
+    copyTweetButton.className = "copy-tweet-btn";
+    copyTweetButton.textContent = "C";
+    copyTweetButton.addEventListener("click", copyTweetText);
+    shareButton.parentNode.insertBefore(copyTweetButton, shareButton.nextSibling);
   }
 }
-
 
 function appendAsidepanel(toolbar2) {
   const asidePanel = document.createElement("div");

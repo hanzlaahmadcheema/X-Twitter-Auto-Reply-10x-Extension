@@ -91,20 +91,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log(replyText);
         sendResponse({ reply: replyText });
       } else {
-        sendResponse({ reply: 'Error: No AI response received.' });
+        sendResponse({ error: 'Error: No AI response received.' });
       }
     } else {
-      sendResponse({ reply: 'Error: No AI response received.' });
+      sendResponse({ error: 'Error: No AI response received.' });
     }
   })
           .catch(error => {
             console.error('Error:', error);
-            sendResponse({ reply: 'Error generating AI response.' });
+            sendResponse({ error: 'Error generating AI response.' });
           });
           return; // Ensure the response is sent asynchronously
         } else {
           console.error("Error: Invalid model selected.");
-          sendResponse({ reply: "Error: Invalid model selected." });
+          sendResponse({ error: "Error: Invalid model selected." });
           return;
         }
 
@@ -125,10 +125,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               ? data?.candidates?.[0]?.content?.parts?.[0]?.text
               : data?.choices?.[0]?.message?.content;
 
-          sendResponse({ reply: reply || "Error: No AI response received." });
+          sendResponse({ reply: reply });
         } catch (error) {
           console.error("API Error:", error);
-          sendResponse({ reply: "Error generating AI response." });
+          sendResponse({ error: "Error generating AI response." });
         }
       }
     );
