@@ -76,17 +76,16 @@ function insertReplyText(replyText) {
   }
 }
 
-function copyTweetText() {
-  const tweetText = getTweetContext();
-  if (tweetText) {
-    navigator.clipboard.writeText(tweetText).then(() => {
-      console.log("Tweet text copied to clipboard:", tweetText);
-    }).catch(err => {
-      console.error("Failed to copy tweet text:", err);
-    });
-  } else {
-    console.error("No tweet text found to copy!");
+function getTweetContextFromShareButton(shareButton) {
+  let tweetText = "";
+  const tweetContainer = shareButton.closest('[data-testid="tweet"]');
+  const mainTweetElement = tweetContainer ? tweetContainer.querySelector('[data-testid="tweetText"]') : null;
+  if (mainTweetElement) {
+    tweetText = mainTweetElement.innerText.trim();
+    console.log(tweetText);
+    return tweetText;
   }
+  return "";
 }
 
 function appendToneSelector(toolbar) {
@@ -295,15 +294,33 @@ function stopErrorInButton(message) {
 }
 
 function insertCopyTweetButton() {
-  const shareButton = document.querySelector('[aria-label="Share post"]');
-  if (shareButton && !document.querySelector(".copy-tweet-btn")) {
-    const copyTweetButton = document.createElement("button");
-    copyTweetButton.className = "copy-tweet-btn";
-    copyTweetButton.textContent = "C";
-    copyTweetButton.addEventListener("click", copyTweetText);
-    shareButton.parentNode.insertBefore(copyTweetButton, shareButton.nextSibling);
+  const shareButtons = document.querySelectorAll('[aria-label="Share post"]');
+  shareButtons.forEach((shareButton) => {
+    if (shareButton && !shareButton.parentNode.querySelector(".copy-tweet-btn")) {
+      const copyTweetButton = document.createElement("button");
+      copyTweetButton.className = "copy-tweet-btn";
+      copyTweetButton.textContent = "C";
+      copyTweetButton.addEventListener("click", () => copyTweetText(copyTweetButton, shareButton));
+      shareButton.parentNode.insertBefore(copyTweetButton, shareButton.nextSibling);
+    }
+  });
+}
+
+function copyTweetText(button, shareButton) {
+  const tweetText = getTweetContextFromShareButton(shareButton);
+  if (tweetText) {
+    navigator.clipboard.writeText(tweetText).then(() => {
+      console.log("Tweet text copied to clipboard:", tweetText);
+      button.textContent = "D";
+      button.style.color = "red";
+    }).catch(err => {
+      console.error("Failed to copy tweet text:", err);
+    });
+  } else {
+    console.error("No tweet text found to copy!");
   }
 }
+
 
 function appendAsidepanel(toolbar2) {
   const asidePanel = document.createElement("div");
