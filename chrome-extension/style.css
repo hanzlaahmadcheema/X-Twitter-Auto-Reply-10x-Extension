@@ -81,8 +81,7 @@
   font-family: 'Chirp-Regular', sans-serif;
   font-weight: bolder;
   border-radius: 40px;
-  background-color: transparent;
-  color: var(--model-color, #1da1f2);
+  background-color: var(--model-color, #1da1f2);
   cursor: pointer;
   text-align: right;
   border: none;

@@ -60,7 +60,7 @@ function insertReplyText(replyText) {
     replyInput.value = "";
 
     const dataTransfer = new DataTransfer();
-    dataTransfer.setData("text/plain", filteredText);
+    dataTransfer.setData("text/plain", filteredText + " ");
 
     replyInput.dispatchEvent(
       new ClipboardEvent("paste", {
@@ -76,18 +76,18 @@ function insertReplyText(replyText) {
   }
 }
 
-function copyTweetText() {
-  const tweetText = getTweetContext();
-  if (tweetText) {
-    navigator.clipboard.writeText(tweetText).then(() => {
-      console.log("Tweet text copied to clipboard:", tweetText);
-    }).catch(err => {
-      console.error("Failed to copy tweet text:", err);
-    });
-  } else {
-    console.error("No tweet text found to copy!");
+function getTweetContextFromShareButton(shareButton) {
+  let tweetText = "";
+  const tweetContainer = shareButton.closest('[data-testid="tweet"]');
+  const mainTweetElement = tweetContainer ? tweetContainer.querySelector('[data-testid="tweetText"]') : null;
+  if (mainTweetElement) {
+    tweetText = mainTweetElement.innerText.trim();
+    console.log(tweetText);
+    return tweetText;
   }
+  return "";
 }
+
 
 function appendToneSelector(toolbar) {
   const container = document.createElement("div");
@@ -129,56 +129,60 @@ function appendToneSelector(toolbar) {
       <option value="joking">Joking</option>
       <option value="quirky">Quirky</option>
     </select>
-    <button class="mic-btn" >M</button>
+    <button class="mic-btn" >🎤</button>
     <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">Generate</button>
     <!--<button class="stop-btn" style="display: none;">🛑 Stop</button>-->
   `;
   toolbar.appendChild(container);
 
   const micButton = container.querySelector(".mic-btn");
-    let recognition;
+  let recognition;
 
-  micButton.addEventListener("click", () => {
-    if (micButton.textContent === "M") {
-      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = "ur-PK";
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
+micButton.addEventListener("click", () => {
+  if (micButton.textContent === "🎤") {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "ur-PK";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
-      recognition.start();
-      micButton.textContent = "D";
-      micButton.style.backgroundColor = "red";
-      console.log("Speech recognition started");
+    recognition.start();
+    micButton.textContent = "🛑";
+    micButton.style.backgroundColor = "red";
+    console.log("Speech recognition started");
 
-      recognition.onresult = (event) => {
-        const speechResult = event.results[0][0].transcript;
-        insertReplyText(speechResult);
-        console.log("Speech recognition result:", speechResult);
-      };
+    recognition.onresult = (event) => {
+      const speechResult = event.results[0][0].transcript;
+      insertReplyText(speechResult);
+      
+      console.log("Speech recognition result:", speechResult);
+    };
 
-      recognition.onerror = (event) => {
-        console.error("Speech recognition error detected: " + event.error);
-        if (event.error === "aborted") {
-          console.log("Speech recognition was aborted.");
-        } else {
-          console.log("An unexpected error occurred during speech recognition.");
-        }
-      };
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error detected: " + event.error);
+      if (event.error === "aborted") {
+        console.log("Speech recognition was aborted.");
+      } else {
+        console.log("An unexpected error occurred during speech recognition.");
+      }
+    };
 
-      recognition.onend = () => {
-        if (micButton.textContent === "D") {
-          recognition.start(); // Restart recognition if it ended unexpectedly
-        } else {
-          console.log("Speech recognition stopped");
-        }
-      };
-    } else {
-      recognition.stop();
-      micButton.textContent = "M";
-      micButton.style.backgroundColor = "";
-      console.log("Speech recognition manually stopped");
-    }
-  });
+    recognition.onend = () => {
+      if (micButton.textContent === "🛑") {
+        recognition.start(); // Restart recognition if it ended unexpectedly
+      } else {
+        console.log("Speech recognition stopped");
+      }
+    };
+  } else {
+    recognition.stop();
+    micButton.textContent = "🎤";
+    chrome.storage.sync.get(["selectedColor"], (data) => {
+      micButton.style.backgroundColor = data.selectedColor;
+    });
+    console.log("Speech recognition manually stopped");
+  }
+});
+
 
   const customPromptTextarea = container.querySelector("#customPrompt");
   const toneSelect = container.querySelector("#toneSelect");
@@ -346,13 +350,34 @@ function stopErrorInButton(message) {
 }
 
 function insertCopyTweetButton() {
-  const shareButton = document.querySelector('[aria-label="Share post"]');
-  if (shareButton && !document.querySelector(".copy-tweet-btn")) {
-    const copyTweetButton = document.createElement("button");
-    copyTweetButton.className = "copy-tweet-btn";
-    copyTweetButton.textContent = "C";
-    copyTweetButton.addEventListener("click", copyTweetText);
-    shareButton.parentNode.insertBefore(copyTweetButton, shareButton.nextSibling);
+  const shareButtons = document.querySelectorAll('[aria-label="Share post"]');
+  shareButtons.forEach((shareButton) => {
+    if (shareButton && !shareButton.parentNode.querySelector(".copy-tweet-btn")) {
+      const copyTweetButton = document.createElement("button");
+      copyTweetButton.className = "copy-tweet-btn";
+      copyTweetButton.textContent = "📋";
+      copyTweetButton.addEventListener("click", () => copyTweetText(copyTweetButton, shareButton));
+      shareButton.parentNode.insertBefore(copyTweetButton, shareButton.nextSibling);
+    }
+  });
+}
+
+function copyTweetText(button, shareButton) {
+  const tweetText = getTweetContextFromShareButton(shareButton);
+  if (tweetText) {
+    navigator.clipboard.writeText(tweetText).then(() => {
+      console.log("Tweet text copied to clipboard:", tweetText);
+      button.textContent = "✔";
+      button.style.color = "red";
+      setTimeout(() => {
+        button.textContent = "📋";
+        button.style.color = "";
+      }, 4000);
+    }).catch(err => {
+      console.error("Failed to copy tweet text:", err);
+    });
+  } else {
+    console.error("No tweet text found to copy!");
   }
 }
 
