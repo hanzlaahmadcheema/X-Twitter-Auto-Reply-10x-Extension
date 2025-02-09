@@ -50,6 +50,7 @@ function filterResponse(response) {
   return response;
 }
 
+
 function insertReplyText(replyText) {
   const filteredText = filterResponse(replyText);
   const replyInput = document.querySelector('[data-testid="tweetTextarea_0"]');
@@ -71,6 +72,31 @@ function insertReplyText(replyText) {
     );
 
     console.log("New text inserted successfully:", filteredText);
+  } else {
+    console.error("Reply input field not found!");
+  }
+}
+
+function insertCopyText(copyText) {
+  const replyInput = document.querySelector('[data-testid="tweetTextarea_0"]');
+
+  if (replyInput) {
+    replyInput.focus();
+
+    replyInput.value = "";
+
+    const dataTransfer = new DataTransfer();
+    dataTransfer.setData("text/plain", copyText + " ");
+
+    replyInput.dispatchEvent(
+      new ClipboardEvent("paste", {
+        clipboardData: dataTransfer,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+
+    console.log("New text inserted successfully:", copyText);
   } else {
     console.error("Reply input field not found!");
   }
