@@ -81,17 +81,18 @@
   font-family: 'Chirp-Regular', sans-serif;
   font-weight: bolder;
   border-radius: 40px;
-  background-color: var(--model-color, #1da1f2);
+  color: var(--model-color, #1da1f2);
+  background-color: transparent;
   cursor: pointer;
   text-align: right;
   border: none;
   transition: background-color 1s ease, transform 1s ease;
 }
 
-.mic-btn:hover {
+/* .mic-btn:hover {
   background-color: transparent;
   color: #FFFFFF;
-}
+} */
 
 /* Styling for the Stop button */
 .stop-btn {

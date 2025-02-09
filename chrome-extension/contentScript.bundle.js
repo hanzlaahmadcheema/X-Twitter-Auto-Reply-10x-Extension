@@ -129,9 +129,9 @@ function appendToneSelector(toolbar) {
       <option value="joking">Joking</option>
       <option value="quirky">Quirky</option>
     </select>
-    <button class="mic-btn" >🎤</button>
+    <button class="mic-btn" >▶</button>
     <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">Generate</button>
-    <!--<button class="stop-btn" style="display: none;">🛑 Stop</button>-->
+    <!--<button class="stop-btn" style="display: none;">🔴 Stop</button>-->
   `;
   toolbar.appendChild(container);
 
@@ -139,15 +139,15 @@ function appendToneSelector(toolbar) {
   let recognition;
 
 micButton.addEventListener("click", () => {
-  if (micButton.textContent === "🎤") {
+  if (micButton.textContent === "▶") {
     recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = "ur-PK";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
     recognition.start();
-    micButton.textContent = "🛑";
-    micButton.style.backgroundColor = "red";
+    micButton.textContent = "🔴";
+    // micButton.style.backgroundColor = "red";
     console.log("Speech recognition started");
 
     recognition.onresult = (event) => {
@@ -167,7 +167,7 @@ micButton.addEventListener("click", () => {
     };
 
     recognition.onend = () => {
-      if (micButton.textContent === "🛑") {
+      if (micButton.textContent === "🔴") {
         recognition.start(); // Restart recognition if it ended unexpectedly
       } else {
         console.log("Speech recognition stopped");
@@ -175,9 +175,9 @@ micButton.addEventListener("click", () => {
     };
   } else {
     recognition.stop();
-    micButton.textContent = "🎤";
+    micButton.textContent = "▶";
     chrome.storage.sync.get(["selectedColor"], (data) => {
-      micButton.style.backgroundColor = data.selectedColor;
+      micButton.style.color = data.selectedColor;
     });
     console.log("Speech recognition manually stopped");
   }
@@ -368,7 +368,7 @@ function copyTweetText(button, shareButton) {
     navigator.clipboard.writeText(tweetText).then(() => {
       console.log("Tweet text copied to clipboard:", tweetText);
       button.textContent = "✔";
-      button.style.color = "red";
+      button.style.color = "green";
       setTimeout(() => {
         button.textContent = "📋";
         button.style.color = "";
