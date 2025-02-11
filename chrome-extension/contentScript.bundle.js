@@ -164,50 +164,75 @@ function appendToneSelector(toolbar) {
   const micButton = container.querySelector(".mic-btn");
   let recognition;
 
-micButton.addEventListener("click", () => {
-  if (micButton.textContent === "▶") {
-    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = "ur-PK";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.start();
-    micButton.textContent = "🔴";
-    // micButton.style.backgroundColor = "red";
-    console.log("Speech recognition started");
-
-    recognition.onresult = (event) => {
-      const speechResult = event.results[0][0].transcript;
-      insertReplyText(speechResult);
-      
-      console.log("Speech recognition result:", speechResult);
+  micButton.addEventListener("click", () => {
+    let silenceTimeout;
+  
+    const resetSilenceTimeout = () => {
+      clearTimeout(silenceTimeout);
+      silenceTimeout = setTimeout(() => {
+        recognition.stop();
+        micButton.textContent = "▶";
+        chrome.storage.sync.get(["selectedColor"], (data) => {
+          micButton.style.color = data.selectedColor;
+        });
+        console.log("Speech recognition stopped due to inactivity");
+      }, 5000); // 5 seconds of silence
     };
-
-    recognition.onerror = (event) => {
-      console.error("Speech recognition error detected: " + event.error);
-      if (event.error === "aborted") {
-        console.log("Speech recognition was aborted.");
-      } else {
-        console.log("An unexpected error occurred during speech recognition.");
-      }
-    };
-
-    recognition.onend = () => {
-      if (micButton.textContent === "🔴") {
-        recognition.start(); // Restart recognition if it ended unexpectedly
-      } else {
-        console.log("Speech recognition stopped");
-      }
-    };
-  } else {
-    recognition.stop();
-    micButton.textContent = "▶";
-    chrome.storage.sync.get(["selectedColor"], (data) => {
-      micButton.style.color = data.selectedColor;
-    });
-    console.log("Speech recognition manually stopped");
-  }
-});
+  
+    if (micButton.textContent === "▶") {
+      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "ur-PK";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+  
+      recognition.start();
+      micButton.textContent = "🔴";
+      console.log("Speech recognition started");
+  
+      resetSilenceTimeout();
+  
+      recognition.onresult = (event) => {
+        let speechResult = event.results[0][0].transcript;
+        speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔");
+        insertReplyText(speechResult);
+        resetSilenceTimeout();
+        console.log("Speech recognition result:", speechResult);
+      };
+  
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error detected: " + event.error);
+        if (event.error === "no-speech") {
+          console.log("No speech detected. Stopping recognition.");
+          recognition.stop();
+          micButton.textContent = "▶";
+          chrome.storage.sync.get(["selectedColor"], (data) => {
+            micButton.style.color = data.selectedColor;
+          });
+        } else if (event.error === "aborted") {
+          console.log("Speech recognition was aborted.");
+        } else {
+          console.log("An unexpected error occurred during speech recognition.");
+        }
+      };
+  
+      recognition.onend = () => {
+        clearTimeout(silenceTimeout);
+        if (micButton.textContent === "🔴") {
+          recognition.start(); // Restart recognition if it ended unexpectedly
+        } else {
+          console.log("Speech recognition stopped");
+        }
+      };
+    } else {
+      recognition.stop();
+      clearTimeout(silenceTimeout);
+      micButton.textContent = "▶";
+      chrome.storage.sync.get(["selectedColor"], (data) => {
+        micButton.style.color = data.selectedColor;
+      });
+      console.log("Speech recognition manually stopped");
+    }
+  });
 
 
   const customPromptTextarea = container.querySelector("#customPrompt");
