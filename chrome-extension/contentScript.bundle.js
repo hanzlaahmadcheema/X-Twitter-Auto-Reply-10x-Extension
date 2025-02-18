@@ -379,7 +379,7 @@ function showErrorInButton(message) {
         generateButton.style.color = "#fff";
       });
       generateButton.disabled = false;
-    }, 5000);
+    }, 3000);
   }
 }
 
