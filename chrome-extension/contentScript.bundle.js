@@ -142,7 +142,6 @@ function appendToneSelector(toolbar) {
       <option value="engaging">Engaging</option>
       <option value="curious">Curious</option>
       <option value="neutral">Neutral</option>
-      <option value="friendly">Friendly</option>
       <option value="witty">Witty</option>
       <option value="joking">Joking</option>
       <option value="quirky">Quirky</option>
@@ -152,6 +151,7 @@ function appendToneSelector(toolbar) {
       <option value="straightforward">Straight</option>
       <option value="professional">Profesnl</option>
       <option value="supportive">Suportive</option>
+      <option value="friendly">Friendly</option>
       <option value="agreeable">Agreeable</option>
       <option value="casual">Casual</option>
     </select>
