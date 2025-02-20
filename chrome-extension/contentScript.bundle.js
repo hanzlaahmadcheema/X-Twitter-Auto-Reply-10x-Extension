@@ -142,18 +142,18 @@ function appendToneSelector(toolbar) {
       <option value="engaging">Engaging</option>
       <option value="curious">Curious</option>
       <option value="neutral">Neutral</option>
+      <option value="friendly">Friendly</option>
+      <option value="witty">Witty</option>
+      <option value="joking">Joking</option>
+      <option value="quirky">Quirky</option>
       <option value="humorous">Humrous</option>
+      <option value="sarcastic">Sarcastic</option>
+      <option value="negative">Negative</option>
+      <option value="straightforward">Straight</option>
       <option value="professional">Profesnl</option>
       <option value="supportive">Suportive</option>
       <option value="agreeable">Agreeable</option>
-      <option value="sarcastic">Sarcastic</option>
-      <option value="negative">Negative</option>
       <option value="casual">Casual</option>
-      <option value="friendly">Friendly</option>
-      <option value="witty">Witty</option>
-      <option value="straightforward">Straight</option>
-      <option value="joking">Joking</option>
-      <option value="quirky">Quirky</option>
     </select>
     <button class="mic-btn" >▶</button>
     <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">Generate</button>
