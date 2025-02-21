@@ -154,6 +154,7 @@ function appendToneSelector(toolbar) {
       <option value="friendly">Friendly</option>
       <option value="agreeable">Agreeable</option>
       <option value="casual">Casual</option>
+      <option value="optimal">Optimal</option>
     </select>
     <button class="mic-btn" >▶</button>
     <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">Generate</button>
