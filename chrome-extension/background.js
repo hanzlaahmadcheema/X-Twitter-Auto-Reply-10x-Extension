@@ -196,7 +196,7 @@ function sendNotification() {
 }
 
 const tonePrompts = {  
-  casual: "Craft a casual and conversational response to the tweet '{text}'. Keep the tone light, engaging, and natural, ensuring it flows well. The response should feel like a real person is replying—sometimes agreeing, sometimes adding a playful remark, asking a question, or sharing a brief thought. Avoid hashtags, emojis, and interjections like 'Wow' or 'Huh'. Use the {lang} language and keep it gender-neutral. Aim for a length of approximately {length}. Use the real-time context of the tweet to generate the response. {customPrompt}",
+  casual: "Craft a casual and conversational response to the tweet '{text}'. Keep the tone light, engaging, and natural, ensuring it flows well. The response should feel like a real person is replying—sometimes agreeing, sometimes adding a playful remark, or sharing a brief thought. Avoid hashtags, emojis, and interjections like 'Wow' or 'Huh'. Use the {lang} language and keep it gender-neutral. Aim for a length of approximately {length}. Use the real-time context of the tweet to generate the response. {customPrompt}",
 
   straightforward: "Craft a direct and clear response to this tweet: '{text}'. Ensure the reply is concise yet complete, fully conveying the intended meaning without unnecessary elaboration. Avoid friendliness, casual language, or indirect phrasing—keep it strictly professional and to the point. Do not engage in small talk or address anything outside the scope of the tweet. Maintain a neutral yet firm tone. Write in {lang}, avoid hashtags, emojis, and interjections, and keep the reply gender-neutral. Keep it within {length}. Use the real-time context of the tweet to generate the response. {customPrompt}",
 
