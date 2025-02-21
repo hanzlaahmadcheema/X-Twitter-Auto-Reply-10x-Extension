@@ -202,13 +202,13 @@ const tonePrompts = {
  
   straightforward: "Respond to '{text}' with a direct and clear reply. Keep it professional and to the point without unnecessary elaboration. No casual language or small talk. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
 
-  professional: "Write a formal and respectful reply to '{text}', adding insight or analysis without repetition. Keep the language structured and articulate. Use {lang}, maintain gender neutrality, and exclude hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  professional: "Reply to '{text}' with a respectful and articulate response. Keep it formal yet accessible, ensuring clarity and professionalism. Avoid rewording the tweet—add value with relevant insight. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
 
   friendly: "Craft a warm and welcoming response to '{text}', making the interaction feel natural and engaging. Avoid generic phrases—keep it personal and authentic. Use {lang}, stay gender-neutral, and exclude hashtags, emojis, or interjections. Keep it concise within {length}. Use the real-time context of the tweet. {customPrompt}",
 
   supportive: "Write a kind and encouraging response to '{text}', showing empathy and understanding. Offer meaningful encouragement rather than just agreement. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
 
-  witty: "Create a clever and sharp reply to '{text}', using humor or wordplay to add personality. Keep it relevant and engaging, not forced. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  witty: "Compose a sharp and clever response to '{text}', using intelligent wordplay or humor while staying relevant. Ensure its engaging but not overly casual. Use {lang}, maintain gender neutrality, and exclude hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
 
   humorous: "Write a funny and engaging response to '{text}', using playful humor while keeping it appropriate. Avoid forced jokes or exaggeration. Use {lang}, stay gender-neutral, and exclude hashtags, emojis, or interjections. Keep it under {length}. Use the real-time context of the tweet. {customPrompt}",
 
@@ -238,7 +238,7 @@ const tonePrompts = {
 
   critical: "Provide a balanced and constructive critique in response to '{text}', maintaining a respectful and logical tone. Avoid hostility or exaggeration. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
 
-  neutral: "Write an objective and balanced reply to '{text}', avoiding strong opinions or emotions. Keep the tone measured and unbiased. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  neutral: "Reply to '{text}' with a balanced and objective response. Keep it clear, concise, and neutral without unnecessary elaboration or personal opinions. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
 
   polite: "Respond to '{text}' in a courteous and respectful manner, ensuring the tone is kind and considerate. Avoid unnecessary elaboration. Use {lang}, stay gender-neutral, and exclude hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
 
