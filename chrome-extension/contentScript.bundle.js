@@ -114,6 +114,148 @@ function getTweetContextFromShareButton(shareButton) {
   return "";
 }
 
+function captureTweetScreenshot(shareButton) {
+  const tweetElement = shareButton.closest('[data-testid="tweet"]');
+  if (!tweetElement) {
+    console.error("Tweet not found!");
+    return;
+  }
+
+  console.log("Capturing screenshot...");
+
+  // Send message to background.js to inject html2canvas
+  chrome.runtime.sendMessage({ action: "injectHtml2Canvas" }, (response) => {
+    if (response?.success) {
+      console.log("html2canvas injected successfully.");
+      takeScreenshot(tweetElement);
+    } else {
+      console.error("Error injecting html2canvas:", response?.error);
+    }
+  });
+}
+
+// Function to take a screenshot with improved styling
+function takeScreenshot(tweetElement) {
+  setTimeout(() => {
+    if (typeof html2canvas === "undefined") {
+      console.error("html2canvas is still undefined!");
+      return;
+    }
+
+    // Apply temporary styles for better formatting
+    const tempStyles = document.createElement("style");
+    tempStyles.innerHTML = `
+      /* Hide browser UI elements */
+      [role="banner"], nav, .css-1dbjc4n.r-14lw9ot { display: none !important; } 
+
+      /* Set background color for readability */
+      body, html { background: white !important; } 
+
+      /* Ensure images are fully visible */
+      img, video { 
+        filter: none !important; 
+        opacity: 1 !important; 
+        visibility: visible !important; 
+      } 
+
+      /* Improve text readability */
+      [data-testid="tweetText"] { 
+        color: black !important; 
+        font-size: 16px !important; 
+        line-height: 1.5 !important; 
+      } 
+
+      /* Add padding and margin for better layout */
+      [data-testid="tweet"] {
+        padding: 20px !important; 
+        margin-bottom: 15px !important; 
+        border-radius: 10px !important; 
+        background: white !important;
+      }
+
+      /* Space out tweet images */
+      [data-testid="tweet"] img {
+        margin-top: 10px !important; 
+        border-radius: 8px !important; 
+        max-width: 100% !important; 
+      }
+
+      /* Add padding between username and tweet text */
+      [data-testid="User-Name"] {
+        margin-bottom: 10px !important;
+      }
+      
+      .css-175oi2r button {
+        display: none !important;
+      }
+
+      [aria-label="Media Harvest"] {
+      display: none !important;
+      }
+
+      [role="group"] {
+      display: none !important;
+      }
+
+      a {
+      color: black !important;
+      }
+    `;
+    document.head.appendChild(tempStyles);
+
+    // Capture the tweet element
+    html2canvas(tweetElement, {
+      scale: 3, // Higher scale for better quality
+      useCORS: true, // Ensure cross-origin images load
+      logging: true, // Debugging
+      backgroundColor: null // Transparent background
+    }).then((canvas) => {
+      document.head.removeChild(tempStyles); // Remove temporary styles
+
+      const image = canvas.toDataURL("image/png");
+
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const filename = `tweet-${timestamp}.png`;
+
+      // Create a download link
+      const link = document.createElement("a");
+      link.href = image;
+      link.download = filename;
+      link.click();
+
+      console.log(`Screenshot saved: ${filename}`);
+
+      // Show a success message to the user
+      showSuccessMessage("Screenshot saved successfully!");
+    });
+  }, 500);
+}
+
+// Function to show a small success notification
+function showSuccessMessage(message) {
+  const notification = document.createElement("div");
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #1DA1F2;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    z-index: 10000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  `;
+  document.body.appendChild(notification);
+
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
+
+
 
 function appendToneSelector(toolbar) {
   const container = document.createElement("div");
@@ -403,13 +545,46 @@ function stopErrorInButton(message) {
 
 function insertCopyTweetButton() {
   const shareButtons = document.querySelectorAll('[aria-label="Share post"]');
+
   shareButtons.forEach((shareButton) => {
-    if (shareButton && !shareButton.parentNode.querySelector(".copy-tweet-btn")) {
+    const parent = shareButton.parentNode;
+
+    // Avoid duplicate buttons
+    if (!parent.querySelector(".copy-tweet-btn") && !parent.querySelector(".screenshot-btn")) {
+      
+      // 📋 Copy Tweet Button
       const copyTweetButton = document.createElement("button");
       copyTweetButton.className = "copy-tweet-btn";
-      copyTweetButton.textContent = "📋";
+      copyTweetButton.textContent = "📋"; // Copy Icon
+      copyTweetButton.style.cssText = `
+        padding: 6px;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-left: 8px;
+        font-size: 14px;
+      `;
       copyTweetButton.addEventListener("click", () => copyTweetText(copyTweetButton, shareButton));
-      shareButton.parentNode.insertBefore(copyTweetButton, shareButton.nextSibling);
+
+      // 📸 Screenshot Tweet Button
+      const screenshotButton = document.createElement("button");
+      screenshotButton.className = "screenshot-btn";
+      screenshotButton.textContent = "📸"; // Camera Icon
+      screenshotButton.style.cssText = `
+        padding: 6px;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-left: 8px;
+        font-size: 14px;
+      `;
+      screenshotButton.addEventListener("click", () => captureTweetScreenshot(shareButton));
+
+      // Insert buttons after the Share button
+      parent.insertBefore(copyTweetButton, shareButton.nextSibling);
+      parent.insertBefore(screenshotButton, shareButton.nextSibling);
     }
   });
 }
