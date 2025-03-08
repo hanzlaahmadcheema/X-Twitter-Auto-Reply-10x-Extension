@@ -71,9 +71,9 @@ function insertReplyText(replyText) {
       })
     );
 
-    console.log("New text inserted successfully:", filteredText);
+    showSuccessMessage("New text inserted successfully:", filteredText);
   } else {
-    console.error("Reply input field not found!");
+    showSuccessMessage("Reply input field not found!");
   }
 }
 
@@ -96,9 +96,9 @@ function insertCopyText(copyText) {
       })
     );
 
-    console.log("New text inserted successfully:", copyText);
+    showSuccessMessage("New text inserted successfully:", copyText);
   } else {
-    console.error("Reply input field not found!");
+    showSuccessMessage("Reply input field not found!");
   }
 }
 
@@ -117,11 +117,11 @@ function getTweetContextFromShareButton(shareButton) {
 function captureTweetScreenshot(shareButton) {
   const tweetElement = shareButton.closest('[data-testid="tweet"]');
   if (!tweetElement) {
-    console.error("Tweet not found!");
+    showSuccessMessage("Tweet not found!");
     return;
   }
 
-  console.log("Capturing screenshot...");
+  showSuccessMessage("Capturing screenshot...");
 
   // Send message to background.js to inject html2canvas
   chrome.runtime.sendMessage({ action: "injectHtml2Canvas" }, (response) => {
@@ -235,12 +235,12 @@ function showSuccessMessage(message) {
   notification.style.cssText = `
     position: fixed;
     bottom: 20px;
-    right: 20px;
+    right: 40pc;
     background: #1DA1F2;
     color: white;
-    padding: 10px 15px;
+    padding: 20px 25px;
     border-radius: 5px;
-    font-size: 14px;
+    font-size: 16px;
     z-index: 10000;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   `;
@@ -317,23 +317,23 @@ function startSpeechRecognition() {
 
     recognition.onstart = () => {
       micButton.textContent = "🔴"; // Update button UI
-      console.log("🎤 Speech recognition started...");
+      showSuccessMessage("🎤 Speech recognition started...");
     };
 
     recognition.onresult = (event) => {
       let speechResult = event.results[0][0].transcript;
       speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
       insertReplyText(speechResult);
-      console.log("✅ Speech recognized:", speechResult);
+      showSuccessMessage("✅ Speech recognized:", speechResult);
     };
 
     recognition.onerror = (event) => {
-      console.error("❌ Speech recognition error:", event.error);
+      showSuccessMessage("❌ Speech recognition error:", event.error);
       stopSpeechRecognition(); // Stop only on a real error
     };
 
     recognition.onend = () => {
-      console.log("⚠️ Speech recognition stopped automatically. Restarting...");
+      showSuccessMessage("⚠️ Speech recognition stopped automatically. Restarting...");
       if (micButton.textContent === "🔴") {
         recognition.start(); // Restart recognition if still active
       }
@@ -348,7 +348,7 @@ function stopSpeechRecognition() {
   if (recognition) {
     recognition.stop();
     micButton.textContent = "▶"; // Reset button UI
-    console.log("🛑 Speech recognition manually stopped.");
+    showSuccessMessage("🛑 Speech recognition manually stopped.");
   }
 }
 
@@ -588,15 +588,18 @@ function copyTweetText(button, shareButton) {
       console.log("Tweet text copied to clipboard:", tweetText);
       button.textContent = "✔";
       button.style.color = "green";
+      showSuccessMessage("Text Copied to clipboard!")
       setTimeout(() => {
         button.textContent = "📋";
         button.style.color = "";
       }, 4000);
     }).catch(err => {
       console.error("Failed to copy tweet text:", err);
+      showSuccessMessage("Failed to copy tweet text:", err)
     });
   } else {
     console.error("No tweet text found to copy!");
+    showSuccessMessage("No tweet text found to copy!");
   }
 }
 
