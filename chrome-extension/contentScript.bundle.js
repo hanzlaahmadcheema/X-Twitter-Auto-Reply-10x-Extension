@@ -304,79 +304,95 @@ function appendToneSelector(toolbar) {
   `;
   toolbar.appendChild(container);
 
-  const micButton = container.querySelector(".mic-btn");
-  let recognition;
-
-  micButton.addEventListener("click", () => {
-    let silenceTimeout;
+    const micButton = document.querySelector(".mic-btn");
   
-    const resetSilenceTimeout = () => {
-      clearTimeout(silenceTimeout);
-      silenceTimeout = setTimeout(() => {
-        recognition.stop();
-        micButton.textContent = "▶";
-        chrome.storage.sync.get(["selectedColor"], (data) => {
-          micButton.style.color = data.selectedColor;
-        });
-        console.log("Speech recognition stopped due to inactivity");
-      }, 5000); // 5 seconds of silence
-    };
-  
-    if (micButton.textContent === "▶") {
-      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = "ur-PK";
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-  
-      recognition.start();
-      micButton.textContent = "🔴";
-      console.log("Speech recognition started");
-  
-      resetSilenceTimeout();
-  
-      recognition.onresult = (event) => {
-        let speechResult = event.results[0][0].transcript;
-        speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔");
-        insertReplyText(speechResult);
-        resetSilenceTimeout();
-        console.log("Speech recognition result:", speechResult);
-      };
-  
-      recognition.onerror = (event) => {
-        console.error("Speech recognition error detected: " + event.error);
-        if (event.error === "no-speech") {
-          console.log("No speech detected. Stopping recognition.");
-          recognition.stop();
-          micButton.textContent = "▶";
-          chrome.storage.sync.get(["selectedColor"], (data) => {
-            micButton.style.color = data.selectedColor;
-          });
-        } else if (event.error === "aborted") {
-          console.log("Speech recognition was aborted.");
-        } else {
-          console.log("An unexpected error occurred during speech recognition.");
-        }
-      };
-  
-      recognition.onend = () => {
-        clearTimeout(silenceTimeout);
-        if (micButton.textContent === "🔴") {
-          recognition.start(); // Restart recognition if it ended unexpectedly
-        } else {
-          console.log("Speech recognition stopped");
-        }
-      };
-    } else {
-      recognition.stop();
-      clearTimeout(silenceTimeout);
-      micButton.textContent = "▶";
-      chrome.storage.sync.get(["selectedColor"], (data) => {
-        micButton.style.color = data.selectedColor;
-      });
-      console.log("Speech recognition manually stopped");
+    if (!micButton) {
+      console.error("⚠ micButton not found! Ensure the element exists.");
+      return;
     }
-  });
-
+  
+    let recognition;
+    let spacePressCount = 0;
+    let spaceTimeout;
+    
+    // Function to start speech recognition
+    function startSpeechRecognition() {
+      if (!window.webkitSpeechRecognition) {
+        console.error("❌ Web Speech API is not supported in this browser.");
+        return;
+      }
+  
+      if (!recognition) {
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = "ur-PK"; // Set language to Urdu
+        recognition.interimResults = false; // Don't show partial results
+        recognition.maxAlternatives = 1; // Get only the best result
+  
+        recognition.onstart = () => {
+          micButton.textContent = "🔴"; // Update button UI
+          console.log("🎤 Speech recognition started...");
+        };
+  
+        recognition.onresult = (event) => {
+          let speechResult = event.results[0][0].transcript;
+          speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
+          insertReplyText(speechResult);
+          console.log("✅ Speech recognized:", speechResult);
+        };
+  
+        recognition.onspeechend = () => {
+          console.log("⏳ No speech detected, stopping recognition...");
+          stopSpeechRecognition();
+        };
+  
+        recognition.onerror = (event) => {
+          console.error("❌ Speech recognition error:", event.error);
+          stopSpeechRecognition();
+        };
+  
+        recognition.onend = () => {
+          console.log("🛑 Speech recognition stopped.");
+          micButton.textContent = "▶"; // Reset button UI
+        };
+      }
+  
+      console.log("🔍 Starting recognition...");
+      recognition.start();
+    }
+  
+    // Function to stop speech recognition
+    function stopSpeechRecognition() {
+      if (recognition) {
+        console.log("🚫 Stopping recognition...");
+        recognition.stop();
+        micButton.textContent = "▶"; // Reset button UI
+      }
+    }
+  
+    // Mic button event listener
+    micButton.addEventListener("click", () => {
+      if (micButton.textContent === "▶") {
+        startSpeechRecognition();
+      } else {
+        stopSpeechRecognition();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.code === "Space") {
+        spacePressCount++;
+  
+        if (spacePressCount === 2) {
+          event.preventDefault(); // Prevent unwanted scrolling
+          micButton.click(); // Simulate mic button click
+          spacePressCount = 0; // Reset counter
+        }
+  
+        clearTimeout(spaceTimeout);
+        spaceTimeout = setTimeout(() => {
+          spacePressCount = 0; // Reset counter if not pressed twice in quick succession
+        }, 300);
+      }
+    });  
 
   const customPromptTextarea = container.querySelector("#customPrompt");
   const toneSelect = container.querySelector("#toneSelect");
