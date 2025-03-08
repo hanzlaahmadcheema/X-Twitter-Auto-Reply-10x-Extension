@@ -220,7 +220,7 @@ const tonePrompts = {
 
   professional: "Craft a professional response to '{text}' with clarity and respect. Keep it formal yet accessible, avoiding repetition or filler. Add value with insights instead of just agreeing. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
 
-  friendly: "Reply to '{text}' in a warm and welcoming way. Keep it personal yet not overly familiar. Make the interaction feel natural and engaging. Avoid generic phrases and keep the tone inviting. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  disagree: "Respond to '{text}' with a firm but respectful disagreement. Clearly express a differing perspective without being rude or dismissive. Keep the response logical and well-structured, ensuring it challenges the idea rather than the person. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
 
   supportive: "Respond to '{text}' with kindness and understanding. Offer encouragement or a thoughtful perspective rather than just agreeing. Keep it genuine and uplifting. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
 

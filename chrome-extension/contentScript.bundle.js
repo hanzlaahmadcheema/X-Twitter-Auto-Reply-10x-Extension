@@ -289,7 +289,7 @@ function appendToneSelector(toolbar) {
       <option value="straightforward">Straight</option>
       <option value="professional">Profesnl</option>
       <option value="supportive">Suportive</option>
-      <option value="friendly">Friendly</option>
+      <option value="disagree">Disagree</option>
       <option value="agreeable">Agreeable</option>
       <option value="casual">Casual</option>
       <option value="optimal">Optimal</option>
