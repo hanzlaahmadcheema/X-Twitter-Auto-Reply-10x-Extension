@@ -176,6 +176,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     currentAlarmType = null; // Reset the current alarm type
     console.log("Alarms stopped successfully.");
   }
+  if (message.action === "injectHtml2Canvas") {
+    chrome.scripting.executeScript(
+      {
+        target: { tabId: sender.tab.id },
+        files: ["libs/html2canvas.min.js"] // Ensure this file exists in your extension directory
+      },
+      () => {
+        if (chrome.runtime.lastError) {
+          sendResponse({ success: false, error: chrome.runtime.lastError.message });
+        } else {
+          sendResponse({ success: true });
+        }
+      }
+    );
+    return true; // Keep message channel open
+  }
 });
 
 function sendNotification() {

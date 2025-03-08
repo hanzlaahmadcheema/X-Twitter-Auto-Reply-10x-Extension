@@ -3,10 +3,8 @@
     "name": "Twitter Reply Assistant",
     "version": "3.0",
     "description": "Generate replies with contextual tones on Twitter.",
-    "permissions": ["activeTab", "scripting", "storage", "notifications"],
-    "host_permissions": [
-      "http://localhost:3000/*"
-    ],
+    "permissions": ["activeTab", "scripting", "storage", "notifications", "downloads"],
+    "host_permissions": ["<all_urls>"],
     "background": {
       "service_worker": "background.js"
     },
@@ -19,8 +17,8 @@
     ],
     "web_accessible_resources": [
     {
-      "resources": ["style.css", "popup.css"],
-      "matches": ["*://x.com/*", "*://twitter.com/*"]
+      "resources": ["style.css", "popup.css", "libs/html2canvas.min.js"],
+      "matches": ["<all_urls>"]
     }
   ],
     "action": {
