@@ -327,26 +327,23 @@ function startSpeechRecognition() {
       console.log("✅ Speech recognized:", speechResult);
     };
 
-    recognition.onspeechend = () => {
-      console.log("⏳ No speech detected, stopping recognition...");
-      // Do not stop automatically
-    };
-
     recognition.onerror = (event) => {
       console.error("❌ Speech recognition error:", event.error);
-      stopSpeechRecognition(); // Stop on error
+      stopSpeechRecognition(); // Stop only on a real error
     };
 
     recognition.onend = () => {
-      console.log("🛑 Speech recognition stopped.");
-      // Do not stop UI updates here, only manually stop
+      console.log("⚠️ Speech recognition stopped automatically. Restarting...");
+      if (micButton.textContent === "🔴") {
+        recognition.start(); // Restart recognition if still active
+      }
     };
   }
 
   recognition.start();
 }
 
-// Function to stop speech recognition (Manually Only)
+// Function to stop speech recognition manually
 function stopSpeechRecognition() {
   if (recognition) {
     recognition.stop();
@@ -363,6 +360,8 @@ micButton.addEventListener("click", () => {
     stopSpeechRecognition();
   }
 });
+
+
     document.addEventListener("keydown", (event) => {
       if (event.code === "Space") {
         spacePressCount++;
