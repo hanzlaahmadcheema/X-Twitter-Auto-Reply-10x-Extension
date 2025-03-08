@@ -173,13 +173,6 @@ function takeScreenshot(tweetElement) {
         background: white !important;
       }
 
-      /* Space out tweet images */
-      [data-testid="tweet"] img {
-        margin-top: 10px !important; 
-        border-radius: 8px !important; 
-        max-width: 100% !important; 
-      }
-
       /* Add padding between username and tweet text */
       [data-testid="User-Name"] {
         margin-bottom: 10px !important;
@@ -198,6 +191,9 @@ function takeScreenshot(tweetElement) {
       }
 
       a {
+      color: black !important;
+      }
+      span {
       color: black !important;
       }
     `;
@@ -256,7 +252,7 @@ function showSuccessMessage(message) {
 }
 
 
-
+//#region Tone Prompts
 function appendToneSelector(toolbar) {
   const container = document.createElement("div");
   container.className = "tone-selector-container";
@@ -304,79 +300,69 @@ function appendToneSelector(toolbar) {
   `;
   toolbar.appendChild(container);
 
-    const micButton = document.querySelector(".mic-btn");
-  
-    if (!micButton) {
-      console.error("⚠ micButton not found! Ensure the element exists.");
-      return;
-    }
-  
-    let recognition;
-    let spacePressCount = 0;
-    let spaceTimeout;
-    
-    // Function to start speech recognition
-    function startSpeechRecognition() {
-      if (!window.webkitSpeechRecognition) {
-        console.error("❌ Web Speech API is not supported in this browser.");
-        return;
-      }
-  
-      if (!recognition) {
-        recognition = new webkitSpeechRecognition();
-        recognition.lang = "ur-PK"; // Set language to Urdu
-        recognition.interimResults = false; // Don't show partial results
-        recognition.maxAlternatives = 1; // Get only the best result
-  
-        recognition.onstart = () => {
-          micButton.textContent = "🔴"; // Update button UI
-          console.log("🎤 Speech recognition started...");
-        };
-  
-        recognition.onresult = (event) => {
-          let speechResult = event.results[0][0].transcript;
-          speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
-          insertReplyText(speechResult);
-          console.log("✅ Speech recognized:", speechResult);
-        };
-  
-        recognition.onspeechend = () => {
-          console.log("⏳ No speech detected, stopping recognition...");
-          stopSpeechRecognition();
-        };
-  
-        recognition.onerror = (event) => {
-          console.error("❌ Speech recognition error:", event.error);
-          stopSpeechRecognition();
-        };
-  
-        recognition.onend = () => {
-          console.log("🛑 Speech recognition stopped.");
-          micButton.textContent = "▶"; // Reset button UI
-        };
-      }
-  
-      console.log("🔍 Starting recognition...");
-      recognition.start();
-    }
-  
-    // Function to stop speech recognition
-    function stopSpeechRecognition() {
-      if (recognition) {
-        console.log("🚫 Stopping recognition...");
-        recognition.stop();
-        micButton.textContent = "▶"; // Reset button UI
-      }
-    }
-  
-    // Mic button event listener
-    micButton.addEventListener("click", () => {
-      if (micButton.textContent === "▶") {
-        startSpeechRecognition();
-      } else {
-        stopSpeechRecognition();
-      }
-    });
+//#region Mic Setting
+
+const micButton = document.querySelector(".mic-btn");
+let recognition = null;
+let spacePressCount = 0;
+let spaceTimeout;
+
+// Function to start speech recognition
+function startSpeechRecognition() {
+  if (!recognition) {
+    recognition = new webkitSpeechRecognition(); // Use Chrome's API
+    recognition.lang = "ur-PK"; // Set language to Urdu
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      micButton.textContent = "🔴"; // Update button UI
+      console.log("🎤 Speech recognition started...");
+    };
+
+    recognition.onresult = (event) => {
+      let speechResult = event.results[0][0].transcript;
+      speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
+      insertReplyText(speechResult);
+      console.log("✅ Speech recognized:", speechResult);
+    };
+
+    recognition.onspeechend = () => {
+      console.log("⏳ No speech detected, stopping recognition...");
+      // Do not stop automatically
+    };
+
+    recognition.onerror = (event) => {
+      console.error("❌ Speech recognition error:", event.error);
+      stopSpeechRecognition(); // Stop on error
+    };
+
+    recognition.onend = () => {
+      console.log("🛑 Speech recognition stopped.");
+      // Do not stop UI updates here, only manually stop
+    };
+  }
+
+  recognition.start();
+}
+
+// Function to stop speech recognition (Manually Only)
+function stopSpeechRecognition() {
+  if (recognition) {
+    recognition.stop();
+    micButton.textContent = "▶"; // Reset button UI
+    console.log("🛑 Speech recognition manually stopped.");
+  }
+}
+
+// Mic button event listener (Manually stop only)
+micButton.addEventListener("click", () => {
+  if (micButton.textContent === "▶") {
+    startSpeechRecognition();
+  } else if (micButton.textContent === "🔴") {
+    stopSpeechRecognition();
+  }
+});
     document.addEventListener("keydown", (event) => {
       if (event.code === "Space") {
         spacePressCount++;
@@ -401,7 +387,6 @@ function appendToneSelector(toolbar) {
   // const stopButton = container.querySelector(".stop-btn");
 
   let isGenerating = false;
-  let controller;
 
   // Restore last selected values
   chrome.storage.sync.get(["lastTone", "lastLength", "selectedColor"], (data) => {
@@ -436,8 +421,6 @@ function appendToneSelector(toolbar) {
     const tweetContext = getTweetContext();
     const { accountUserName, accountName } = getReplyAccountDetails();
 
-    controller = new AbortController();
-    const signal = controller.signal;
 
     chrome.runtime.sendMessage(
       {
@@ -512,13 +495,6 @@ function appendToneSelector(toolbar) {
     }
   }
   
-  // stopButton.addEventListener("click", () => {
-  //   if (controller) {
-  //     controller.abort();
-  //     showErrorInButton("Generation Stopped.");
-  //     stopButton.style.display = "none";
-  //   }
-  // });
 }
 
 function showErrorInButton(message) {
@@ -595,6 +571,7 @@ function insertCopyTweetButton() {
         cursor: pointer;
         margin-left: 8px;
         font-size: 14px;
+        background-color: transparent;
       `;
       screenshotButton.addEventListener("click", () => captureTweetScreenshot(shareButton));
 
