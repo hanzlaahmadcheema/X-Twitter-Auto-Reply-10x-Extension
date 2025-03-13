@@ -114,119 +114,19 @@ function getTweetContextFromShareButton(shareButton) {
   return "";
 }
 
-function captureTweetScreenshot(shareButton) {
+//#region Get tweet URL
+function getTweetUrl(shareButton) {
   const tweetElement = shareButton.closest('[data-testid="tweet"]');
-  if (!tweetElement) {
-    showSuccessMessage("Tweet not found!");
-    return;
-  }
+  const tweetLink = tweetElement?.querySelector('a[href*="/status/"]');
 
-  showSuccessMessage("Capturing screenshot...");
-
-  // Send message to background.js to inject html2canvas
-  chrome.runtime.sendMessage({ action: "injectHtml2Canvas" }, (response) => {
-    if (response?.success) {
-      console.log("html2canvas injected successfully.");
-      takeScreenshot(tweetElement);
-    } else {
-      console.error("Error injecting html2canvas:", response?.error);
-    }
-  });
-}
-
-// Function to take a screenshot with improved styling
-function takeScreenshot(tweetElement) {
-  setTimeout(() => {
-    if (typeof html2canvas === "undefined") {
-      console.error("html2canvas is still undefined!");
-      return;
-    }
-
-    // Apply temporary styles for better formatting
-    const tempStyles = document.createElement("style");
-    tempStyles.innerHTML = `
-      /* Hide browser UI elements */
-      [role="banner"], nav, .css-1dbjc4n.r-14lw9ot { display: none !important; } 
-
-      /* Set background color for readability */
-      body, html { background: white !important; } 
-
-      /* Ensure images are fully visible */
-      img, video { 
-        filter: none !important; 
-        opacity: 1 !important; 
-        visibility: visible !important; 
-      } 
-
-      /* Improve text readability */
-      [data-testid="tweetText"] { 
-        color: black !important; 
-        font-size: 16px !important; 
-        line-height: 1.5 !important; 
-      } 
-
-      /* Add padding and margin for better layout */
-      [data-testid="tweet"] {
-        padding: 20px !important; 
-        margin-bottom: 15px !important; 
-        border-radius: 10px !important; 
-        background: white !important;
-      }
-
-      /* Add padding between username and tweet text */
-      [data-testid="User-Name"] {
-        margin-bottom: 10px !important;
-      }
+  if (tweetLink) {
+    return `https://twitter.com${tweetLink.getAttribute("href")}`;
       
-      .css-175oi2r button {
-        display: none !important;
-      }
-
-      [aria-label="Media Harvest"] {
-      display: none !important;
-      }
-
-      [role="group"] {
-      display: none !important;
-      }
-
-      a {
-      color: black !important;
-      }
-      span {
-      color: black !important;
-      }
-    `;
-    document.head.appendChild(tempStyles);
-
-    // Capture the tweet element
-    html2canvas(tweetElement, {
-      scale: 3, // Higher scale for better quality
-      useCORS: true, // Ensure cross-origin images load
-      logging: true, // Debugging
-      backgroundColor: null // Transparent background
-    }).then((canvas) => {
-      document.head.removeChild(tempStyles); // Remove temporary styles
-
-      const image = canvas.toDataURL("image/png");
-
-      // Generate filename with timestamp
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const filename = `tweet-${timestamp}.png`;
-
-      // Create a download link
-      const link = document.createElement("a");
-      link.href = image;
-      link.download = filename;
-      link.click();
-
-      console.log(`Screenshot saved: ${filename}`);
-
-      // Show a success message to the user
-      showSuccessMessage("Screenshot saved successfully!");
-    });
-  }, 500);
+  }
+  return null;
 }
+
+
 
 // Function to show a small success notification
 function showSuccessMessage(message) {
@@ -534,6 +434,7 @@ function stopErrorInButton(message) {
   }
 }
 
+//#region Screenshot
 function insertCopyTweetButton() {
   const shareButtons = document.querySelectorAll('[aria-label="Share post"]');
 
@@ -572,13 +473,32 @@ function insertCopyTweetButton() {
         font-size: 14px;
         background-color: transparent;
       `;
-      screenshotButton.addEventListener("click", () => captureTweetScreenshot(shareButton));
+      screenshotButton.addEventListener("click", () => requestTweetScreenshot(shareButton));
 
       // Insert buttons after the Share button
       parent.insertBefore(copyTweetButton, shareButton.nextSibling);
       parent.insertBefore(screenshotButton, shareButton.nextSibling);
     }
   });
+}
+
+function requestTweetScreenshot(shareButton) {
+  const tweetElement = shareButton.closest('[data-testid="tweet"]');
+  if (!tweetElement) {
+    console.error("❌ Could not find tweet.");
+    return;
+  }
+
+  const tweetUrlElement = tweetElement.querySelector('a[href*="/status/"]');
+  if (!tweetUrlElement) {
+    console.error("❌ Tweet URL not found.");
+    return;
+  }
+
+  const tweetUrl = tweetUrlElement.href;
+  console.log(`📸 Extracted Tweet URL: ${tweetUrl}`);
+
+  chrome.runtime.sendMessage({ action: "captureTweetScreenshot", tweetUrl });
 }
 
 function copyTweetText(button, shareButton) {

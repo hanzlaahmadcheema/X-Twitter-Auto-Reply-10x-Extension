@@ -13,6 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const alarmTimeInput = document.getElementById("alarmTime");
   const startAlarmButton = document.getElementById("startAlarm");
   const stopAlarmButton = document.getElementById("stopAlarm");
+  const apiKeyInput = document.getElementById("tweetpikApiKey");
+  const saveApiKeyButton = document.getElementById("saveApiKey");
   const colorSelect = document.getElementById("colorSelect");
   const status = document.getElementById("status");
 
@@ -90,6 +92,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     newApiKeyInput.value = "";
+  });
+
+  chrome.storage.sync.get(["tweetpikApiKey"], (data) => {
+    if (data.tweetpikApiKey) {
+      apiKeyInput.value = data.tweetpikApiKey;
+    }
+  });
+
+  // Save API Key
+  saveApiKeyButton.addEventListener("click", () => {
+    const apiKey = apiKeyInput.value.trim();
+    chrome.storage.sync.set({ tweetpikApiKey: apiKey }, () => {
+      console.log("✅ TweetPik API key saved successfully.");
+    });
   });
 
   // Save settings
