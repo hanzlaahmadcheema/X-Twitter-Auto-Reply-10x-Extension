@@ -133,7 +133,12 @@ function captureTweetScreenshot(shareButton) {
   }
 
   console.log("📸 Capturing screenshot...");
-
+  shareButton.textContent = "✔";
+  shareButton.style.color = "green";
+  setTimeout(() => {
+    shareButton.textContent = "📸";
+    shareButton.style.color = "";
+  }, 4000);
   // Request injection of html2canvas
   chrome.runtime.sendMessage({ action: "injectHtml2Canvas" }, (response) => {
     if (response?.success) {
@@ -197,13 +202,12 @@ function takeScreenshot(tweetElement) {
 
     /* Images inside tweets */
     [data-testid="tweetPhoto"] img {
-      max-width: 100% !important;
       border-radius: 8px !important;
       margin-top: 10px !important;
     }
 
     /* Hide unwanted UI elements (buttons, etc.) */
-    nav, [role="banner"], .css-1dbjc4n.r-14lw9ot, [role="group"], [data-testid="tweet-text-show-more-link"] {
+    nav, [role="banner"], .css-1dbjc4n, .css-1dbjc4n.r-14lw9ot, [role="group"], [data-testid="tweet-text-show-more-link"], [type="button"] {
       display: none !important;
     }
 
@@ -215,9 +219,10 @@ function takeScreenshot(tweetElement) {
 
   // Capture the tweet element
   html2canvas(tweetElement, {
-    scale: 3, // High resolution
+    scale: 2, // High resolution
     useCORS: true, // Fixes images not loading
-    backgroundColor: null // Transparent background
+    backgroundColor: null, // Transparent background
+    removeContentScripts: true // Prevent unnecessary scripts
   }).then((canvas) => {
     document.head.removeChild(tempStyles); // Remove styles after screenshot
 
