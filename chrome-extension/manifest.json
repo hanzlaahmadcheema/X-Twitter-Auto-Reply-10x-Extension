@@ -12,12 +12,13 @@
       {
         "matches": ["*://x.com/*", "*://twitter.com/*"],
         "js": ["contentScript.bundle.js"],
-        "css": ["popup.css", "style.css"]
+        "css": ["popup.css", "style.css"],
+        "run_at": "document_idle"
       }
     ],
     "web_accessible_resources": [
     {
-      "resources": ["style.css", "popup.css", "libs/html2canvas.min.js"],
+      "resources": ["style.css", "popup.css", "html2canvas.min.js"],
       "matches": ["<all_urls>"]
     }
   ],

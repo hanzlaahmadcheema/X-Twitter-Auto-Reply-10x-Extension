@@ -114,6 +114,126 @@ function getTweetContextFromShareButton(shareButton) {
   return "";
 }
 
+function waitForHtml2Canvas(callback) {
+  if (typeof html2canvas !== "undefined") {
+    console.log("✅ html2canvas is available.");
+    callback(); // Execute the callback function
+  } else {
+    console.log("⏳ Waiting for html2canvas...");
+    setTimeout(() => waitForHtml2Canvas(callback), 500);
+  }
+}
+
+// Capture Tweet Screenshot Function
+function captureTweetScreenshot(shareButton) {
+  const tweetElement = shareButton.closest('[data-testid="tweet"]');
+  if (!tweetElement) {
+    console.error("❌ Tweet not found!");
+    return;
+  }
+
+  console.log("📸 Capturing screenshot...");
+
+  // Request injection of html2canvas
+  chrome.runtime.sendMessage({ action: "injectHtml2Canvas" }, (response) => {
+    if (response?.success) {
+      console.log("✅ html2canvas injected successfully.");
+      waitForHtml2Canvas(() => takeScreenshot(tweetElement));
+    } else {
+      console.error("❌ Error injecting html2canvas:", response?.error);
+    }
+  });
+}
+
+function takeScreenshot(tweetElement) {
+  console.log("📌 Styling before screenshot...");
+
+  // Create a temporary style element
+  const tempStyles = document.createElement("style");
+  tempStyles.innerHTML = `
+    /* Set background to white for readability */
+    body, html {
+      background: white !important;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    /* Main tweet container */
+    [data-testid="tweet"] {
+      background: white !important;
+      padding: 20px !important;
+      margin: auto !important;
+      border-radius: 12px !important;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1) !important;
+      font-weight: normal !important;
+    }
+
+    /* Profile picture */
+    [data-testid="User-Avatar"] img {
+      width: 50px !important;
+      height: 50px !important;
+      border-radius: 50% !important;
+      margin-bottom: 10px !important;
+    }
+
+    /* User's name */
+    [data-testid="User-Name"] {
+      font-size: 18px !important;
+      color: #14171a !important;
+      margin-bottom: 5px !important;
+    }
+
+    /* Tweet text */
+    [data-testid="tweetText"] {
+      font-size: 16px !important;
+      line-height: 1.5 !important;
+      color: #333 !important;
+      margin: 10px 0 !important;
+      padding: 5px !important;
+      font-weight: normal !important;
+    }
+
+    /* Images inside tweets */
+    [data-testid="tweetPhoto"] img {
+      max-width: 100% !important;
+      border-radius: 8px !important;
+      margin-top: 10px !important;
+    }
+
+    /* Hide unwanted UI elements (buttons, etc.) */
+    nav, [role="banner"], .css-1dbjc4n.r-14lw9ot, [role="group"], [data-testid="tweet-text-show-more-link"] {
+      display: none !important;
+    }
+
+    span { color: #000 !important; }
+  `;
+  document.head.appendChild(tempStyles);
+
+  console.log("✅ Applied temporary styles for better screenshot...");
+
+  // Capture the tweet element
+  html2canvas(tweetElement, {
+    scale: 3, // High resolution
+    useCORS: true, // Fixes images not loading
+    backgroundColor: null // Transparent background
+  }).then((canvas) => {
+    document.head.removeChild(tempStyles); // Remove styles after screenshot
+
+    const image = canvas.toDataURL("image/png");
+    const filename = `tweet-${Date.now()}.png`;
+
+    // Create a download link
+    const link = document.createElement("a");
+    link.href = image;
+    link.download = filename;
+    link.click();
+
+    console.log(`📸 Screenshot saved as ${filename}`);
+  });
+}
+
 //#region Get tweet URL
 function getTweetUrl(shareButton) {
   const tweetElement = shareButton.closest('[data-testid="tweet"]');
@@ -125,8 +245,6 @@ function getTweetUrl(shareButton) {
   }
   return null;
 }
-
-
 
 // Function to show a small success notification
 function showSuccessMessage(message) {
@@ -233,10 +351,7 @@ function startSpeechRecognition() {
     };
 
     recognition.onend = () => {
-      showSuccessMessage("⚠️ Speech recognition stopped automatically. Restarting...");
-      if (micButton.textContent === "🔴") {
-        recognition.start(); // Restart recognition if still active
-      }
+      stopSpeechRecognition();
     };
   }
 
@@ -248,7 +363,7 @@ function stopSpeechRecognition() {
   if (recognition) {
     recognition.stop();
     micButton.textContent = "▶"; // Reset button UI
-    showSuccessMessage("🛑 Speech recognition manually stopped.");
+    showSuccessMessage("🛑 Speech recognition stopped.");
   }
 }
 
@@ -473,7 +588,7 @@ function insertCopyTweetButton() {
         font-size: 14px;
         background-color: transparent;
       `;
-      screenshotButton.addEventListener("click", () => requestTweetScreenshot(shareButton));
+      screenshotButton.addEventListener("click", () => captureTweetScreenshot(screenshotButton));
 
       // Insert buttons after the Share button
       parent.insertBefore(copyTweetButton, shareButton.nextSibling);
@@ -482,24 +597,6 @@ function insertCopyTweetButton() {
   });
 }
 
-function requestTweetScreenshot(shareButton) {
-  const tweetElement = shareButton.closest('[data-testid="tweet"]');
-  if (!tweetElement) {
-    console.error("❌ Could not find tweet.");
-    return;
-  }
-
-  const tweetUrlElement = tweetElement.querySelector('a[href*="/status/"]');
-  if (!tweetUrlElement) {
-    console.error("❌ Tweet URL not found.");
-    return;
-  }
-
-  const tweetUrl = tweetUrlElement.href;
-  console.log(`📸 Extracted Tweet URL: ${tweetUrl}`);
-
-  chrome.runtime.sendMessage({ action: "captureTweetScreenshot", tweetUrl });
-}
 
 function copyTweetText(button, shareButton) {
   const tweetText = getTweetContextFromShareButton(shareButton);

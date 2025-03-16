@@ -211,45 +211,25 @@ function sendNotification() {
   );
 }
 
-async function captureTweetScreenshot(tweetUrl) {
-  console.log(`📸 Sending request to local FastAPI server for URL: ${tweetUrl}`);
-
-  const apiUrl = `http://127.0.0.1:8000/capture?url=${encodeURIComponent(tweetUrl)}&mode=3&wait_time=5.0`;
-
-  try {
-    const response = await fetch(apiUrl);
-    const json = await response.json();
-
-    if (!response.ok || json.error) {
-      console.error("❌ Error capturing screenshot:", json.error || response.statusText);
-      return;
-    }
-
-    const filePath = json.file_path; // Expected response: { "file_path": "downloads/tweet-123.png" }
-    console.log(`✅ Screenshot saved at: ${filePath}`);
-
-    // Convert relative path to full URL
-    const fileUrl = `http://127.0.0.1:8000/${filePath}`;
-
-    // Automatically trigger download
-    chrome.downloads.download({
-      url: fileUrl,
-      filename: filePath.split("/").pop(), // Extract only the filename
-      saveAs: false, // Set to true if you want user to choose location
-    });
-
-    console.log("📥 Screenshot download started...");
-  } catch (error) {
-    console.error("🚨 API request failed:", error);
-  }
-}
-
-// Listen for screenshot requests from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "captureTweetScreenshot") {
-    captureTweetScreenshot(message.tweetUrl);
+  if (message.action === "injectHtml2Canvas") {
+    console.log("📜 Injecting html2canvas script...");
+
+    chrome.scripting.executeScript(
+      {
+        target: { tabId: sender.tab.id },
+        files: ["html2canvas.min.js"], // Injecting from extension files
+      },
+      () => {
+        console.log("✅ html2canvas script injected.");
+        sendResponse({ success: true });
+      }
+    );
+
+    return true; // Keep sendResponse async
   }
 });
+
 
 const tonePrompts = {  
   casual: "Reply to '{text}' in a natural and engaging way. Keep it light, relaxed, and conversational—like a real person chatting. No forced jokes, just an easy-flowing response. Avoid hashtags, emojis, or interjections like 'Wow' or 'Huh'. Use {lang}, keep it gender-neutral, and stay within {length}. Use the real-time context of the tweet. {customPrompt}",
