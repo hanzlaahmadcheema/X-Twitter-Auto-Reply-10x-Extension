@@ -286,7 +286,7 @@ function appendToneSelector(toolbar) {
       <option value="5-100 characters">5-100 CH</option>
       <option value="5-200 characters">5-200 CH</option>
       <option value="5-250 characters">5-250 CH</option>
-      <option value="5-325 characters">5-325 CH</option>
+      <option value="5-350 characters">5-350 CH</option>
     </select>
     <select id="toneSelect">
       <!--<option value="empathetic">Empath</option>
