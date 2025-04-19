@@ -30,10 +30,39 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         let apiUrl, payload, headers;
 
         if (selectedModel === "gemini") {
-          const model = geminiModel || "gemini-1.5-flash-latest";
+          const model = geminiModel || "gemini-2.0-flash-exp";
           console.log(`Using Gemini model: ${model}`); // Log Gemini model
+
+            const systemPrompt = `
+            You are XMLEA — a system that generates natural, thoughtful, and human-like replies to tweets on X (formerly Twitter), based on the user's selected tone and preferences.
+
+      Write responses in a way that feels handwritten by a real person, avoiding patterns typical of AI-generated text. 
+
+      **Avoid using the following phrases:**
+      - In English: "You are correct", "You are right"
+      - In Urdu: "بلکل درست فرمایا آپ نے", "بلکل بجا فرمایا آپ نے", "بلکل ٹھیک ہے", "بلکل" ,"بلکل درست کہہ رہے ہیں"
+
+      Do not include hashtags, emojis, or interjections such as "Wow" or "Huh".
+
+      Ensure the response is:
+      - Gender-neutral  
+      - In the same language of the tweet (${message.lang})  
+      - Within the character limit defined (${message.length})  
+      - Directly relevant to the real-time context of the tweet  
+
+      Make the writing flow naturally, as if a genuine person is reacting spontaneously while staying aligned with the user's chosen tone.
+          `;
+console.log(`System Prompt: ${systemPrompt}`); // Log system prompt
+
           apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${selectedApiKey}`;
-          payload = { contents: [{ parts: [{ text: prompt }] }] };
+          payload = {
+            contents: [{
+              parts: [
+                { text: systemPrompt },
+                { text: prompt }
+              ]
+            }]
+          };
           headers = { "Content-Type": "application/json" };
         } else if (selectedModel === "grok") {
           const model = grokModel || "grok-beta";
@@ -41,7 +70,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           apiUrl = "https://api.x.ai/v1/chat/completions";
           payload = {
             messages: [
-              {role: "system", content: "You are Grok, a chatbot for generating concise and contextually relevant replies to tweets in a Twitter extension." },
+              { role: "system", content: "You are Grok, a chatbot for generating concise and contextually relevant replies to tweets in a Twitter extension." },
               { role: "user", content: prompt },
             ],
             model: model,
@@ -69,38 +98,38 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${selectedApiKey}`,
           };
-        
+
           fetch(apiUrl, {
             method: 'POST',
             headers: headers,
             body: JSON.stringify(payload)
           })
-          .then(response => response.json())
-          .then(data => {
-            console.log('API Response:', data); // Log the full response for debugging
-            const responseData = data[`${model}`];
-    if (responseData) {
-      let replyText = '';
-      if (responseData.standardized_response && responseData.standardized_response.generated_text) {
-        replyText = responseData.standardized_response.generated_text;
-      } else if (responseData.generated_text) {
-        replyText = responseData.generated_text;
-      }
+            .then(response => response.json())
+            .then(data => {
+              console.log('API Response:', data); // Log the full response for debugging
+              const responseData = data[`${model}`];
+              if (responseData) {
+                let replyText = '';
+                if (responseData.standardized_response && responseData.standardized_response.generated_text) {
+                  replyText = responseData.standardized_response.generated_text;
+                } else if (responseData.generated_text) {
+                  replyText = responseData.generated_text;
+                }
 
-      if (replyText) {
-        console.log(replyText);
-        sendResponse({ reply: replyText });
-      } else {
-        sendResponse({ error: 'Error: No AI response received.' });
-      }
-    } else {
-      sendResponse({ error: 'Error: No AI response received.' });
-    }
-  })
-          .catch(error => {
-            console.error('Error:', error);
-            sendResponse({ error: 'Error generating AI response.' });
-          });
+                if (replyText) {
+                  console.log(replyText);
+                  sendResponse({ reply: replyText });
+                } else {
+                  sendResponse({ error: 'Error: No AI response received.' });
+                }
+              } else {
+                sendResponse({ error: 'Error: No AI response received.' });
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              sendResponse({ error: 'Error generating AI response.' });
+            });
           return; // Ensure the response is sent asynchronously
         } else {
           console.error("Error: Invalid model selected.");
@@ -135,7 +164,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     return true;
   }
-  
+
   if (message.action === "startAlarm") {
     const { time, type } = message;
     console.log(`Starting alarm. Type: ${type} | Time: ${time}ms`);
@@ -231,11 +260,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 
-const tonePrompts = {  
+const tonePrompts = {
   casual: "Reply to '{text}' in a natural and engaging way. Keep it light, relaxed, and conversational—like a real person chatting. No forced jokes, just an easy-flowing response. Avoid hashtags, emojis, or interjections like 'Wow' or 'Huh'. Use {lang}, keep it gender-neutral, and stay within {length}. Use the real-time context of the tweet. {customPrompt}",
 
-  optimal: "Craft a concise and engaging response to '{text}', ensuring it is natural, thoughtful, and relevant. Maintain a professional yet approachable tone, avoiding unnecessary formality or casualness. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",  
- 
+  optimal: "Craft a concise and engaging response to '{text}', ensuring it is natural, thoughtful, and relevant. Maintain a professional yet approachable tone, avoiding unnecessary formality or casualness. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
+
   straightforward: "Respond to '{text}' with a direct and to-the-point answer. No small talk, no extra fluff—just a clear and effective response. Keep it neutral yet firm. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
 
   professional: "Craft a professional response to '{text}' with clarity and respect. Keep it formal yet accessible, avoiding repetition or filler. Add value with insights instead of just agreeing. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
