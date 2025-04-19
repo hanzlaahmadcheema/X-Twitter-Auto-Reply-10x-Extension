@@ -34,7 +34,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           console.log(`Using Gemini model: ${model}`); // Log Gemini model
 
             const systemPrompt = `
-            You are XMLEA — a system that generates natural, thoughtful, and human-like replies to tweets on X (formerly Twitter), based on the user's selected tone and preferences.
+            You are a human — that gives natural, thoughtful, and human-like replies to tweets on X (formerly Twitter), based on the user's selected tone and preferences.
 
       Write responses in a way that feels handwritten by a real person, avoiding patterns typical of AI-generated text. 
 
@@ -52,7 +52,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       Make the writing flow naturally, as if a genuine person is reacting spontaneously while staying aligned with the user's chosen tone.
           `;
-console.log(`System Prompt: ${systemPrompt}`); // Log system prompt
 
           apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${selectedApiKey}`;
           payload = {
@@ -261,57 +260,57 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 
 const tonePrompts = {
-  casual: "Reply to '{text}' in a natural and engaging way. Keep it light, relaxed, and conversational—like a real person chatting. No forced jokes, just an easy-flowing response. Avoid hashtags, emojis, or interjections like 'Wow' or 'Huh'. Use {lang}, keep it gender-neutral, and stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  casual: "Reply to '{text}' in a natural and engaging way. Keep it light, relaxed, and conversational—like a real person chatting. No forced jokes, just an easy-flowing response. {customPrompt}",
 
-  optimal: "Craft a concise and engaging response to '{text}', ensuring it is natural, thoughtful, and relevant. Maintain a professional yet approachable tone, avoiding unnecessary formality or casualness. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
+  optimal: "Craft a concise and engaging response to '{text}', ensuring it is natural, thoughtful, and relevant. Maintain a professional yet approachable tone, avoiding unnecessary formality or casualness. {customPrompt}",
 
-  straightforward: "Respond to '{text}' with a direct and to-the-point answer. No small talk, no extra fluff—just a clear and effective response. Keep it neutral yet firm. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
+  straightforward: "Respond to '{text}' with a direct and to-the-point answer. No small talk, no extra fluff—just a clear and effective response. Keep it neutral yet firm. {customPrompt}",
 
-  professional: "Craft a professional response to '{text}' with clarity and respect. Keep it formal yet accessible, avoiding repetition or filler. Add value with insights instead of just agreeing. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
+  professional: "Craft a professional response to '{text}' with clarity and respect. Keep it formal yet accessible, avoiding repetition or filler. Add value with insights instead of just agreeing. {customPrompt}",
 
-  disagree: "Respond to '{text}' with a firm but respectful disagreement. Clearly express a differing perspective without being rude or dismissive. Keep the response logical and well-structured, ensuring it challenges the idea rather than the person. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  disagree: "Respond to '{text}' with a firm but respectful disagreement. Clearly express a differing perspective without being rude or dismissive. Keep the response logical and well-structured, ensuring it challenges the idea rather than the person. {customPrompt}",
 
-  supportive: "Respond to '{text}' with kindness and understanding. Offer encouragement or a thoughtful perspective rather than just agreeing. Keep it genuine and uplifting. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  supportive: "Respond to '{text}' with kindness and understanding. Offer encouragement or a thoughtful perspective rather than just agreeing. Keep it genuine and uplifting. {customPrompt}",
 
-  witty: "Reply to '{text}' with sharp humor or wordplay while staying relevant. Keep it clever but not forced. Make the response engaging without losing its meaning. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  witty: "Reply to '{text}' with sharp humor or wordplay while staying relevant. Keep it clever but not forced. Make the response engaging without losing its meaning. {customPrompt}",
 
-  humorous: "Write a funny response to '{text}', using playful humor without going overboard. Keep it light and entertaining, but still relevant. No forced jokes or unnecessary exaggeration. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
+  humorous: "Write a funny response to '{text}', using playful humor without going overboard. Keep it light and entertaining, but still relevant. No forced jokes or unnecessary exaggeration. {customPrompt}",
 
-  joking: "Craft a lighthearted and teasing reply to '{text}', ensuring the humor is fun and never offensive. Make it feel natural, not overly familiar. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
+  joking: "Craft a lighthearted and teasing reply to '{text}', ensuring the humor is fun and never offensive. Make it feel natural, not overly familiar. {customPrompt}",
 
-  sarcastic: "Reply to '{text}' with a sarcastic but fun response. Keep the humor light, witty, and not overly negative. Avoid sounding harsh or dismissive. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  sarcastic: "Reply to '{text}' with a sarcastic but fun response. Keep the humor light, witty, and not overly negative. Avoid sounding harsh or dismissive. {customPrompt}",
 
-  quirky: "Respond to '{text}' with a unique and creative twist. Make the response stand out without being too random. Keep it playful but still relevant. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
+  quirky: "Respond to '{text}' with a unique and creative twist. Make the response stand out without being too random. Keep it playful but still relevant. {customPrompt}",
 
-  encouraging: "Write a motivating and uplifting reply to '{text}', using positive language that inspires confidence. Avoid excessive praise—keep it meaningful. Use {lang}, stay gender-neutral, and exclude hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
+  encouraging: "Write a motivating and uplifting reply to '{text}', using positive language that inspires confidence. Avoid excessive praise—keep it meaningful. {customPrompt}",
 
-  optimistic: "Respond to '{text}' with a positive and hopeful tone, focusing on opportunities and bright sides. Keep it uplifting without being unrealistic. Use {lang}, maintain gender neutrality, and exclude hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  optimistic: "Respond to '{text}' with a positive and hopeful tone, focusing on opportunities and bright sides. Keep it uplifting without being unrealistic. {customPrompt}",
 
-  grateful: "Express sincere appreciation in response to '{text}'. Keep it heartfelt and genuine rather than generic. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Aim for {length}. Use the real-time context of the tweet. {customPrompt}",
+  grateful: "Express sincere appreciation in response to '{text}'. Keep it heartfelt and genuine rather than generic. {customPrompt}",
 
-  inspirational: "Write an inspiring response to '{text}', using meaningful language to uplift and empower. Avoid clichés—keep it authentic. Use {lang}, stay gender-neutral, and exclude hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  inspirational: "Write an inspiring response to '{text}', using meaningful language to uplift and empower. Avoid clichés—keep it authentic. {customPrompt}",
 
-  informative: "Provide a clear and factual reply to '{text}', focusing on educating or clarifying without unnecessary complexity. Use {lang}, maintain gender neutrality, and avoid hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
+  informative: "Provide a clear and factual reply to '{text}', focusing on educating or clarifying without unnecessary complexity. {customPrompt}",
 
-  insightful: "Offer a thoughtful and insightful response to '{text}', adding depth to the conversation with meaningful observations. Avoid redundancy. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  insightful: "Offer a thoughtful and insightful response to '{text}', adding depth to the conversation with meaningful observations. Avoid redundancy. {customPrompt}",
 
-  empathetic: "Show understanding and compassion in your reply to '{text}', acknowledging emotions or experiences respectfully. Use {lang}, maintain gender neutrality, and avoid hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
+  empathetic: "Show understanding and compassion in your reply to '{text}', acknowledging emotions or experiences respectfully. {customPrompt}",
 
-  curious: "Ask a thoughtful and relevant question in response to '{text}', encouraging elaboration. Keep it open-ended and directly related to the tweet. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Aim for {length}. Use the real-time context of the tweet. {customPrompt}",
+  curious: "Ask a thoughtful and relevant question in response to '{text}', encouraging elaboration. Keep it open-ended and directly related to the tweet. {customPrompt}",
 
-  agreeable: "Respond to '{text}' with a supportive and reinforcing tone. Express agreement in a way that adds value rather than just repeating the original point. Keep it natural and engaging. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  agreeable: "Respond to '{text}' with a supportive and reinforcing tone. Express agreement in a way that adds value rather than just repeating the original point. Keep it natural and engaging. {customPrompt}",
 
-  critical: "Provide a well-reasoned critique of '{text}'. Be analytical, not aggressive. Keep the feedback balanced, constructive, and insightful—offering a perspective that adds value rather than just disagreeing. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  critical: "Provide a well-reasoned critique of '{text}'. Be analytical, not aggressive. Keep the feedback balanced, constructive, and insightful—offering a perspective that adds value rather than just disagreeing. {customPrompt}",
 
-  neutral: "Reply to '{text}' with a balanced and objective response. Keep it clear, concise, and neutral without unnecessary elaboration or personal opinions. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  neutral: "Reply to '{text}' with a balanced and objective response. Keep it clear, concise, and neutral without unnecessary elaboration or personal opinions.  {customPrompt}",
 
-  polite: "Write a respectful and courteous reply to '{text}'. Maintain a thoughtful and considerate tone, even in disagreement. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  polite: "Write a respectful and courteous reply to '{text}'. Maintain a thoughtful and considerate tone, even in disagreement. {customPrompt}",
 
-  reflective: "Compose a deep and introspective response to '{text}', adding meaningful insights. Keep it thought-provoking without being overly abstract. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  reflective: "Compose a deep and introspective response to '{text}', adding meaningful insights. Keep it thought-provoking without being overly abstract. {customPrompt}",
 
-  engaging: "Encourage interaction with an open-ended question or discussion in reply to '{text}'. Keep it inviting and natural. Stay focused on the topic without unnecessary diversions. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
+  engaging: "Encourage interaction with an open-ended question or discussion in reply to '{text}'. Keep it inviting and natural. Stay focused on the topic without unnecessary diversions. {customPrompt}",
 
-  playful: "Reply to '{text}' with a fun and energetic tone. Keep it lighthearted and engaging without being off-topic. Ensure the response adds to the conversation in a creative way. Use {lang}, ensure gender neutrality, and avoid hashtags, emojis, or interjections. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  playful: "Reply to '{text}' with a fun and energetic tone. Keep it lighthearted and engaging without being off-topic. Ensure the response adds to the conversation in a creative way. {customPrompt}",
 
-  negative: "Respond to '{text}' with a clear and reasoned critique. Stay firm but respectful—no emotional language or personal attacks. Ensure the stance is well-articulated and professional. Use {lang}, ensure gender neutrality, and exclude hashtags, emojis, or interjections. Keep it within {length}. Use the real-time context of the tweet. {customPrompt}",
+  negative: "Respond to '{text}' with a clear and reasoned critique. Stay firm but respectful—no emotional language or personal attacks. Ensure the stance is well-articulated and professional. {customPrompt}",
 };

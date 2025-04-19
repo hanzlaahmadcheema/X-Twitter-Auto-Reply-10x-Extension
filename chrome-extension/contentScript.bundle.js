@@ -41,6 +41,9 @@ function filterResponse(response) {
 
   const excitementWords = ["wow", "wow,", "wow!", "oh", "oh,", "oh!", "amazing", "awesome", "AI Assistant:", "AI Assistant"];
   const regex = new RegExp(`\\b(${excitementWords.join("|")})\\b`, "gi");
+  //also exclude "بلکل" with a comma after it and then a space
+  response = response.replace(/بالکل،\s/g, "");
+  response = response.replace(/بالکل ٹھیک!\s/g, "");
   response = response.replace(regex, "").replace(/,+/g, "");
 
   response = response.trim();
