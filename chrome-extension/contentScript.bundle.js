@@ -450,7 +450,7 @@ micButton.addEventListener("click", () => {
         text: tweetContext,
         customPrompt: customPrompt,
         tone: tone,
-        lang: "should be in same language as tweet",
+        lang: "in same language as tweet",
         length: length,
         accountName: accountName,
         accountUserName: accountUserName,
