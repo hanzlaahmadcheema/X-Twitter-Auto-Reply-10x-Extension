@@ -27,9 +27,6 @@ function getReplyAccountDetails() {
 
   const accountName = displayNameElement ? displayNameElement.innerText.trim() : "Unknown User";
 
-  console.log("Account Name:", accountName);
-  console.log("Account Username:", accountUserName);
-
   return { accountUserName, accountName };
 }
 
@@ -290,7 +287,7 @@ function appendToneSelector(toolbar) {
         <option value="The length should be sufficient for a lengthy message">Lengthy</option>
         <option value="The message length should be between 5 and 200 characters">5-200 Ch</option>
         <option value="The length requirement should be between 100 and 400 characters">100-400 Ch</option>
-        <option value="The message length should be short but impactful, up to 50 characters">Short & Impactful</option>
+        <option value="The message length should be short but impactful, up to 50 characters">Short</option>
                 <!-- <option value="The message length must align with the tweet's character limit">Tweet Length</option>
         <option value="The character count should be appropriate for a more extensive message">Extensive</option>
         <option value="The length should fall between 5 and 200 characters for conciseness">Concise 5-200</option>

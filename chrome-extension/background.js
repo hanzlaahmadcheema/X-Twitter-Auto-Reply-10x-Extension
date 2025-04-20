@@ -34,6 +34,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           
           **Tone:** ${tonePrompt}
           
+          Tweet's Author: ${message.accountName}
           **Guidelines:**
           - Avoid: "You are correct", "You are right"
           - Avoid in Urdu: "بلکل درست فرمایا آپ نے", "بلکل بجا فرمایا آپ نے", "بلکل ٹھیک ہے", "بلکل", "بلکل درست کہہ رہے ہیں"
@@ -43,7 +44,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           - ${message.length}
           - Base your reply directly on the real-time tweet context.
           - Make it sound naturally handwritten, not like AI.
-          
+          - Don't mention Authors name
           ${message.customPrompt ? `Additional instructions: ${message.customPrompt}` : ""}
           `;
           
@@ -260,7 +261,7 @@ const tonePrompts = {
 
   optimal: "Craft a concise and engaging response to tweet, ensuring it is natural, thoughtful, and relevant. Maintain a professional yet approachable tone, avoiding unnecessary formality or casualness.",
 
-  blunt:   "Write a direct and assertive response to '{text}', challenging the opinion or claim made. The tone should be bold, unapologetic, and possibly blunt or mildly offensive if the situation warrants it—but avoid explicit abuse. Do not sugarcoat the reply. Keep it in {lang}, gender-neutral, and exclude hashtags, emojis, or interjections like 'Wow' or 'Huh'. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  blunt:   "Write a direct and assertive response to tweet, challenging the opinion or claim made. The tone should be bold, unapologetic, and possibly blunt or mildly offensive. Do not sugarcoat the reply.",
   
   straightforward: "Respond to tweet with a direct and to-the-point answer. No small talk, no extra fluff—just a clear and effective response. Keep it neutral yet firm.",
 
