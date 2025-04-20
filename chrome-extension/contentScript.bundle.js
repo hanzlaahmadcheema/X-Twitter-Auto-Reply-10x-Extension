@@ -75,7 +75,7 @@ function insertReplyText(replyText) {
       })
     );
 
-    showSuccessMessage("New text inserted successfully:", filteredText);
+    showSuccessMessage("New text inserted successfully");
   } else {
     showSuccessMessage("Reply input field not found!");
   }
@@ -100,7 +100,7 @@ function insertCopyText(copyText) {
       })
     );
 
-    showSuccessMessage("New text inserted successfully:", copyText);
+    showSuccessMessage("New text inserted successfully");
   } else {
     showSuccessMessage("Reply input field not found!");
   }
@@ -286,10 +286,17 @@ function appendToneSelector(toolbar) {
   container.innerHTML = `
       <textarea id="customPrompt" placeholder="Custom Prompt"></textarea>
     <select id="lengthSelect">
-      <option value="length according to the tweet's length">As Tweet</option>
-      <option value="Brief">Brief</option>
-      <option value="5-200 characters">5-200 CH</option>
-      <option value="100-400 characters">100-400 CH</option>
+        <option value="The message length should match the typical tweet length">As Tweet</option>
+        <option value="The length should be sufficient for a lengthy message">Lengthy</option>
+        <option value="The message length should be between 5 and 200 characters">5-200 Ch</option>
+        <option value="The length requirement should be between 100 and 400 characters">100-400 Ch</option>
+        <option value="The message length should be short but impactful, up to 50 characters">Short & Impactful</option>
+                <!-- <option value="The message length must align with the tweet's character limit">Tweet Length</option>
+        <option value="The character count should be appropriate for a more extensive message">Extensive</option>
+        <option value="The length should fall between 5 and 200 characters for conciseness">Concise 5-200</option>
+        <option value="The character length should fall between 100 and 400 characters for detailed communication">Detailed 100-400</option>
+        <option value="The message length should be ideal for a mid-length message, ranging from 150 to 250 characters">Mid-Length 150-250</option>
+        <option value="The length should be sufficiently detailed, spanning between 250 and 350 characters">Detailed 250-350</option>-->
     </select>
     <select id="toneSelect">
       <!--<option value="empathetic">Empath</option>
@@ -435,7 +442,7 @@ micButton.addEventListener("click", () => {
     generateButton.style.backgroundColor = "red";
     generateButton.disabled = true;
     // stopButton.style.display = "inline-block";
-
+    showSuccessMessage("Generating reply...");
 
     const tone = toneSelect.value;
     const length = lengthSelect.value;
@@ -450,7 +457,7 @@ micButton.addEventListener("click", () => {
         text: tweetContext,
         customPrompt: customPrompt,
         tone: tone,
-        lang: "in same language as tweet",
+        lang: "The response language should match the language of the tweet",
         length: length,
         accountName: accountName,
         accountUserName: accountUserName,

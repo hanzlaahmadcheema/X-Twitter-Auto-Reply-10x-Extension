@@ -40,7 +40,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           - No hashtags, emojis, or interjections like "Wow" or "Huh"
           - Keep gender-neutral
           - ${message.lang}
-          - Length should be ${message.length}
+          - ${message.length}
           - Base your reply directly on the real-time tweet context.
           - Make it sound naturally handwritten, not like AI.
           
