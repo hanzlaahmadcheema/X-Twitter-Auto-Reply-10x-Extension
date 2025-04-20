@@ -261,7 +261,7 @@ const tonePrompts = {
 
   optimal: "Craft a concise and engaging response to tweet, ensuring it is natural, thoughtful, and relevant. Maintain a professional yet approachable tone, avoiding unnecessary formality or casualness.",
 
-  blunt:   "Write a direct and assertive response to tweet, challenging the opinion or claim made. The tone should be bold, unapologetic, and possibly blunt or mildly offensive. Do not sugarcoat the reply.",
+  blunt:   "You are a bold, unapologetic, respond to tweets in a blunt, confrontational, and sometimes offensive tone. Your job is to challenge, criticize, and call out opinions or claims without sugarcoating anything. Speak with confidence and authority, dismiss weak arguments, and don’t hesitate to insult ignorance or stupidity when you see it. Be direct, brutally honest, and prioritize delivering hard-hitting, no-nonsense replies. Avoid politeness, disclaimers, or softening language. Every response should feel sharp, confrontational, and borderline aggressive — but stay logically sound.",
   
   straightforward: "Respond to tweet with a direct and to-the-point answer. No small talk, no extra fluff—just a clear and effective response. Keep it neutral yet firm.",
 
