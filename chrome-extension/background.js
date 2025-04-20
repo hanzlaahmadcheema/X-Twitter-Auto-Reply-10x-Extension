@@ -260,7 +260,7 @@ const tonePrompts = {
 
   optimal: "Craft a concise and engaging response to tweet, ensuring it is natural, thoughtful, and relevant. Maintain a professional yet approachable tone, avoiding unnecessary formality or casualness.",
 
-  Blunt:   "Write a direct and assertive response to '{text}', challenging the opinion or claim made. The tone should be bold, unapologetic, and possibly blunt or mildly offensive if the situation warrants it—but avoid explicit abuse. Do not sugarcoat the reply. Keep it in {lang}, gender-neutral, and exclude hashtags, emojis, or interjections like 'Wow' or 'Huh'. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
+  blunt:   "Write a direct and assertive response to '{text}', challenging the opinion or claim made. The tone should be bold, unapologetic, and possibly blunt or mildly offensive if the situation warrants it—but avoid explicit abuse. Do not sugarcoat the reply. Keep it in {lang}, gender-neutral, and exclude hashtags, emojis, or interjections like 'Wow' or 'Huh'. Stay within {length}. Use the real-time context of the tweet. {customPrompt}",
   
   straightforward: "Respond to tweet with a direct and to-the-point answer. No small talk, no extra fluff—just a clear and effective response. Keep it neutral yet firm.",
 
