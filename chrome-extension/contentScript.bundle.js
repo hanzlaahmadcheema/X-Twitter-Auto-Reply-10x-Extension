@@ -287,10 +287,9 @@ function appendToneSelector(toolbar) {
       <textarea id="customPrompt" placeholder="Custom Prompt"></textarea>
     <select id="lengthSelect">
       <option value="length according to the tweet's length">As Tweet</option>
-      <option value="5-100 characters">5-100 CH</option>
+      <option value="Brief">Brief</option>
       <option value="5-200 characters">5-200 CH</option>
-      <option value="5-250 characters">5-250 CH</option>
-      <option value="5-350 characters">5-350 CH</option>
+      <option value="100-400 characters">100-400 CH</option>
     </select>
     <select id="toneSelect">
       <!--<option value="empathetic">Empath</option>
