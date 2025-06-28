@@ -408,6 +408,167 @@ micButton.addEventListener("click", () => {
       }
     });  
 
+    // Function to add mic button to WhatsApp input field
+function addMicToWhatsApp() {
+  const whatsappInput = document.querySelector('[contenteditable="true"][data-tab="10"]'); // WhatsApp input field
+
+  if (whatsappInput && !document.querySelector(".whatsapp-mic-btn")) {
+    // Create mic button
+    const micButton = document.createElement("button");
+    micButton.className = "whatsapp-mic-btn";
+    micButton.textContent = "🎤"; // Mic emoji
+    micButton.style.cssText = `
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: #25D366;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    `;
+
+    // Append mic button to the body
+    document.body.appendChild(micButton);
+
+    // Speech recognition setup
+    let recognition = null;
+
+    function startSpeechRecognition() {
+      if (!recognition) {
+        recognition = new webkitSpeechRecognition(); // Use Chrome's API
+        recognition.lang = "ur-PK"; // Set language to Urdu
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = () => {
+          micButton.textContent = "🔴"; // Update button UI
+          showSuccessMessage("🎤 Speech recognition started...");
+        };
+
+        recognition.onresult = (event) => {
+          let speechResult = event.results[0][0].transcript;
+          speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
+          insertReplyText(speechResult);
+          showSuccessMessage("✅ Speech recognized:", speechResult);
+        };
+
+        recognition.onerror = (event) => {
+          showSuccessMessage("❌ Speech recognition error:", event.error);
+          stopSpeechRecognition(); // Stop only on a real error
+        };
+
+        recognition.onend = () => {
+          stopSpeechRecognition();
+        };
+      }
+
+      recognition.start();
+    }
+
+    function stopSpeechRecognition() {
+      if (recognition) {
+        recognition.stop();
+        micButton.textContent = "▶"; // Reset button UI
+        showSuccessMessage("🛑 Speech recognition stopped.");
+      }
+    }
+
+    micButton.addEventListener("click", () => {
+      if (micButton.textContent === "▶") {
+        startSpeechRecognition();
+      } else if (micButton.textContent === "🔴") {
+        stopSpeechRecognition();
+      }
+    });
+  }
+  if (whatsappInput && !document.querySelector(".whatsapp-mic-btn")) {
+    // Create mic button
+    const micButton = document.createElement("button");
+    micButton.className = "whatsapp-mic-btn";
+    micButton.textContent = "🎤"; // Mic emoji
+    micButton.style.cssText = `
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      background: #25D366;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      z-index: 1000;
+    `;
+
+    // Append mic button to the parent of the input field
+    whatsappInput.parentElement.appendChild(micButton);
+
+    // Speech recognition setup
+    let recognition = null;
+
+    function startSpeechRecognition() {
+  if (!recognition) {
+    recognition = new webkitSpeechRecognition(); // Use Chrome's API
+    recognition.lang = "ur-PK"; // Set language to Urdu
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      micButton.textContent = "🔴"; // Update button UI
+      showSuccessMessage("🎤 Speech recognition started...");
+    };
+
+    recognition.onresult = (event) => {
+      let speechResult = event.results[0][0].transcript;
+      speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
+      insertReplyText(speechResult);
+      showSuccessMessage("✅ Speech recognized:", speechResult);
+    };
+
+    recognition.onerror = (event) => {
+      showSuccessMessage("❌ Speech recognition error:", event.error);
+      stopSpeechRecognition(); // Stop only on a real error
+    };
+
+    recognition.onend = () => {
+      stopSpeechRecognition();
+    };
+  }
+
+  recognition.start();
+}
+
+// Function to stop speech recognition manually
+function stopSpeechRecognition() {
+  if (recognition) {
+    recognition.stop();
+    micButton.textContent = "▶"; // Reset button UI
+    showSuccessMessage("🛑 Speech recognition stopped.");
+  }
+}
+
+// Mic button event listener (Manually stop only)
+micButton.addEventListener("click", () => {
+  if (micButton.textContent === "▶") {
+    startSpeechRecognition();
+  } else if (micButton.textContent === "🔴") {
+    stopSpeechRecognition();
+  }
+});
+  }
+}
+
+// Observe DOM changes to detect WhatsApp input field
+const whatsappObserver = new MutationObserver(() => {
+  addMicToWhatsApp();
+});
+
+whatsappObserver.observe(document.body, { childList: true, subtree: true });
   const customPromptTextarea = container.querySelector("#customPrompt");
   const toneSelect = container.querySelector("#toneSelect");
   const lengthSelect = container.querySelector("#lengthSelect");

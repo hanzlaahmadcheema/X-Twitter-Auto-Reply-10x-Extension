@@ -10,7 +10,7 @@
     },
     "content_scripts": [
       {
-        "matches": ["*://x.com/*", "*://twitter.com/*"],
+        "matches": ["*://x.com/*", "*://twitter.com/*", "*://whatsapp.com/*"],
         "js": ["contentScript.bundle.js"],
         "css": ["popup.css", "style.css"],
         "run_at": "document_idle"
