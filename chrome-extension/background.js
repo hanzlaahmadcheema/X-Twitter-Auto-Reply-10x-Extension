@@ -45,7 +45,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           - Base your reply directly on the real-time tweet context.
           - Make it sound naturally handwritten, not like AI.
           - Don't mention Authors name
-          ${message.customPrompt ? `I want to say in reply to the tweet: ${message.customPrompt}` : ""}
+          ${message.customPrompt ? `Reply to the tweet something like this: ${message.customPrompt}` : ""}
           `;
           
 console.log("System Prompt:", systemPrompt); // Log system prompt
