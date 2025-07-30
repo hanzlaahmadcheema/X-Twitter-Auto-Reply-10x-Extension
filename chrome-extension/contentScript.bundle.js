@@ -152,92 +152,178 @@ function captureTweetScreenshot(shareButton) {
 }
 
 function takeScreenshot(tweetElement) {
-  console.log("📌 Styling before screenshot...");
+  const tweetContainer = tweetElement.closest('article[data-testid="tweet"]');
+  if (!tweetContainer) {
+    showSuccessMessage('❌ Tweet container not found');
+    return;
+  }
 
-  // Create a temporary style element
-  const tempStyles = document.createElement("style");
-  tempStyles.innerHTML = `
-    /* Set background to white for readability */
-    body, html {
-      background: white !important;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+  // Manually extract tweet data
+  const userName = tweetContainer.querySelector('[data-testid="User-Name"] span')?.textContent || '';
+  let userHandle = '';
+  const usernameElements = tweetContainer.querySelectorAll('a[href^="/"]');
+  for (const element of usernameElements) {
+    const href = element.getAttribute('href');
+    if (href && href.startsWith('/') && !href.includes('/status/') && element.textContent.startsWith('@')) {
+      userHandle = element.textContent;
+      break;
     }
-
-    /* Main tweet container */
-    [data-testid="tweet"] {
-      background: white !important;
-      padding: 20px !important;
-      margin: auto !important;
-      border-radius: 12px !important;
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1) !important;
-      font-weight: normal !important;
+  }
+  if (!userHandle) {
+    const handleElement = tweetContainer.querySelector('[dir="ltr"] span');
+    if (handleElement && handleElement.textContent.startsWith('@')) {
+      userHandle = handleElement.textContent;
     }
+  }
 
-    /* Profile picture */
-    [data-testid="User-Avatar"] img {
-      width: 50px !important;
-      height: 50px !important;
-      border-radius: 50% !important;
-      margin-bottom: 10px !important;
+  const tweetTextElement = tweetContainer.querySelector('[data-testid="tweetText"]');
+  const tweetText = tweetTextElement ? tweetTextElement.textContent : '';
+  const tweetDate = tweetContainer.querySelector('time')?.textContent || '';
+  const avatarImg = tweetContainer.querySelector('[data-testid="UserAvatar-Container"] img');
+  const originalAvatarSrc = avatarImg ? avatarImg.src : '';
+  
+  // Extract tweet images more reliably - handle multiple images
+  const tweetImages = [];
+  const imageIds = new Set(); // Track unique image IDs to prevent duplicates
+  
+  // Function to extract unique image ID from Twitter URL
+  function getImageId(url) {
+    const match = url.match(/\/media\/([^?&]+)/);
+    return match ? match[1] : url;
+  }
+  
+  // Function to add image if not duplicate
+  function addUniqueImage(src) {
+    if (!src || !src.includes('pbs.twimg.com/media')) return;
+    
+    const imageId = getImageId(src);
+    if (!imageIds.has(imageId)) {
+      imageIds.add(imageId);
+      // Get high quality version
+      const highQualitySrc = src.replace(/&name=[^&]*/, '&name=large').replace(/\?format=[^&]*&name=[^&]*/, '?format=jpg&name=large');
+      tweetImages.push(highQualitySrc);
     }
-
-    /* User's name */
-    [data-testid="User-Name"] {
-      font-size: 18px !important;
-      color: #14171a !important;
-      margin-bottom: 5px !important;
-    }
-
-    /* Tweet text */
-    [data-testid="tweetText"] {
-      font-size: 16px !important;
-      line-height: 1.5 !important;
-      color: #333 !important;
-      margin: 10px 0 !important;
-      padding: 5px !important;
-      font-weight: normal !important;
-    }
-
-    /* Images inside tweets */
-    [data-testid="tweetPhoto"] img {
-      border-radius: 8px !important;
-      margin-top: 10px !important;
-    }
-
-    /* Hide unwanted UI elements (buttons, etc.) */
-    nav, [role="banner"], .css-1dbjc4n, .css-1dbjc4n.r-14lw9ot, [role="group"], [data-testid="tweet-text-show-more-link"], [type="button"] {
-      display: none !important;
-    }
-
-    span { color: #000 !important; }
-  `;
-  document.head.appendChild(tempStyles);
-
-  console.log("✅ Applied temporary styles for better screenshot...");
-
-  // Capture the tweet element
-  html2canvas(tweetElement, {
-    scale: 2, // High resolution
-    useCORS: true, // Fixes images not loading
-    backgroundColor: null, // Transparent background
-    removeContentScripts: true // Prevent unnecessary scripts
-  }).then((canvas) => {
-    document.head.removeChild(tempStyles); // Remove styles after screenshot
-
-    const image = canvas.toDataURL("image/png");
-    const filename = `tweet-${Date.now()}.png`;
-
-    // Create a download link
-    const link = document.createElement("a");
-    link.href = image;
-    link.download = filename;
-    link.click();
-
-    console.log(`📸 Screenshot saved as ${filename}`);
+  }
+  
+  // Try multiple selectors to catch all image patterns
+  const imageSelectors = [
+    '[data-testid="tweetPhoto"] img',
+    'img[src*="pbs.twimg.com/media"]',
+    'a[href*="/photo/"] img'
+  ];
+  
+  imageSelectors.forEach(selector => {
+    const images = tweetContainer.querySelectorAll(selector);
+    images.forEach(img => {
+      if (img.src) {
+        addUniqueImage(img.src);
+      }
+    });
   });
+  
+  // Additional fallback: look for background images in divs
+  const bgImageDivs = tweetContainer.querySelectorAll('div[style*="background-image"]');
+  bgImageDivs.forEach(div => {
+    const style = div.getAttribute('style');
+    const match = style.match(/background-image:\s*url\(["']?(.*?)["']?\)/);
+    if (match && match[1]) {
+      addUniqueImage(match[1]);
+    }
+  });
+  
+  console.log(`Found ${tweetImages.length} unique images:`, tweetImages);
+
+  // Use direct avatar source
+  const proxiedAvatarSrc = originalAvatarSrc;
+
+  const screenshotContainer = document.createElement('div');
+  screenshotContainer.style.cssText = `
+    position: fixed;
+    top: -9999px; /* Hide off-screen */
+    left: 0;
+    background: #15202B;
+    border: none;
+    border-radius: 0;
+    padding: 16px;
+    width: 600px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #F7F9F9;
+  `;
+
+  const renderScreenshot = () => {
+    let avatarHTML = '';
+    if (proxiedAvatarSrc) {
+      avatarHTML = `<div style="width: 48px; height: 48px; border-radius: 50%; margin-right: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">${userName.charAt(0).toUpperCase()}</div>`;
+    }
+
+    // Generate images HTML if there are tweet images
+    let imagesHTML = '';
+    if (tweetImages.length > 0) {
+      if (tweetImages.length === 1) {
+        // If there's only one image, display it as a square
+        imagesHTML = `
+          <div style="width: 100%; aspect-ratio: 1 / 1; margin-top: 12px; border-radius: 8px; overflow: hidden;">
+            <img src="${tweetImages[0]}" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+        `;
+      } else {
+        // If there are multiple images, display them in a grid
+        const imageGrid = tweetImages.map(imgSrc => {
+          return `
+            <div style="flex: 1 1 calc(50% - 4px); margin: 2px; border-radius: 8px; overflow: hidden; height: 200px;">
+              <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+            </div>
+          `;
+        }).join('');
+        imagesHTML = `
+          <div style="display: flex; flex-wrap: wrap; margin: 12px -2px 0;">
+            ${imageGrid}
+          </div>
+        `;
+      }
+    }
+
+    screenshotContainer.innerHTML = `
+      <div style="display: flex; align-items: center;">
+        ${avatarHTML}
+        <div>
+          <div style="font-weight: bold;">${userName}</div>
+          <div style="color: #8899A6;">${userHandle}</div>
+        </div>
+      </div>
+      <div style="margin-top: 12px; font-size: 20px; line-height: 1.4;">${tweetText}</div>
+      ${imagesHTML}
+      <div style="margin-top: 12px; color: #8899A6;">${tweetDate}</div>
+    `;
+
+    document.body.appendChild(screenshotContainer);
+
+    html2canvas(screenshotContainer, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#15202B',
+    }).then(canvas => {
+      const image = canvas.toDataURL('image/png');
+      const filename = `tweet-${Date.now()}.png`;
+
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = filename;
+      link.click();
+
+      showSuccessMessage('📸 Screenshot captured!');
+      document.body.removeChild(screenshotContainer);
+
+    }).catch(error => {
+      showSuccessMessage(`❌ Screenshot failed: ${error.message}`);
+      if (document.body.contains(screenshotContainer)) {
+        document.body.removeChild(screenshotContainer);
+      }
+    });
+  };
+
+  renderScreenshot();
 }
 
 //#region Get tweet URL

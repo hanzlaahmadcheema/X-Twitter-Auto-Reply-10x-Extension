@@ -205,17 +205,19 @@ console.log("Tone Prompt:", prompt); // Log tone prompt
     chrome.scripting.executeScript(
       {
         target: { tabId: sender.tab.id },
-        files: ["libs/html2canvas.min.js"] // Ensure this file exists in your extension directory
+        files: ["libs/html2canvas.min.js"]
       },
       () => {
         if (chrome.runtime.lastError) {
+          console.error("❌ Error injecting html2canvas:", chrome.runtime.lastError.message);
           sendResponse({ success: false, error: chrome.runtime.lastError.message });
         } else {
+          console.log("✅ html2canvas injected successfully.");
           sendResponse({ success: true });
         }
       }
     );
-    return true; // Keep message channel open
+    return true;
   }
 });
 
@@ -236,24 +238,6 @@ function sendNotification() {
   );
 }
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "injectHtml2Canvas") {
-    console.log("📜 Injecting html2canvas script...");
-
-    chrome.scripting.executeScript(
-      {
-        target: { tabId: sender.tab.id },
-        files: ["html2canvas.min.js"], // Injecting from extension files
-      },
-      () => {
-        console.log("✅ html2canvas script injected.");
-        sendResponse({ success: true });
-      }
-    );
-
-    return true; // Keep sendResponse async
-  }
-});
 
 
 const tonePrompts = {
