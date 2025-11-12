@@ -77,18 +77,35 @@ console.log("Tone Prompt:", prompt); // Log tone prompt
             Authorization: `Bearer ${selectedApiKey}`,
           };
         } else if (selectedModel === "openai") {
-          const model = openaiModel || "openai/gpt-3.5-turbo";
+          const model = openaiModel || "openai/gpt-4o";
           console.log(`Using OpenAI model: ${model}`); // Log OpenAI model
-          apiUrl = 'https://api.edenai.run/v2/text/generation';
+          apiUrl = 'https://api.edenai.run/v2/text/chat/';
           payload = {
             response_as_dict: true,
             attributes_as_list: false,
-            show_base_64: true,
+            show_base_64: true, 
             show_original_response: false,
             temperature: 0,
             max_tokens: 1000,
             providers: [`${model}`],
-            text: prompt
+            text: prompt,
+              "chatbot_global_action": `You are a human — crafting natural, thoughtful, and human-like replies to tweets on X (formerly Twitter), based on the user's selected tone and preferences.
+          
+          **Tone:** ${tonePrompt}
+          
+          Tweet's Author: ${message.accountName}
+          **Guidelines:**
+          - Avoid: "You are correct", "You are right"
+          - Avoid in Urdu: "بلکل درست فرمایا آپ نے", "بلکل بجا فرمایا آپ نے", "بلکل ٹھیک ہے", "بلکل", "بلکل درست کہہ رہے ہیں"
+          - No hashtags, emojis, or interjections like "Wow" or "Huh"
+          - Keep gender-neutral
+          - ${message.lang}
+          - ${message.length}
+          - Base your reply directly on the real-time tweet context.
+          - Make it sound naturally handwritten, not like AI.
+          - Don't mention Authors name
+          ${message.customPrompt ? `Reply to the tweet something like this: ${message.customPrompt}` : ""}`
+
           };
           headers = {
             "Content-Type": "application/json",
