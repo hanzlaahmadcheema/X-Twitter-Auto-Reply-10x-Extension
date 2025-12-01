@@ -54,8 +54,7 @@ console.log("Tone Prompt:", prompt); // Log tone prompt
           payload = {
             contents: [{
               parts: [
-                { text: systemPrompt },
-                { text: prompt }
+                { text: `${systemPrompt}\n\n${prompt}` }
               ]
             }]
           };
@@ -108,7 +107,7 @@ console.log("Tone Prompt:", prompt); // Log tone prompt
 
           };
           headers = {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json", 
             Authorization: `Bearer ${selectedApiKey}`,
           };
 
@@ -158,10 +157,13 @@ console.log("Tone Prompt:", prompt); // Log tone prompt
           });
 
           if (!response.ok) {
-            throw new Error(`Error: ${response.statusText}`);
+            const errorBody = await response.json().catch(() => response.text());
+            console.error("API Error Response:", JSON.stringify(errorBody, null, 2));
+            throw new Error(`Error: ${response.status} ${response.statusText}`);
           }
 
           const data = await response.json();
+          console.log("Gemini API Response:", JSON.stringify(data, null, 2));
           const reply =
             selectedModel === "gemini"
               ? data?.candidates?.[0]?.content?.parts?.[0]?.text
