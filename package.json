@@ -1,0 +1,27 @@
+{
+  "name": "x-twitter-auto-reply-10x-extension",
+  "version": "1.0.0",
+  "description": "This Chrome extension helps users efficiently engage on Twitter with customizable features like auto-reply generation, alarm notifications, and more. Stay active, organized, and productive with ease!",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "tailwindcss -i ./chrome-extension/input.css -o ./chrome-extension/popup.css --minify",
+    "watch:css": "tailwindcss -i ./chrome-extension/input.css -o ./chrome-extension/popup.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hanzlaahmadcheema/X-Twitter-Auto-Reply-10x-Extension.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/hanzlaahmadcheema/X-Twitter-Auto-Reply-10x-Extension/issues"
+  },
+  "homepage": "https://github.com/hanzlaahmadcheema/X-Twitter-Auto-Reply-10x-Extension#readme",
+  "devDependencies": {
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.1"
+  }
+}
