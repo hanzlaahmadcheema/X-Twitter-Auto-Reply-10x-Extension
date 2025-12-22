@@ -1,3 +1,9 @@
+// Inject Font Awesome CSS
+const fontAwesomeLink = document.createElement('link');
+fontAwesomeLink.rel = 'stylesheet';
+fontAwesomeLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
+document.head.appendChild(fontAwesomeLink);
+
 function getTweetContext() {
   let tweetText = "";
   const mainTweetElement =
@@ -108,7 +114,8 @@ function getTweetContextFromShareButton(shareButton) {
   const tweetContainer = shareButton.closest('[data-testid="tweet"]');
   const mainTweetElement = tweetContainer ? tweetContainer.querySelector('[data-testid="tweetText"]') : null;
   if (mainTweetElement) {
-    tweetText = mainTweetElement.innerText.trim();
+    // Use textContent instead of innerText to preserve emojis
+    tweetText = mainTweetElement.textContent.trim();
     console.log(tweetText);
     return tweetText;
   }
@@ -823,7 +830,7 @@ function insertCopyTweetButton() {
       // 📋 Copy Tweet Button
       const copyTweetButton = document.createElement("button");
       copyTweetButton.className = "copy-tweet-btn";
-      copyTweetButton.textContent = "📋"; // Copy Icon
+      copyTweetButton.innerHTML = '<i class="fas fa-copy"></i>'; // Copy Icon
       copyTweetButton.style.cssText = `
         padding: 6px;
         color: white;
@@ -838,7 +845,7 @@ function insertCopyTweetButton() {
       // 📸 Screenshot Tweet Button
       const screenshotButton = document.createElement("button");
       screenshotButton.className = "screenshot-btn";
-      screenshotButton.textContent = "📸"; // Camera Icon
+      screenshotButton.innerHTML = '<i class="fas fa-camera"></i>'; // Camera Icon
       screenshotButton.style.cssText = `
         padding: 6px;
         color: white;
@@ -862,22 +869,56 @@ function insertCopyTweetButton() {
 function copyTweetText(button, shareButton) {
   const tweetText = getTweetContextFromShareButton(shareButton);
   if (tweetText) {
-    navigator.clipboard.writeText(tweetText).then(() => {
-      console.log("Tweet text copied to clipboard:", tweetText);
-      button.textContent = "✔";
-      button.style.color = "green";
-      showSuccessMessage("Text Copied to clipboard!")
-      setTimeout(() => {
-        button.textContent = "📋";
-        button.style.color = "";
-      }, 4000);
-    }).catch(err => {
-      console.error("Failed to copy tweet text:", err);
-      showSuccessMessage("Failed to copy tweet text:", err)
-    });
+    // Try navigator.clipboard first (modern, secure method)
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(tweetText).then(() => {
+        console.log("Tweet text copied to clipboard:", tweetText);
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        button.style.color = "green";
+        showSuccessMessage("Text Copied to clipboard!")
+        setTimeout(() => {
+          button.innerHTML = '<i class="fas fa-copy"></i>';
+          button.style.color = "";
+        }, 4000);
+      }).catch(err => {
+        console.error("Failed with navigator.clipboard, trying fallback:", err);
+        copyWithFallback(tweetText, button);
+      });
+    } else {
+      // Use fallback for older browsers
+      copyWithFallback(tweetText, button);
+    }
   } else {
     console.error("No tweet text found to copy!");
     showSuccessMessage("No tweet text found to copy!");
+  }
+}
+
+function copyWithFallback(tweetText, button) {
+  const textarea = document.createElement("textarea");
+  textarea.value = tweetText;
+  textarea.style.position = "fixed";
+  textarea.style.top = "0";
+  textarea.style.left = "0";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  
+  try {
+    document.execCommand("copy");
+    console.log("Tweet text copied to clipboard (fallback):", tweetText);
+    button.innerHTML = '<i class="fas fa-check"></i>';
+    button.style.color = "green";
+    showSuccessMessage("Text Copied to clipboard!")
+    setTimeout(() => {
+      button.innerHTML = '<i class="fas fa-copy"></i>';
+      button.style.color = "";
+    }, 4000);
+  } catch (err) {
+    console.error("Failed to copy tweet text with fallback:", err);
+    showSuccessMessage("Failed to copy tweet text")
+  } finally {
+    document.body.removeChild(textarea);
   }
 }
 
