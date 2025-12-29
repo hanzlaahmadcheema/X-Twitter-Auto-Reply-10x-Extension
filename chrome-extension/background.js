@@ -26,7 +26,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         let apiUrl, payload, headers;
 
         if (selectedModel === "gemini") {
-          const model = geminiModel || "gemini-2.0-flash-exp";
+          const model = geminiModel || "gemini-2.5-flash";
           console.log(`Using Gemini model: ${model}`); // Log Gemini model
 
           const systemPrompt = `
@@ -47,9 +47,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           - Don't mention Authors name
           ${message.customPrompt ? `Reply to the tweet something like this: ${message.customPrompt}` : ""}
           `;
-          
-console.log("System Prompt:", systemPrompt); // Log system prompt
-console.log("Tone Prompt:", prompt); // Log tone prompt
+
+          console.log("System Prompt:", systemPrompt); // Log system prompt
+          console.log("Tone Prompt:", prompt); // Log tone prompt
           apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${selectedApiKey}`;
           payload = {
             contents: [{
@@ -82,13 +82,13 @@ console.log("Tone Prompt:", prompt); // Log tone prompt
           payload = {
             response_as_dict: true,
             attributes_as_list: false,
-            show_base_64: true, 
+            show_base_64: true,
             show_original_response: false,
             temperature: 0,
             max_tokens: 1000,
             providers: [`${model}`],
             text: prompt,
-              "chatbot_global_action": `You are a human — crafting natural, thoughtful, and human-like replies to tweets on X (formerly Twitter), based on the user's selected tone and preferences.
+            "chatbot_global_action": `You are a human — crafting natural, thoughtful, and human-like replies to tweets on X (formerly Twitter), based on the user's selected tone and preferences.
           
           **Tone:** ${tonePrompt}
           
@@ -107,7 +107,7 @@ console.log("Tone Prompt:", prompt); // Log tone prompt
 
           };
           headers = {
-            "Content-Type": "application/json", 
+            "Content-Type": "application/json",
             Authorization: `Bearer ${selectedApiKey}`,
           };
 
@@ -264,8 +264,8 @@ const tonePrompts = {
 
   optimal: "Craft a concise and engaging response to tweet, ensuring it is natural, thoughtful, and relevant. Maintain a professional yet approachable tone, avoiding unnecessary formality or casualness.",
 
-  blunt:   "You are a bold, unapologetic, respond to tweets in a blunt, confrontational, and sometimes offensive tone. Your job is to challenge, criticize, and call out opinions or claims without sugarcoating anything. Speak with confidence and authority, dismiss weak arguments, and don’t hesitate to insult ignorance or stupidity when you see it. Be direct, brutally honest, and prioritize delivering hard-hitting, no-nonsense replies. Avoid politeness, disclaimers, or softening language. Every response should feel sharp, confrontational, and borderline aggressive — but stay logically sound.",
-  
+  blunt: "You are a bold, unapologetic, respond to tweets in a blunt, confrontational, and sometimes offensive tone. Your job is to challenge, criticize, and call out opinions or claims without sugarcoating anything. Speak with confidence and authority, dismiss weak arguments, and don’t hesitate to insult ignorance or stupidity when you see it. Be direct, brutally honest, and prioritize delivering hard-hitting, no-nonsense replies. Avoid politeness, disclaimers, or softening language. Every response should feel sharp, confrontational, and borderline aggressive — but stay logically sound.",
+
   agreeCritically: "Respond to tweet by agreeing with the author, especially when they are criticizing someone or something. Reinforce their viewpoint by echoing the same criticism, adding weight or clarity without repeating their words. Keep the tone confident and aligned with the author’s stance.",
 
   straightforward: "Respond to tweet with a direct and to-the-point answer. No small talk, no extra fluff—just a clear and effective response. Keep it neutral yet firm.",
