@@ -6,7 +6,8 @@ const ICONS = {
   timesCircle: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/></svg>',
   exclamationCircle: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zM224 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z"/></svg>',
   copy: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32"><path fill="#1da1f2" d="M8.5 5.25A3.25 3.25 0 0 1 11.75 2h12A3.25 3.25 0 0 1 27 5.25v18a3.25 3.25 0 0 1-3.25 3.25h-12a3.25 3.25 0 0 1-3.25-3.25zM5 8.75c0-1.352.826-2.511 2-3.001v17.75a4.5 4.5 0 0 0 4.5 4.5h11.751a3.25 3.25 0 0 1-3.001 2H11.5A6.5 6.5 0 0 1 5 23.5z"/></svg>' // Using 'file' icon as copy, or standard copy
-};
+};
+
 
 // Inject Font Awesome CSS (Keeping it for now as backup or other usages, but user asked to use SVGs instead of <i>)
 const fontAwesomeLink = document.createElement('link');
@@ -483,6 +484,7 @@ function appendToneSelector(toolbar) {
 
       recognition.onstart = () => {
         micButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`; // Update button UI
+        micButton.dataset.state = "recording";
         showSuccessMessage(`${ICONS.microphone} Speech recognition started...`);
       };
 
@@ -511,13 +513,14 @@ function appendToneSelector(toolbar) {
     if (recognition) {
       recognition.stop();
       micButton.innerHTML = ICONS.microphone; // Reset button UI
+      micButton.dataset.state = "idle";
       showSuccessMessage(`${ICONS.stop} Speech recognition stopped.`);
     }
   }
 
   // Mic button event listener (Manually stop only)
   micButton.addEventListener("click", () => {
-    if (micButton.innerHTML.includes("d=\"M192 0C139 0 96 43 96 96V256c0 53 43 96 96 96s96-43 96-96V96c0-53-43-96-96-96zM64 216c0-11.2-6-21-15.4-26.1s-20.9-4.3-29.3 2.1l0 0C7.2 201.2 0 216.3 0 231.7V256c0 97.4 72.3 177.9 166.4 190.5V512h-32c-17.7 0-32 14.3-32 32s14.3 32 32 32h116c17.7 0 32-14.3 32-32s-14.3-32-32-32H217.6V446.5C311.7 433.9 384 353.4 384 256v-24.3c0-15.4-7.2-30.5-19.3-39.7l0 0c-8.4-6.4-19.9-7-29.3-2.1S320 204.8 320 216v40c0 70.7-57.3 128-128 128s-128-57.3-128-128V216z\"")) { // Check for unique path part of microphone icon
+    if (micButton.dataset.state !== "recording") {
       startSpeechRecognition();
     } else {
       stopSpeechRecognition();
@@ -565,6 +568,8 @@ function appendToneSelector(toolbar) {
       z-index: 1000;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     `;
+      micButton.dataset.state = "idle";
+
 
       // Append mic button to the body
       document.body.appendChild(micButton);
@@ -581,6 +586,7 @@ function appendToneSelector(toolbar) {
 
           recognition.onstart = () => {
             micButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`; // Update button UI
+            micButton.dataset.state = "recording";
             showSuccessMessage(`${ICONS.microphone} Speech recognition started...`);
           };
 
@@ -608,12 +614,13 @@ function appendToneSelector(toolbar) {
         if (recognition) {
           recognition.stop();
           micButton.innerHTML = ICONS.microphone; // Reset button UI
+          micButton.dataset.state = "idle";
           showSuccessMessage(`${ICONS.stop} Speech recognition stopped.`);
         }
       }
 
       micButton.addEventListener("click", () => {
-        if (micButton.innerHTML.includes("d=\"M192 0C139 0 96 43 96 96V256c0 53 43 96 96 96s96-43 96-96V96c0-53-43-96-96-96zM64 216c0-11.2-6-21-15.4-26.1s-20.9-4.3-29.3 2.1l0 0C7.2 201.2 0 216.3 0 231.7V256c0 97.4 72.3 177.9 166.4 190.5V512h-32c-17.7 0-32 14.3-32 32s14.3 32 32 32h116c17.7 0 32-14.3 32-32s-14.3-32-32-32H217.6V446.5C311.7 433.9 384 353.4 384 256v-24.3c0-15.4-7.2-30.5-19.3-39.7l0 0c-8.4-6.4-19.9-7-29.3-2.1S320 204.8 320 216v40c0 70.7-57.3 128-128 128s-128-57.3-128-128V216z\"")) {
+        if (micButton.dataset.state !== "recording") {
           startSpeechRecognition();
         } else {
           stopSpeechRecognition();
@@ -638,6 +645,8 @@ function appendToneSelector(toolbar) {
       cursor: pointer;
       z-index: 1000;
     `;
+      micButton.dataset.state = "idle";
+
 
       // Append mic button to the parent of the input field
       whatsappInput.parentElement.appendChild(micButton);
@@ -654,6 +663,7 @@ function appendToneSelector(toolbar) {
 
           recognition.onstart = () => {
             micButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`; // Update button UI
+            micButton.dataset.state = "recording";
             showSuccessMessage(`${ICONS.microphone} Speech recognition started...`);
           };
 
@@ -682,13 +692,14 @@ function appendToneSelector(toolbar) {
         if (recognition) {
           recognition.stop();
           micButton.innerHTML = ICONS.microphone; // Reset button UI
+          micButton.dataset.state = "idle";
           showSuccessMessage(`${ICONS.stop} Speech recognition stopped.`);
         }
       }
 
       // Mic button event listener (Manually stop only)
       micButton.addEventListener("click", () => {
-        if (micButton.innerHTML.includes("d=\"M192 0C139 0 96 43 96 96V256c0 53 43 96 96 96s96-43 96-96V96c0-53-43-96-96-96zM64 216c0-11.2-6-21-15.4-26.1s-20.9-4.3-29.3 2.1l0 0C7.2 201.2 0 216.3 0 231.7V256c0 97.4 72.3 177.9 166.4 190.5V512h-32c-17.7 0-32 14.3-32 32s14.3 32 32 32h116c17.7 0 32-14.3 32-32s-14.3-32-32-32H217.6V446.5C311.7 433.9 384 353.4 384 256v-24.3c0-15.4-7.2-30.5-19.3-39.7l0 0c-8.4-6.4-19.9-7-29.3-2.1S320 204.8 320 216v40c0 70.7-57.3 128-128 128s-128-57.3-128-128V216z\"")) {
+        if (micButton.dataset.state !== "recording") {
           startSpeechRecognition();
         } else {
           stopSpeechRecognition();
