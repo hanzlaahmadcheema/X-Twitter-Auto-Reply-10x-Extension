@@ -130,9 +130,9 @@
 
 /* Mic Button */
 .mic-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--model-color);
+  background: #1DA1F2;
+  border: none;
+  color: #fff;
   width: 32px;
   height: 32px;
   border-radius: 50%;
