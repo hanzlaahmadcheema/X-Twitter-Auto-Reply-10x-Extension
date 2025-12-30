@@ -5,11 +5,11 @@ let currentAlarmType = null; // Track the active alarm type
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "generateReply") {
     chrome.storage.sync.get(
-      ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel"],
+      ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "ollamaModel", "ollamaUrl"],
       async (data) => {
-        const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel } = data;
+        const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, ollamaModel, ollamaUrl } = data;
 
-        if (!selectedApiKey) {
+        if (!selectedApiKey && selectedModel !== "ollama") {
           sendResponse({ error: "API key not set. Please select an API key." });
           return;
         }
@@ -143,6 +143,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               sendResponse({ error: 'Error generating AI response.' });
             });
           return; // Ensure the response is sent asynchronously
+        } else if (selectedModel === "ollama") {
+          const model = ollamaModel || "gemma2:9b";
+          const baseUrl = ollamaUrl || "http://127.0.0.1:11434";
+          console.log(`Using Ollama model: ${model} at ${baseUrl}`);
+          apiUrl = `${baseUrl}/api/generate`;
+          payload = {
+            model: model,
+            prompt: prompt,
+            system: `You are a human — crafting natural, thoughtful, and human-like replies to tweets on X (formerly Twitter), based on the user's selected tone and preferences.
+            
+            **Tone:** ${tonePrompt}
+            
+            Tweet's Author: ${message.accountName}
+            **Guidelines:**
+            - Avoid: "You are correct", "You are right"
+            - No hashtags, emojis, or interjections like "Wow" or "Huh"
+            - Keep gender-neutral
+            - ${message.lang}
+            - ${message.length}
+            - Base your reply directly on the real-time tweet context.
+            - Make it sound naturally handwritten, not like AI.
+            - Don't mention Authors name
+            ${message.customPrompt ? `Reply to the tweet something like this: ${message.customPrompt}` : ""}`,
+            stream: false
+          };
+          headers = { "Content-Type": "application/json" };
         } else {
           console.error("Error: Invalid model selected.");
           sendResponse({ error: "Error: Invalid model selected." });
@@ -150,29 +176,46 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         try {
+          console.log(`Sending request to ${selectedModel} API at ${apiUrl}`);
           const response = await fetch(apiUrl, {
             method: "POST",
             headers: headers,
             body: JSON.stringify(payload),
           });
 
-          if (!response.ok) {
-            const errorBody = await response.json().catch(() => response.text());
-            console.error("API Error Response:", JSON.stringify(errorBody, null, 2));
-            throw new Error(`Error: ${response.status} ${response.statusText}`);
+          const responseText = await response.text();
+          let data;
+          try {
+            data = JSON.parse(responseText);
+          } catch (e) {
+            data = responseText;
           }
 
-          const data = await response.json();
-          console.log("Gemini API Response:", JSON.stringify(data, null, 2));
-          const reply =
-            selectedModel === "gemini"
-              ? data?.candidates?.[0]?.content?.parts?.[0]?.text
-              : data?.choices?.[0]?.message?.content;
+          if (!response.ok) {
+            console.error(`${selectedModel} API Error Response:`, responseText);
+            throw new Error(`API Error: ${response.status} ${response.statusText} - ${typeof data === 'string' ? data : JSON.stringify(data)}`);
+          }
 
-          sendResponse({ reply: reply });
+          console.log(`${selectedModel} API Response:`, data);
+
+          let reply;
+          if (selectedModel === "gemini") {
+            reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          } else if (selectedModel === "ollama") {
+            reply = data?.response;
+          } else {
+            reply = data?.choices?.[0]?.message?.content;
+          }
+
+          if (reply) {
+            sendResponse({ reply: reply });
+          } else {
+            console.error(`${selectedModel} empty reply in data:`, data);
+            sendResponse({ error: `Error: ${selectedModel} returned an empty response.` });
+          }
         } catch (error) {
-          console.error("API Error:", error);
-          sendResponse({ error: "Error generating AI response." });
+          console.error(`${selectedModel} API Error:`, error);
+          sendResponse({ error: `Error: ${error.message}` });
         }
       }
     );

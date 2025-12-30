@@ -109,13 +109,44 @@ function insertCopyText(copyText) {
   }
 }
 
+function extractTextWithEmojis(element) {
+  let text = "";
+  if (!element) return text;
+
+  // Handle text nodes
+  if (element.nodeType === Node.TEXT_NODE) {
+    return element.textContent;
+  }
+
+  // Handle images (often used for emojis on Twitter)
+  if (element.tagName === "IMG") {
+    const alt = element.getAttribute("alt");
+    if (alt) {
+      return alt;
+    }
+  }
+
+  // Recursively process child nodes
+  for (const child of element.childNodes) {
+    text += extractTextWithEmojis(child);
+  }
+
+  return text;
+}
+
 function getTweetContextFromShareButton(shareButton) {
   let tweetText = "";
   const tweetContainer = shareButton.closest('[data-testid="tweet"]');
   const mainTweetElement = tweetContainer ? tweetContainer.querySelector('[data-testid="tweetText"]') : null;
   if (mainTweetElement) {
-    // Use textContent instead of innerText to preserve emojis
-    tweetText = mainTweetElement.textContent.trim();
+    // Use extractTextWithEmojis to preserve emojis from images
+    tweetText = extractTextWithEmojis(mainTweetElement).trim();
+
+    // Remove hashtags
+    tweetText = tweetText.replace(/#\S+/g, "").trim();
+    // Remove extra spaces
+    tweetText = tweetText.replace(/\s\s+/g, " ");
+
     console.log(tweetText);
     return tweetText;
   }
@@ -188,21 +219,21 @@ function takeScreenshot(tweetElement) {
   const tweetDate = tweetContainer.querySelector('time')?.textContent || '';
   const avatarImg = tweetContainer.querySelector('[data-testid="UserAvatar-Container"] img');
   const originalAvatarSrc = avatarImg ? avatarImg.src : '';
-  
+
   // Extract tweet images more reliably - handle multiple images
   const tweetImages = [];
   const imageIds = new Set(); // Track unique image IDs to prevent duplicates
-  
+
   // Function to extract unique image ID from Twitter URL
   function getImageId(url) {
     const match = url.match(/\/media\/([^?&]+)/);
     return match ? match[1] : url;
   }
-  
+
   // Function to add image if not duplicate
   function addUniqueImage(src) {
     if (!src || !src.includes('pbs.twimg.com/media')) return;
-    
+
     const imageId = getImageId(src);
     if (!imageIds.has(imageId)) {
       imageIds.add(imageId);
@@ -211,14 +242,14 @@ function takeScreenshot(tweetElement) {
       tweetImages.push(highQualitySrc);
     }
   }
-  
+
   // Try multiple selectors to catch all image patterns
   const imageSelectors = [
     '[data-testid="tweetPhoto"] img',
     'img[src*="pbs.twimg.com/media"]',
     'a[href*="/photo/"] img'
   ];
-  
+
   imageSelectors.forEach(selector => {
     const images = tweetContainer.querySelectorAll(selector);
     images.forEach(img => {
@@ -227,7 +258,7 @@ function takeScreenshot(tweetElement) {
       }
     });
   });
-  
+
   // Additional fallback: look for background images in divs
   const bgImageDivs = tweetContainer.querySelectorAll('div[style*="background-image"]');
   bgImageDivs.forEach(div => {
@@ -237,7 +268,7 @@ function takeScreenshot(tweetElement) {
       addUniqueImage(match[1]);
     }
   });
-  
+
   console.log(`Found ${tweetImages.length} unique images:`, tweetImages);
 
   // Use direct avatar source
@@ -340,7 +371,7 @@ function getTweetUrl(shareButton) {
 
   if (tweetLink) {
     return `https://twitter.com${tweetLink.getAttribute("href")}`;
-      
+
   }
   return null;
 }
@@ -425,92 +456,92 @@ function appendToneSelector(toolbar) {
   `;
   toolbar.appendChild(container);
 
-//#region Mic Setting
+  //#region Mic Setting
 
-const micButton = document.querySelector(".mic-btn");
-let recognition = null;
-let spacePressCount = 0;
-let spaceTimeout;
+  const micButton = document.querySelector(".mic-btn");
+  let recognition = null;
+  let spacePressCount = 0;
+  let spaceTimeout;
 
-// Function to start speech recognition
-function startSpeechRecognition() {
-  if (!recognition) {
-    recognition = new webkitSpeechRecognition(); // Use Chrome's API
-    recognition.lang = "ur-PK"; // Set language to Urdu
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+  // Function to start speech recognition
+  function startSpeechRecognition() {
+    if (!recognition) {
+      recognition = new webkitSpeechRecognition(); // Use Chrome's API
+      recognition.lang = "ur-PK"; // Set language to Urdu
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
 
-    recognition.onstart = () => {
-      micButton.textContent = "🔴"; // Update button UI
-      showSuccessMessage("🎤 Speech recognition started...");
-    };
+      recognition.onstart = () => {
+        micButton.textContent = "🔴"; // Update button UI
+        showSuccessMessage("🎤 Speech recognition started...");
+      };
 
-    recognition.onresult = (event) => {
-      let speechResult = event.results[0][0].transcript;
-      speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
-      insertReplyText(speechResult);
-      showSuccessMessage("✅ Speech recognized:", speechResult);
-    };
+      recognition.onresult = (event) => {
+        let speechResult = event.results[0][0].transcript;
+        speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
+        insertReplyText(speechResult);
+        showSuccessMessage("✅ Speech recognized:", speechResult);
+      };
 
-    recognition.onerror = (event) => {
-      showSuccessMessage("❌ Speech recognition error:", event.error);
-      stopSpeechRecognition(); // Stop only on a real error
-    };
+      recognition.onerror = (event) => {
+        showSuccessMessage("❌ Speech recognition error:", event.error);
+        stopSpeechRecognition(); // Stop only on a real error
+      };
 
-    recognition.onend = () => {
+      recognition.onend = () => {
+        stopSpeechRecognition();
+      };
+    }
+
+    recognition.start();
+  }
+
+  // Function to stop speech recognition manually
+  function stopSpeechRecognition() {
+    if (recognition) {
+      recognition.stop();
+      micButton.textContent = "▶"; // Reset button UI
+      showSuccessMessage("🛑 Speech recognition stopped.");
+    }
+  }
+
+  // Mic button event listener (Manually stop only)
+  micButton.addEventListener("click", () => {
+    if (micButton.textContent === "▶") {
+      startSpeechRecognition();
+    } else if (micButton.textContent === "🔴") {
       stopSpeechRecognition();
-    };
-  }
-
-  recognition.start();
-}
-
-// Function to stop speech recognition manually
-function stopSpeechRecognition() {
-  if (recognition) {
-    recognition.stop();
-    micButton.textContent = "▶"; // Reset button UI
-    showSuccessMessage("🛑 Speech recognition stopped.");
-  }
-}
-
-// Mic button event listener (Manually stop only)
-micButton.addEventListener("click", () => {
-  if (micButton.textContent === "▶") {
-    startSpeechRecognition();
-  } else if (micButton.textContent === "🔴") {
-    stopSpeechRecognition();
-  }
-});
+    }
+  });
 
 
-    document.addEventListener("keydown", (event) => {
-      if (event.code === "Space") {
-        spacePressCount++;
-  
-        if (spacePressCount === 2) {
-          event.preventDefault(); // Prevent unwanted scrolling
-          micButton.click(); // Simulate mic button click
-          spacePressCount = 0; // Reset counter
-        }
-  
-        clearTimeout(spaceTimeout);
-        spaceTimeout = setTimeout(() => {
-          spacePressCount = 0; // Reset counter if not pressed twice in quick succession
-        }, 300);
+  document.addEventListener("keydown", (event) => {
+    if (event.code === "Space") {
+      spacePressCount++;
+
+      if (spacePressCount === 2) {
+        event.preventDefault(); // Prevent unwanted scrolling
+        micButton.click(); // Simulate mic button click
+        spacePressCount = 0; // Reset counter
       }
-    });  
 
-    // Function to add mic button to WhatsApp input field
-function addMicToWhatsApp() {
-  const whatsappInput = document.querySelector('[contenteditable="true"][data-tab="10"]'); // WhatsApp input field
+      clearTimeout(spaceTimeout);
+      spaceTimeout = setTimeout(() => {
+        spacePressCount = 0; // Reset counter if not pressed twice in quick succession
+      }, 300);
+    }
+  });
 
-  if (whatsappInput && !document.querySelector(".whatsapp-mic-btn")) {
-    // Create mic button
-    const micButton = document.createElement("button");
-    micButton.className = "whatsapp-mic-btn";
-    micButton.textContent = "🎤"; // Mic emoji
-    micButton.style.cssText = `
+  // Function to add mic button to WhatsApp input field
+  function addMicToWhatsApp() {
+    const whatsappInput = document.querySelector('[contenteditable="true"][data-tab="10"]'); // WhatsApp input field
+
+    if (whatsappInput && !document.querySelector(".whatsapp-mic-btn")) {
+      // Create mic button
+      const micButton = document.createElement("button");
+      micButton.className = "whatsapp-mic-btn";
+      micButton.textContent = "🎤"; // Mic emoji
+      micButton.style.cssText = `
       position: fixed;
       right: 20px;
       bottom: 20px;
@@ -525,66 +556,66 @@ function addMicToWhatsApp() {
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     `;
 
-    // Append mic button to the body
-    document.body.appendChild(micButton);
+      // Append mic button to the body
+      document.body.appendChild(micButton);
 
-    // Speech recognition setup
-    let recognition = null;
+      // Speech recognition setup
+      let recognition = null;
 
-    function startSpeechRecognition() {
-      if (!recognition) {
-        recognition = new webkitSpeechRecognition(); // Use Chrome's API
-        recognition.lang = "ur-PK"; // Set language to Urdu
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
+      function startSpeechRecognition() {
+        if (!recognition) {
+          recognition = new webkitSpeechRecognition(); // Use Chrome's API
+          recognition.lang = "ur-PK"; // Set language to Urdu
+          recognition.interimResults = false;
+          recognition.maxAlternatives = 1;
 
-        recognition.onstart = () => {
-          micButton.textContent = "🔴"; // Update button UI
-          showSuccessMessage("🎤 Speech recognition started...");
-        };
+          recognition.onstart = () => {
+            micButton.textContent = "🔴"; // Update button UI
+            showSuccessMessage("🎤 Speech recognition started...");
+          };
 
-        recognition.onresult = (event) => {
-          let speechResult = event.results[0][0].transcript;
-          speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
-          insertReplyText(speechResult);
-          showSuccessMessage("✅ Speech recognized:", speechResult);
-        };
+          recognition.onresult = (event) => {
+            let speechResult = event.results[0][0].transcript;
+            speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
+            insertReplyText(speechResult);
+            showSuccessMessage("✅ Speech recognized:", speechResult);
+          };
 
-        recognition.onerror = (event) => {
-          showSuccessMessage("❌ Speech recognition error:", event.error);
-          stopSpeechRecognition(); // Stop only on a real error
-        };
+          recognition.onerror = (event) => {
+            showSuccessMessage("❌ Speech recognition error:", event.error);
+            stopSpeechRecognition(); // Stop only on a real error
+          };
 
-        recognition.onend = () => {
+          recognition.onend = () => {
+            stopSpeechRecognition();
+          };
+        }
+
+        recognition.start();
+      }
+
+      function stopSpeechRecognition() {
+        if (recognition) {
+          recognition.stop();
+          micButton.textContent = "▶"; // Reset button UI
+          showSuccessMessage("🛑 Speech recognition stopped.");
+        }
+      }
+
+      micButton.addEventListener("click", () => {
+        if (micButton.textContent === "▶") {
+          startSpeechRecognition();
+        } else if (micButton.textContent === "🔴") {
           stopSpeechRecognition();
-        };
-      }
-
-      recognition.start();
+        }
+      });
     }
-
-    function stopSpeechRecognition() {
-      if (recognition) {
-        recognition.stop();
-        micButton.textContent = "▶"; // Reset button UI
-        showSuccessMessage("🛑 Speech recognition stopped.");
-      }
-    }
-
-    micButton.addEventListener("click", () => {
-      if (micButton.textContent === "▶") {
-        startSpeechRecognition();
-      } else if (micButton.textContent === "🔴") {
-        stopSpeechRecognition();
-      }
-    });
-  }
-  if (whatsappInput && !document.querySelector(".whatsapp-mic-btn")) {
-    // Create mic button
-    const micButton = document.createElement("button");
-    micButton.className = "whatsapp-mic-btn";
-    micButton.textContent = "🎤"; // Mic emoji
-    micButton.style.cssText = `
+    if (whatsappInput && !document.querySelector(".whatsapp-mic-btn")) {
+      // Create mic button
+      const micButton = document.createElement("button");
+      micButton.className = "whatsapp-mic-btn";
+      micButton.textContent = "🎤"; // Mic emoji
+      micButton.style.cssText = `
       position: absolute;
       right: 10px;
       bottom: 10px;
@@ -598,70 +629,70 @@ function addMicToWhatsApp() {
       z-index: 1000;
     `;
 
-    // Append mic button to the parent of the input field
-    whatsappInput.parentElement.appendChild(micButton);
+      // Append mic button to the parent of the input field
+      whatsappInput.parentElement.appendChild(micButton);
 
-    // Speech recognition setup
-    let recognition = null;
+      // Speech recognition setup
+      let recognition = null;
 
-    function startSpeechRecognition() {
-  if (!recognition) {
-    recognition = new webkitSpeechRecognition(); // Use Chrome's API
-    recognition.lang = "ur-PK"; // Set language to Urdu
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+      function startSpeechRecognition() {
+        if (!recognition) {
+          recognition = new webkitSpeechRecognition(); // Use Chrome's API
+          recognition.lang = "ur-PK"; // Set language to Urdu
+          recognition.interimResults = false;
+          recognition.maxAlternatives = 1;
 
-    recognition.onstart = () => {
-      micButton.textContent = "🔴"; // Update button UI
-      showSuccessMessage("🎤 Speech recognition started...");
-    };
+          recognition.onstart = () => {
+            micButton.textContent = "🔴"; // Update button UI
+            showSuccessMessage("🎤 Speech recognition started...");
+          };
 
-    recognition.onresult = (event) => {
-      let speechResult = event.results[0][0].transcript;
-      speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
-      insertReplyText(speechResult);
-      showSuccessMessage("✅ Speech recognized:", speechResult);
-    };
+          recognition.onresult = (event) => {
+            let speechResult = event.results[0][0].transcript;
+            speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
+            insertReplyText(speechResult);
+            showSuccessMessage("✅ Speech recognized:", speechResult);
+          };
 
-    recognition.onerror = (event) => {
-      showSuccessMessage("❌ Speech recognition error:", event.error);
-      stopSpeechRecognition(); // Stop only on a real error
-    };
+          recognition.onerror = (event) => {
+            showSuccessMessage("❌ Speech recognition error:", event.error);
+            stopSpeechRecognition(); // Stop only on a real error
+          };
 
-    recognition.onend = () => {
-      stopSpeechRecognition();
-    };
+          recognition.onend = () => {
+            stopSpeechRecognition();
+          };
+        }
+
+        recognition.start();
+      }
+
+      // Function to stop speech recognition manually
+      function stopSpeechRecognition() {
+        if (recognition) {
+          recognition.stop();
+          micButton.textContent = "▶"; // Reset button UI
+          showSuccessMessage("🛑 Speech recognition stopped.");
+        }
+      }
+
+      // Mic button event listener (Manually stop only)
+      micButton.addEventListener("click", () => {
+        if (micButton.textContent === "▶") {
+          startSpeechRecognition();
+        } else if (micButton.textContent === "🔴") {
+          stopSpeechRecognition();
+        }
+      });
+    }
   }
 
-  recognition.start();
-}
+  // Observe DOM changes to detect WhatsApp input field
+  const whatsappObserver = new MutationObserver(() => {
+    addMicToWhatsApp();
+  });
 
-// Function to stop speech recognition manually
-function stopSpeechRecognition() {
-  if (recognition) {
-    recognition.stop();
-    micButton.textContent = "▶"; // Reset button UI
-    showSuccessMessage("🛑 Speech recognition stopped.");
-  }
-}
-
-// Mic button event listener (Manually stop only)
-micButton.addEventListener("click", () => {
-  if (micButton.textContent === "▶") {
-    startSpeechRecognition();
-  } else if (micButton.textContent === "🔴") {
-    stopSpeechRecognition();
-  }
-});
-  }
-}
-
-// Observe DOM changes to detect WhatsApp input field
-const whatsappObserver = new MutationObserver(() => {
-  addMicToWhatsApp();
-});
-
-whatsappObserver.observe(document.body, { childList: true, subtree: true });
+  whatsappObserver.observe(document.body, { childList: true, subtree: true });
   const customPromptTextarea = container.querySelector("#customPrompt");
   const toneSelect = container.querySelector("#toneSelect");
   const lengthSelect = container.querySelector("#lengthSelect");
@@ -686,7 +717,7 @@ whatsappObserver.observe(document.body, { childList: true, subtree: true });
   lengthSelect.addEventListener("change", () => {
     chrome.storage.sync.set({ lastLength: lengthSelect.value });
   });
-  
+
   generateButton.addEventListener("click", async () => {
     if (isGenerating) return;
 
@@ -729,17 +760,17 @@ whatsappObserver.observe(document.body, { childList: true, subtree: true });
           showErrorInButton(response.error);
         } else if (response?.reply) {
           insertReplyText(response.reply);
-        
+
           // Trigger the alarm if enabled
           // chrome.storage.sync.get(["alarmType", "alarmEnabled", "alarmTime"], (data) => {
           //   console.log("Alarm settings retrieved from storage:", data);
-        
+
           //   const { alarmType, alarmEnabled, alarmTime } = data;
-        
+
           //   if (alarmEnabled) {
           //     const timeInMs = alarmTime * 60000; // Convert minutes to milliseconds
           //     console.log("Alarm enabled. Type:", alarmType, "| Time (ms):", timeInMs);
-        
+
           //     // Trigger the appropriate alarm based on the selected type
           //     chrome.runtime.sendMessage({
           //       action: "startAlarm",
@@ -750,7 +781,7 @@ whatsappObserver.observe(document.body, { childList: true, subtree: true });
           //     console.log("Alarm is disabled. No notification will be triggered.");
           //   }
           // });
-        }        
+        }
       }
     );
   });
@@ -758,25 +789,25 @@ whatsappObserver.observe(document.body, { childList: true, subtree: true });
 
   function applyColor(color) {
     document.documentElement.style.setProperty("--model-color", color);
-  
+
     // Apply the color to specific elements in the toolbar
     const toolbar = document.querySelector(".tone-selector-container");
     if (toolbar) {
       toolbar.style.borderColor = color; // Example: Set the border color of the toolbar
     }
-  
+
     const generateButton = document.querySelector(".generate-reply-btn");
     if (generateButton) {
       generateButton.style.backgroundColor = color;
       generateButton.style.color = "#fff"; // Ensure text remains readable
     }
-  
+
     const customPromptTextarea = document.querySelector("#customPrompt");
     if (customPromptTextarea) {
       customPromptTextarea.style.borderColor = color; // Set border color for text area
     }
   }
-  
+
 }
 
 function showErrorInButton(message) {
@@ -786,8 +817,8 @@ function showErrorInButton(message) {
     generateButton.style.backgroundColor = "red";
     generateButton.style.color = "#fff";
     generateButton.disabled = true;
-    
-  
+
+
     setTimeout(() => {
       generateButton.textContent = "Generate";
       chrome.storage.sync.get(["selectedColor"], (data) => {
@@ -826,7 +857,7 @@ function insertCopyTweetButton() {
 
     // Avoid duplicate buttons
     if (!parent.querySelector(".copy-tweet-btn") && !parent.querySelector(".screenshot-btn")) {
-      
+
       // 📋 Copy Tweet Button
       const copyTweetButton = document.createElement("button");
       copyTweetButton.className = "copy-tweet-btn";
@@ -903,7 +934,7 @@ function copyWithFallback(tweetText, button) {
   textarea.style.opacity = "0";
   document.body.appendChild(textarea);
   textarea.select();
-  
+
   try {
     document.execCommand("copy");
     console.log("Tweet text copied to clipboard (fallback):", tweetText);
@@ -939,10 +970,10 @@ const observer = new MutationObserver(() => {
 });
 
 const observer2 = new MutationObserver(() => {
- const toolbar2 = document.querySelector('[role="list"]');
- if (toolbar2 && !toolbar2.querySelector(".aside-panel")) {
-   appendAsidepanel(toolbar2);
- }
+  const toolbar2 = document.querySelector('[role="list"]');
+  if (toolbar2 && !toolbar2.querySelector(".aside-panel")) {
+    appendAsidepanel(toolbar2);
+  }
 });
 
 const observer3 = new MutationObserver(() => {

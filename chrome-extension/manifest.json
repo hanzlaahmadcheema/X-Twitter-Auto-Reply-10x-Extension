@@ -1,39 +1,64 @@
 {
-    "manifest_version": 3,
-    "name": "Twitter Reply Assistant",
-    "version": "3.0",
-    "description": "Generate replies with contextual tones on Twitter.",
+  "manifest_version": 3,
+  "name": "Twitter Reply Assistant",
+  "version": "3.0",
+  "description": "Generate replies with contextual tones on Twitter.",
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self';",
     "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval'; child-src 'self';"
   },
-  "permissions": ["storage", "activeTab", "scripting", "notifications", "downloads"],
-  "host_permissions": ["*://x.com/*", "*://twitter.com/*", "*://whatsapp.com/*"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "notifications",
+    "downloads"
+  ],
+  "host_permissions": [
+    "*://x.com/*",
+    "*://twitter.com/*",
+    "*://whatsapp.com/*",
+    "http://localhost:11434/*",
+    "http://127.0.0.1:11434/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["*://x.com/*", "*://twitter.com/*", "*://whatsapp.com/*"],
-      "js": ["contentScript.bundle.js"],
-      "css": ["style.css"],
+      "matches": [
+        "*://x.com/*",
+        "*://twitter.com/*",
+        "*://whatsapp.com/*"
+      ],
+      "js": [
+        "contentScript.bundle.js"
+      ],
+      "css": [
+        "style.css"
+      ],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["style.css", "popup.css", "libs/html2canvas.min.js"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "style.css",
+        "popup.css",
+        "libs/html2canvas.min.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ],
-    "action": {
-      "default_popup": "popup.html",
-      "default_icon": {
-        "16": "icons/icon-16.png",
-        "32": "icons/icon-32.png",
-        "48": "icons/icon-48.png",
-        "128": "icons/icon-128.png"
-      }
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
     }
   }
-  
+}

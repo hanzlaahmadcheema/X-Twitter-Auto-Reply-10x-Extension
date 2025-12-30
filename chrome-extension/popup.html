@@ -24,7 +24,7 @@
       <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 border-b border-twitter-border pb-3 m-0">
         <i class="fas fa-robot text-twitter-text-secondary text-sm"></i> Select Model
       </h2>
-      <div class="grid grid-cols-3 gap-4">
+      <div class="grid grid-cols-2 gap-4">
         <label class="cursor-pointer">
           <input type="radio" name="model" value="gemini" checked class="hidden peer">
           <div
@@ -50,6 +50,15 @@
             <span class="text-xl mb-1 text-twitter-text-secondary peer-checked:text-twitter-blue"><i
                 class="fas fa-brain"></i></span>
             <span class="text-xs text-twitter-text-secondary font-bold peer-checked:text-twitter-blue">Grok</span>
+          </div>
+        </label>
+        <label class="cursor-pointer">
+          <input type="radio" name="model" value="ollama" class="hidden peer">
+          <div
+            class="flex flex-col items-center justify-center p-3 border border-twitter-border rounded-xl transition-all peer-checked:border-twitter-blue peer-checked:bg-twitter-blue/10">
+            <span class="text-xl mb-1 text-twitter-text-secondary peer-checked:text-twitter-blue"><i
+                class="fas fa-terminal"></i></span>
+            <span class="text-xs text-twitter-text-secondary font-bold peer-checked:text-twitter-blue">Ollama</span>
           </div>
         </label>
       </div>
@@ -109,6 +118,30 @@
           </div>
         </div>
       </div>
+
+      <div id="ollamaOptions" class="hidden">
+        <label for="ollamaModelSelect" class="block text-xs font-medium text-twitter-text-secondary mb-1">Ollama
+          Model</label>
+        <div class="relative">
+          <select id="ollamaModelSelect"
+            class="w-full p-3 bg-black border border-twitter-border rounded-lg text-sm text-twitter-text appearance-none outline-none focus:border-twitter-blue transition-colors">
+            <option value="gemma2:9b">Gemma 2 9b</option>
+            <option value="llama3">Llama 3</option>
+            <option value="mistral">Mistral</option>
+          </select>
+          <div
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </div>
+        <div class="mt-4">
+          <label for="ollamaUrlInput" class="block text-xs font-medium text-twitter-text-secondary mb-1">Ollama URL
+            (optional)</label>
+          <input type="text" id="ollamaUrlInput" placeholder="http://127.0.0.1:11434"
+            class="w-full p-2.5 bg-black border border-twitter-border rounded-lg text-sm text-twitter-text outline-none focus:border-twitter-blue transition-colors">
+        </div>
+      </div>
+
     </section>
 
     <!-- API Keys Card -->

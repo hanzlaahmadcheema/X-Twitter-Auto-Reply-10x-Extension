@@ -9,6 +9,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const geminiOptions = document.getElementById("geminiOptions");
   const openaiOptions = document.getElementById("openaiOptions");
   const grokOptions = document.getElementById("grokOptions");
+  const ollamaOptions = document.getElementById("ollamaOptions");
+  const ollamaModelSelect = document.getElementById("ollamaModelSelect");
+  const ollamaUrlInput = document.getElementById("ollamaUrlInput");
   // const continuousNotificationCheckbox = document.querySelector('input[value="interval"]');
   // const alarmTimeInput = document.getElementById("alarmTime");
   // const startAlarmButton = document.getElementById("startAlarm");
@@ -23,12 +26,14 @@ document.addEventListener("DOMContentLoaded", () => {
     geminiModel: "",
     openaiModel: "",
     grokModel: "",
+    ollamaModel: "gemma2:9b",
+    ollamaUrl: "http://127.0.0.1:11434",
     apiKeys: [],
   };
 
   // Restore saved settings
   chrome.storage.sync.get(
-    ["selectedModel", "selectedApiKey", "geminiModel", "openaiModel", "grokModel", "apiKeys", "selectedColor"],
+    ["selectedModel", "selectedApiKey", "geminiModel", "openaiModel", "grokModel", "ollamaModel", "ollamaUrl", "apiKeys", "selectedColor"],
     (data) => {
       state = { ...state, ...data };
 
@@ -50,6 +55,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (state.selectedModel === "grok" && state.grokModel) {
         grokModelSelect.value = state.grokModel;
+      }
+
+      if (state.selectedModel === "ollama") {
+        if (state.ollamaModel) ollamaModelSelect.value = state.ollamaModel;
+        if (state.ollamaUrl) ollamaUrlInput.value = state.ollamaUrl;
       }
 
       // Restore selected color
@@ -105,10 +115,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const geminiModel = geminiModelSelect.value;
     const openaiModel = openaiModelSelect.value;
     const grokModel = grokModelSelect.value;
+    const ollamaModel = ollamaModelSelect.value;
+    const ollamaUrl = ollamaUrlInput.value.trim() || "http://localhost:11434";
     const selectedColor = colorSelect.value;
 
     chrome.storage.sync.set(
-      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, openaiModel, grokModel, selectedColor },
+      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, openaiModel, grokModel, ollamaModel, ollamaUrl, selectedColor },
       () => {
         updateColor(selectedColor);
         status.textContent = "Settings saved!";
@@ -116,9 +128,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     );
     if (window.location.href === "https://x.com" || window.location.href === "https://twitter.com") {
-      window.location.reload();      
+      window.location.reload();
     }
-    });
+  });
 
   // Handle model selection changes
   document.querySelectorAll('input[name="model"]').forEach((radio) => {
@@ -147,6 +159,16 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.storage.sync.set({ grokModel: state.grokModel });
   });
 
+  ollamaModelSelect.addEventListener("change", () => {
+    state.ollamaModel = ollamaModelSelect.value;
+    chrome.storage.sync.set({ ollamaModel: state.ollamaModel });
+  });
+
+  ollamaUrlInput.addEventListener("input", () => {
+    state.ollamaUrl = ollamaUrlInput.value.trim();
+    chrome.storage.sync.set({ ollamaUrl: state.ollamaUrl });
+  });
+
   // Render API keys for selected model
   function renderApiKeysForSelectedModel(model) {
     chrome.storage.sync.get("apiKeys", (data) => {
@@ -165,9 +187,8 @@ document.addEventListener("DOMContentLoaded", () => {
         keyDiv.className = "api-key-item";
 
         keyDiv.innerHTML = `
-          <input type="radio" name="apiKey" value="${key}" ${
-          key === selectedApiKey ? "checked" : ""
-        }>
+          <input type="radio" name="apiKey" value="${key}" ${key === selectedApiKey ? "checked" : ""
+          }>
           <span class="api-key-name">${name}</span>
           <button class="edit-api-key-btn" data-key="${key}" data-name="${name}">
             <i class="fas fa-edit"></i>
@@ -184,16 +205,16 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener("click", (e) => {
           const keyToEdit = e.target.closest("button").dataset.key;
           const nameToEdit = e.target.closest("button").dataset.name;
-  
+
           const newKey = prompt("Edit API Key:", keyToEdit);
           const newName = prompt("Edit API Key Name:", nameToEdit);
-  
+
           if (newKey && newName) {
             chrome.storage.sync.get("apiKeys", (data) => {
               const apiKeys = data.apiKeys.map((api) =>
                 api.key === keyToEdit ? { key: newKey, name: newName, model: model } : api
               );
-  
+
               chrome.storage.sync.set({ apiKeys }, () => {
                 renderApiKeys(apiKeys, selectedApiKey, model);
                 status.textContent = "API key updated!";
@@ -203,8 +224,8 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
       });
-  
-      
+
+
       apiKeysContainer.querySelectorAll(".delete-api-key-btn").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           const keyToDelete = e.target.dataset.key;
@@ -237,6 +258,12 @@ document.addEventListener("DOMContentLoaded", () => {
       geminiOptions.style.display = "none";
       grokOptions.style.display = "none";
       openaiOptions.style.display = "block";
+      ollamaOptions.style.display = "none";
+    } else if (model === "ollama") {
+      geminiOptions.style.display = "none";
+      grokOptions.style.display = "none";
+      openaiOptions.style.display = "none";
+      ollamaOptions.style.display = "block";
     }
   }
 
