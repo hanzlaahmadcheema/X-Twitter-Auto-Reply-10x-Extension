@@ -555,7 +555,7 @@ function appendToneSelector(toolbar) {
       position: fixed;
       right: 20px;
       bottom: 20px;
-      background: #1DA1F2;
+      background-color: #1DA1F2;
       color: white;
       border: none;
       border-radius: 50%;
