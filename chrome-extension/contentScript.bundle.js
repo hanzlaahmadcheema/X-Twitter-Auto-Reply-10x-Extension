@@ -95,30 +95,7 @@ function insertReplyText(replyText) {
   }
 }
 
-function insertCopyText(copyText) {
-  const replyInput = document.querySelector('[data-testid="tweetTextarea_0"]');
 
-  if (replyInput) {
-    replyInput.focus();
-
-    replyInput.value = "";
-
-    const dataTransfer = new DataTransfer();
-    dataTransfer.setData("text/plain", copyText + " ");
-
-    replyInput.dispatchEvent(
-      new ClipboardEvent("paste", {
-        clipboardData: dataTransfer,
-        bubbles: true,
-        cancelable: true,
-      })
-    );
-
-    showSuccessMessage("New text inserted successfully");
-  } else {
-    showSuccessMessage("Reply input field not found!");
-  }
-}
 
 function extractTextWithEmojis(element) {
   let text = "";
@@ -200,192 +177,152 @@ function captureTweetScreenshot(shareButton) {
   });
 }
 
-function takeScreenshot(tweetElement) {
+// Helper to convert image to Base64
+async function imageToBase64(url) {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (err) {
+    console.error("Error converting image to base64:", err);
+    return null;
+  }
+}
+
+async function takeScreenshot(tweetElement) {
   const tweetContainer = tweetElement.closest('article[data-testid="tweet"]');
   if (!tweetContainer) {
     showSuccessMessage('❌ Tweet container not found');
     return;
   }
 
-  // Manually extract tweet data
-  const userName = tweetContainer.querySelector('[data-testid="User-Name"] span')?.textContent || '';
-  let userHandle = '';
-  const usernameElements = tweetContainer.querySelectorAll('a[href^="/"]');
-  for (const element of usernameElements) {
-    const href = element.getAttribute('href');
-    if (href && href.startsWith('/') && !href.includes('/status/') && element.textContent.startsWith('@')) {
-      userHandle = element.textContent;
+  // Hide our injected buttons before screenshot
+  const copyBtn = tweetContainer.querySelector('.copy-tweet-btn');
+  const shotBtn = tweetContainer.querySelector('.screenshot-btn');
+  if (copyBtn) copyBtn.style.visibility = 'hidden';
+  if (shotBtn) shotBtn.style.visibility = 'hidden';
+
+  // Determine the correct background color by traversing up the DOM
+  let currentElement = tweetContainer;
+  let backgroundColor = 'transparent';
+
+  while (currentElement) {
+    const style = getComputedStyle(currentElement);
+    const color = style.backgroundColor;
+    // Check if color is not transparent (rgba(0, 0, 0, 0) or generic 'transparent')
+    if (color && color !== 'rgba(0, 0, 0, 0)' && color !== 'transparent') {
+      backgroundColor = color;
       break;
     }
-  }
-  if (!userHandle) {
-    const handleElement = tweetContainer.querySelector('[dir="ltr"] span');
-    if (handleElement && handleElement.textContent.startsWith('@')) {
-      userHandle = handleElement.textContent;
-    }
+    currentElement = currentElement.parentElement;
   }
 
-  const tweetTextElement = tweetContainer.querySelector('[data-testid="tweetText"]');
-  const tweetText = tweetTextElement ? tweetTextElement.textContent : '';
-  const tweetDate = tweetContainer.querySelector('time')?.textContent || '';
-  const avatarImg = tweetContainer.querySelector('[data-testid="UserAvatar-Container"] img');
-  const originalAvatarSrc = avatarImg ? avatarImg.src : '';
-
-  // Extract tweet images more reliably - handle multiple images
-  const tweetImages = [];
-  const imageIds = new Set(); // Track unique image IDs to prevent duplicates
-
-  // Function to extract unique image ID from Twitter URL
-  function getImageId(url) {
-    const match = url.match(/\/media\/([^?&]+)/);
-    return match ? match[1] : url;
+  // Fallback to body if we still have transparent (should be covered by loop reaching body, but just in case)
+  if (backgroundColor === 'transparent' || backgroundColor === 'rgba(0, 0, 0, 0)') {
+    backgroundColor = getComputedStyle(document.body).backgroundColor;
   }
 
-  // Function to add image if not duplicate
-  function addUniqueImage(src) {
-    if (!src || !src.includes('pbs.twimg.com/media')) return;
-
-    const imageId = getImageId(src);
-    if (!imageIds.has(imageId)) {
-      imageIds.add(imageId);
-      // Get high quality version
-      const highQualitySrc = src.replace(/&name=[^&]*/, '&name=large').replace(/\?format=[^&]*&name=[^&]*/, '?format=jpg&name=large');
-      tweetImages.push(highQualitySrc);
-    }
-  }
-
-  // Try multiple selectors to catch all image patterns
-  const imageSelectors = [
-    '[data-testid="tweetPhoto"] img',
-    'img[src*="pbs.twimg.com/media"]',
-    'a[href*="/photo/"] img'
+  // Elements to hide
+  const selectorsToHide = [
+    // '.copy-tweet-btn', // Already handled separately but can be consolidated
+    // '.screenshot-btn', // Already handled separately
+    '[role="group"]', // Bottom action bar (Reply, Repost, Like, Share)
+    'a[href*="/analytics"]', // Views count
+    'div[data-testid="caret"]', // 3 dots icon
+    'button[aria-label*="Follow"]', // Follow button
+    'button[data-testid*="grok"]', // Grok icon (if present with this ID)
+    '[aria-label="Grok"]', // Alternate Grok selector
+    'span[data-testid="socialContext"]', // "Reposted" info
   ];
 
-  imageSelectors.forEach(selector => {
-    const images = tweetContainer.querySelectorAll(selector);
-    images.forEach(img => {
-      if (img.src) {
-        addUniqueImage(img.src);
-      }
+  const hiddenElements = [];
+
+  // Hide generic selectors
+  selectorsToHide.forEach(selector => {
+    const elements = tweetContainer.querySelectorAll(selector);
+    elements.forEach(el => {
+      // Ensure we don't accidentally hide the whole tweet if the selector is too broad
+      // For [role="group"], it targets the action bar at the bottom primarily.
+      hiddenElements.push({ element: el, originalDisplay: el.style.display });
+      el.style.display = 'none';
     });
   });
 
-  // Additional fallback: look for background images in divs
-  const bgImageDivs = tweetContainer.querySelectorAll('div[style*="background-image"]');
-  bgImageDivs.forEach(div => {
-    const style = div.getAttribute('style');
-    const match = style.match(/background-image:\s*url\(["']?(.*?)["']?\)/);
-    if (match && match[1]) {
-      addUniqueImage(match[1]);
+  // Hide "Translate post" link/button
+  // This is often a button or text.
+  const allButtons = tweetContainer.querySelectorAll('button, span');
+  allButtons.forEach(el => {
+    if (el.innerText === 'Translate post' || el.innerText === 'Show translation') {
+      // Hide the closest clickable parent if it's a span inside a button, or just the element
+      const target = el.closest('[role="button"]') || el;
+      hiddenElements.push({ element: target, originalDisplay: target.style.display });
+      target.style.display = 'none';
     }
   });
 
-  console.log(`Found ${tweetImages.length} unique images:`, tweetImages);
-
-  // Use direct avatar source
-  const proxiedAvatarSrc = originalAvatarSrc;
-
-  const screenshotContainer = document.createElement('div');
-  screenshotContainer.style.cssText = `
-    position: fixed;
-    top: -9999px; /* Hide off-screen */
-    left: 0;
-    background: #15202B;
-    border: none;
-    border-radius: 0;
-    padding: 16px;
-    width: 600px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #F7F9F9;
-  `;
-
-  const renderScreenshot = () => {
-    let avatarHTML = '';
-    if (proxiedAvatarSrc) {
-      avatarHTML = `<div style="width: 48px; height: 48px; border-radius: 50%; margin-right: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">${userName.charAt(0).toUpperCase()}</div>`;
+  // Handle Profile Picture - Convert to Base64
+  const avatarImg = tweetContainer.querySelector('[data-testid="UserAvatar-Container"] img');
+  let originalAvatarSrc = '';
+  if (avatarImg) {
+    originalAvatarSrc = avatarImg.src;
+    // Use the higher quality version if available or just the current one
+    // Twitter avatars usually have format params.
+    const base64 = await imageToBase64(originalAvatarSrc);
+    if (base64) {
+      avatarImg.src = base64;
     }
+  }
 
-    // Generate images HTML if there are tweet images
-    let imagesHTML = '';
-    if (tweetImages.length > 0) {
-      if (tweetImages.length === 1) {
-        // If there's only one image, display it as a square
-        imagesHTML = `
-          <div style="width: 100%; aspect-ratio: 1 / 1; margin-top: 12px; border-radius: 8px; overflow: hidden;">
-            <img src="${tweetImages[0]}" style="width: 100%; height: 100%; object-fit: cover;">
-          </div>
-        `;
-      } else {
-        // If there are multiple images, display them in a grid
-        const imageGrid = tweetImages.map(imgSrc => {
-          return `
-            <div style="flex: 1 1 calc(50% - 4px); margin: 2px; border-radius: 8px; overflow: hidden; height: 200px;">
-              <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
-            </div>
-          `;
-        }).join('');
-        imagesHTML = `
-          <div style="display: flex; flex-wrap: wrap; margin: 12px -2px 0;">
-            ${imageGrid}
-          </div>
-        `;
-      }
-    }
 
-    screenshotContainer.innerHTML = `
-      <div style="display: flex; align-items: center;">
-        ${avatarHTML}
-        <div>
-          <div style="font-weight: bold;">${userName}</div>
-          <div style="color: #8899A6;">${userHandle}</div>
-        </div>
-      </div>
-      <div style="margin-top: 12px; font-size: 20px; line-height: 1.4;">${tweetText}</div>
-      ${imagesHTML}
-      <div style="margin-top: 12px; color: #8899A6;">${tweetDate}</div>
-    `;
+  // Use html2canvas directly on the tweet container
+  html2canvas(tweetContainer, {
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: backgroundColor, // Use detected background
+  }).then(canvas => {
+    const image = canvas.toDataURL('image/png');
+    const filename = `tweet-${Date.now()}.png`;
 
-    document.body.appendChild(screenshotContainer);
+    const link = document.createElement('a');
+    link.href = image;
+    link.download = filename;
+    link.click();
 
-    html2canvas(screenshotContainer, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#15202B',
-    }).then(canvas => {
-      const image = canvas.toDataURL('image/png');
-      const filename = `tweet-${Date.now()}.png`;
+    showSuccessMessage(`${ICONS.camera} Screenshot captured!`);
+  }).catch(error => {
+    console.error("Screenshot error:", error);
+    showSuccessMessage(`${ICONS.timesCircle} Screenshot failed: ${error.message}`);
+  }).finally(() => {
+    // Restore buttons
+    if (copyBtn) copyBtn.style.visibility = 'visible';
+    if (shotBtn) shotBtn.style.visibility = 'visible';
 
-      const link = document.createElement('a');
-      link.href = image;
-      link.download = filename;
-      link.click();
-
-      showSuccessMessage(`${ICONS.camera} Screenshot captured!`);
-      document.body.removeChild(screenshotContainer);
-
-    }).catch(error => {
-      showSuccessMessage(`${ICONS.timesCircle} Screenshot failed: ${error.message}`);
-      if (document.body.contains(screenshotContainer)) {
-        document.body.removeChild(screenshotContainer);
-      }
+    // Restore other hidden elements
+    hiddenElements.forEach(({ element, originalDisplay }) => {
+      element.style.display = originalDisplay;
     });
-  };
 
-  renderScreenshot();
+    // Restore Avatar
+    if (avatarImg && originalAvatarSrc) {
+      avatarImg.src = originalAvatarSrc;
+    }
+
+    // Reset the camera icon state (it was set to checkmark in captureTweetScreenshot)
+    const shareButton = tweetContainer.querySelector('[aria-label="Share post"]'); //Find closest doesn't work well reversed often, but here we need to find the specific button that triggered it. 
+    // Actually captureTweetScreenshot handles the icon reset on timeout, but we might want to ensure it's correct. 
+    // The captureTweetScreenshot function changes the icon of the PASSED button. 
+    // We don't have reference to the button here easily unless we pass it.
+    // But captureTweetScreenshot sets a timeout to reset it. That is fine.
+  });
 }
 
 //#region Get tweet URL
-function getTweetUrl(shareButton) {
-  const tweetElement = shareButton.closest('[data-testid="tweet"]');
-  const tweetLink = tweetElement?.querySelector('a[href*="/status/"]');
 
-  if (tweetLink) {
-    return `https://twitter.com${tweetLink.getAttribute("href")}`;
-
-  }
-  return null;
-}
 
 // Function to show a small success notification
 function showSuccessMessage(message) {
