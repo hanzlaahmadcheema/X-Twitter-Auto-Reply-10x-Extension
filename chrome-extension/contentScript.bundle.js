@@ -1,4 +1,16 @@
-// Inject Font Awesome CSS
+const ICONS = {
+  microphone: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M192 0C139 0 96 43 96 96V256c0 53 43 96 96 96s96-43 96-96V96c0-53-43-96-96-96zM64 216c0-11.2-6-21-15.4-26.1s-20.9-4.3-29.3 2.1l0 0C7.2 201.2 0 216.3 0 231.7V256c0 97.4 72.3 177.9 166.4 190.5V512h-32c-17.7 0-32 14.3-32 32s14.3 32 32 32h116c17.7 0 32-14.3 32-32s-14.3-32-32-32H217.6V446.5C311.7 433.9 384 353.4 384 256v-24.3c0-15.4-7.2-30.5-19.3-39.7l0 0c-8.4-6.4-19.9-7-29.3-2.1S320 204.8 320 216v40c0 70.7-57.3 128-128 128s-128-57.3-128-128V216z"/></svg>',
+  stop: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128z"/></svg>',
+  camera: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M149.1 64.8L138.7 96H64C28.7 96 0 124.7 0 160V416c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H373.3L362.9 64.8C356.4 45.2 338.1 32 317.4 32H194.6c-20.7 0-39 13.2-45.5 32.8zM256 192a96 96 0 1 1 0 192 96 96 0 1 1 0-192z"/></svg>',
+  check: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>',
+  timesCircle: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/></svg>',
+  exclamationCircle: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zM224 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z"/></svg>',
+  copy: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M208 0H332.1c12.7 0 24.9 5.1 33.9 14.1l67.9 67.9c9 9 14.1 21.2 14.1 33.9V336c0 26.5-21.5 48-48 48H208c-26.5 0-48-21.5-48-48V48c0-26.5 21.5-48 48-48zM48 128h80v64H64V448H256V416h64v48c0 35.3-28.7 64-64 64H48c-35.3 0-64-28.7-64-64V192c0-35.3 28.7-64 64-64zm160 320h160V128H208V448z"/></svg>' // Using 'file' icon as copy, or standard copy
+};
+// Use 'copy' icon specifically
+ICONS.copy = '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M384 336H192c-8.8 0-16-7.2-16-16V64c0-8.8 7.2-16 16-16l140.1 0L400 115.9V320c0 8.8-7.2 16-16 16zM192 384H384c35.3 0 64-28.7 64-64V115.9c0-12.7-5.1-24.9-14.1-33.9L366.1 14.1c-9-9-21.2-14.1-33.9-14.1H192c-35.3 0-64 28.7-64 64V320c0 35.3 28.7 64 64 64zM64 128c-35.3 0-64 28.7-64 64V448c0 35.3 28.7 64 64 64H256c35.3 0 64-28.7 64-64V416H272v32c0 8.8-7.2 16-16 16H64c-8.8 0-16-7.2-16-16V192c0-8.8 7.2-16 16-16H96V128H64z"/></svg>';
+
+// Inject Font Awesome CSS (Keeping it for now as backup or other usages, but user asked to use SVGs instead of <i>)
 const fontAwesomeLink = document.createElement('link');
 fontAwesomeLink.rel = 'stylesheet';
 fontAwesomeLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
@@ -172,10 +184,10 @@ function captureTweetScreenshot(shareButton) {
   }
 
   console.log("Taking screenshot...");
-  shareButton.innerHTML = '<i class="fas fa-check"></i>';
+  shareButton.innerHTML = ICONS.check;
   shareButton.style.color = "green";
   setTimeout(() => {
-    shareButton.innerHTML = '<i class="fas fa-camera"></i>';
+    shareButton.innerHTML = ICONS.camera;
     shareButton.style.color = "";
   }, 4000);
   // Request injection of html2canvas
@@ -350,11 +362,11 @@ function takeScreenshot(tweetElement) {
       link.download = filename;
       link.click();
 
-      showSuccessMessage('<i class="fas fa-camera"></i> Screenshot captured!');
+      showSuccessMessage(`${ICONS.camera} Screenshot captured!`);
       document.body.removeChild(screenshotContainer);
 
     }).catch(error => {
-      showSuccessMessage(`<i class="fas fa-times-circle"></i> Screenshot failed: ${error.message}`);
+      showSuccessMessage(`${ICONS.timesCircle} Screenshot failed: ${error.message}`);
       if (document.body.contains(screenshotContainer)) {
         document.body.removeChild(screenshotContainer);
       }
@@ -450,7 +462,7 @@ function appendToneSelector(toolbar) {
       <option value="casual">Casual</option>
       <option value="optimal">Optimal</option>
     </select>
-    <button class="mic-btn" ><i class="fas fa-microphone"></i></button>
+    <button class="mic-btn" >${ICONS.microphone}</button>
     <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">Generate</button>
     <!--<button class="stop-btn" style="display: none;">🔴 Stop</button>-->
   `;
@@ -472,19 +484,19 @@ function appendToneSelector(toolbar) {
       recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
-        micButton.innerHTML = '<i class="fas fa-stop" style="color: red;"></i>'; // Update button UI
-        showSuccessMessage('<i class="fas fa-microphone"></i> Speech recognition started...');
+        micButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`; // Update button UI
+        showSuccessMessage(`${ICONS.microphone} Speech recognition started...`);
       };
 
       recognition.onresult = (event) => {
         let speechResult = event.results[0][0].transcript;
         speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
         insertReplyText(speechResult);
-        showSuccessMessage('<i class="fas fa-check"></i> Speech recognized:', speechResult);
+        showSuccessMessage(`${ICONS.check} Speech recognized:`, speechResult);
       };
 
       recognition.onerror = (event) => {
-        showSuccessMessage('<i class="fas fa-exclamation-circle"></i> Speech recognition error:', event.error);
+        showSuccessMessage(`${ICONS.exclamationCircle} Speech recognition error:`, event.error);
         stopSpeechRecognition(); // Stop only on a real error
       };
 
@@ -500,14 +512,14 @@ function appendToneSelector(toolbar) {
   function stopSpeechRecognition() {
     if (recognition) {
       recognition.stop();
-      micButton.innerHTML = '<i class="fas fa-microphone"></i>'; // Reset button UI
-      showSuccessMessage('<i class="fas fa-stop"></i> Speech recognition stopped.');
+      micButton.innerHTML = ICONS.microphone; // Reset button UI
+      showSuccessMessage(`${ICONS.stop} Speech recognition stopped.`);
     }
   }
 
   // Mic button event listener (Manually stop only)
   micButton.addEventListener("click", () => {
-    if (micButton.innerHTML.includes("fa-microphone")) {
+    if (micButton.innerHTML.includes("d=\"M192 0C139 0 96 43 96 96V256c0 53 43 96 96 96s96-43 96-96V96c0-53-43-96-96-96zM64 216c0-11.2-6-21-15.4-26.1s-20.9-4.3-29.3 2.1l0 0C7.2 201.2 0 216.3 0 231.7V256c0 97.4 72.3 177.9 166.4 190.5V512h-32c-17.7 0-32 14.3-32 32s14.3 32 32 32h116c17.7 0 32-14.3 32-32s-14.3-32-32-32H217.6V446.5C311.7 433.9 384 353.4 384 256v-24.3c0-15.4-7.2-30.5-19.3-39.7l0 0c-8.4-6.4-19.9-7-29.3-2.1S320 204.8 320 216v40c0 70.7-57.3 128-128 128s-128-57.3-128-128V216z\"")) { // Check for unique path part of microphone icon
       startSpeechRecognition();
     } else {
       stopSpeechRecognition();
@@ -540,7 +552,7 @@ function appendToneSelector(toolbar) {
       // Create mic button
       const micButton = document.createElement("button");
       micButton.className = "whatsapp-mic-btn";
-      micButton.innerHTML = '<i class="fas fa-microphone"></i>'; // Mic icon
+      micButton.innerHTML = ICONS.microphone; // Mic icon
       micButton.style.cssText = `
       position: fixed;
       right: 20px;
@@ -570,19 +582,19 @@ function appendToneSelector(toolbar) {
           recognition.maxAlternatives = 1;
 
           recognition.onstart = () => {
-            micButton.innerHTML = '<i class="fas fa-stop" style="color: red;"></i>'; // Update button UI
-            showSuccessMessage('<i class="fas fa-microphone"></i> Speech recognition started...');
+            micButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`; // Update button UI
+            showSuccessMessage(`${ICONS.microphone} Speech recognition started...`);
           };
 
           recognition.onresult = (event) => {
             let speechResult = event.results[0][0].transcript;
             speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
             insertReplyText(speechResult);
-            showSuccessMessage('<i class="fas fa-check"></i> Speech recognized:', speechResult);
+            showSuccessMessage(`${ICONS.check} Speech recognized:`, speechResult);
           };
 
           recognition.onerror = (event) => {
-            showSuccessMessage('<i class="fas fa-exclamation-circle"></i> Speech recognition error:', event.error);
+            showSuccessMessage(`${ICONS.exclamationCircle} Speech recognition error:`, event.error);
             stopSpeechRecognition(); // Stop only on a real error
           };
 
@@ -597,13 +609,13 @@ function appendToneSelector(toolbar) {
       function stopSpeechRecognition() {
         if (recognition) {
           recognition.stop();
-          micButton.innerHTML = '<i class="fas fa-microphone"></i>'; // Reset button UI
-          showSuccessMessage('<i class="fas fa-stop"></i> Speech recognition stopped.');
+          micButton.innerHTML = ICONS.microphone; // Reset button UI
+          showSuccessMessage(`${ICONS.stop} Speech recognition stopped.`);
         }
       }
 
       micButton.addEventListener("click", () => {
-        if (micButton.innerHTML.includes("fa-microphone")) {
+        if (micButton.innerHTML.includes("d=\"M192 0C139 0 96 43 96 96V256c0 53 43 96 96 96s96-43 96-96V96c0-53-43-96-96-96zM64 216c0-11.2-6-21-15.4-26.1s-20.9-4.3-29.3 2.1l0 0C7.2 201.2 0 216.3 0 231.7V256c0 97.4 72.3 177.9 166.4 190.5V512h-32c-17.7 0-32 14.3-32 32s14.3 32 32 32h116c17.7 0 32-14.3 32-32s-14.3-32-32-32H217.6V446.5C311.7 433.9 384 353.4 384 256v-24.3c0-15.4-7.2-30.5-19.3-39.7l0 0c-8.4-6.4-19.9-7-29.3-2.1S320 204.8 320 216v40c0 70.7-57.3 128-128 128s-128-57.3-128-128V216z\"")) {
           startSpeechRecognition();
         } else {
           stopSpeechRecognition();
@@ -614,7 +626,7 @@ function appendToneSelector(toolbar) {
       // Create mic button
       const micButton = document.createElement("button");
       micButton.className = "whatsapp-mic-btn";
-      micButton.innerHTML = '<i class="fas fa-microphone"></i>'; // Mic icon
+      micButton.innerHTML = ICONS.microphone; // Mic icon
       micButton.style.cssText = `
       position: absolute;
       right: 10px;
@@ -643,19 +655,19 @@ function appendToneSelector(toolbar) {
           recognition.maxAlternatives = 1;
 
           recognition.onstart = () => {
-            micButton.innerHTML = '<i class="fas fa-stop" style="color: red;"></i>'; // Update button UI
-            showSuccessMessage('<i class="fas fa-microphone"></i> Speech recognition started...');
+            micButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`; // Update button UI
+            showSuccessMessage(`${ICONS.microphone} Speech recognition started...`);
           };
 
           recognition.onresult = (event) => {
             let speechResult = event.results[0][0].transcript;
             speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
             insertReplyText(speechResult);
-            showSuccessMessage('<i class="fas fa-check"></i> Speech recognized:', speechResult);
+            showSuccessMessage(`${ICONS.check} Speech recognized:`, speechResult);
           };
 
           recognition.onerror = (event) => {
-            showSuccessMessage('<i class="fas fa-exclamation-circle"></i> Speech recognition error:', event.error);
+            showSuccessMessage(`${ICONS.exclamationCircle} Speech recognition error:`, event.error);
             stopSpeechRecognition(); // Stop only on a real error
           };
 
@@ -671,14 +683,14 @@ function appendToneSelector(toolbar) {
       function stopSpeechRecognition() {
         if (recognition) {
           recognition.stop();
-          micButton.innerHTML = '<i class="fas fa-microphone"></i>'; // Reset button UI
-          showSuccessMessage('<i class="fas fa-stop"></i> Speech recognition stopped.');
+          micButton.innerHTML = ICONS.microphone; // Reset button UI
+          showSuccessMessage(`${ICONS.stop} Speech recognition stopped.`);
         }
       }
 
       // Mic button event listener (Manually stop only)
       micButton.addEventListener("click", () => {
-        if (micButton.innerHTML.includes("fa-microphone")) {
+        if (micButton.innerHTML.includes("d=\"M192 0C139 0 96 43 96 96V256c0 53 43 96 96 96s96-43 96-96V96c0-53-43-96-96-96zM64 216c0-11.2-6-21-15.4-26.1s-20.9-4.3-29.3 2.1l0 0C7.2 201.2 0 216.3 0 231.7V256c0 97.4 72.3 177.9 166.4 190.5V512h-32c-17.7 0-32 14.3-32 32s14.3 32 32 32h116c17.7 0 32-14.3 32-32s-14.3-32-32-32H217.6V446.5C311.7 433.9 384 353.4 384 256v-24.3c0-15.4-7.2-30.5-19.3-39.7l0 0c-8.4-6.4-19.9-7-29.3-2.1S320 204.8 320 216v40c0 70.7-57.3 128-128 128s-128-57.3-128-128V216z\"")) {
           startSpeechRecognition();
         } else {
           stopSpeechRecognition();
@@ -861,7 +873,7 @@ function insertCopyTweetButton() {
       // 📋 Copy Tweet Button
       const copyTweetButton = document.createElement("button");
       copyTweetButton.className = "copy-tweet-btn";
-      copyTweetButton.innerHTML = '<i class="fas fa-copy"></i>'; // Copy Icon
+      copyTweetButton.innerHTML = ICONS.copy; // Copy Icon
       copyTweetButton.style.cssText = `
         padding: 6px;
         color: white;
@@ -876,7 +888,7 @@ function insertCopyTweetButton() {
       // 📸 Screenshot Tweet Button
       const screenshotButton = document.createElement("button");
       screenshotButton.className = "screenshot-btn";
-      screenshotButton.innerHTML = '<i class="fas fa-camera"></i>'; // Camera Icon
+      screenshotButton.innerHTML = ICONS.camera; // Camera Icon
       screenshotButton.style.cssText = `
         padding: 6px;
         color: white;
@@ -904,11 +916,11 @@ function copyTweetText(button, shareButton) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(tweetText).then(() => {
         console.log("Tweet text copied to clipboard:", tweetText);
-        button.innerHTML = '<i class="fas fa-check"></i>';
+        button.innerHTML = ICONS.check;
         button.style.color = "green";
         showSuccessMessage("Text Copied to clipboard!")
         setTimeout(() => {
-          button.innerHTML = '<i class="fas fa-copy"></i>';
+          button.innerHTML = ICONS.copy;
           button.style.color = "";
         }, 4000);
       }).catch(err => {
@@ -938,11 +950,11 @@ function copyWithFallback(tweetText, button) {
   try {
     document.execCommand("copy");
     console.log("Tweet text copied to clipboard (fallback):", tweetText);
-    button.innerHTML = '<i class="fas fa-check"></i>';
+    button.innerHTML = ICONS.check;
     button.style.color = "green";
     showSuccessMessage("Text Copied to clipboard!")
     setTimeout(() => {
-      button.innerHTML = '<i class="fas fa-copy"></i>';
+      button.innerHTML = ICONS.copy;
       button.style.color = "";
     }, 4000);
   } catch (err) {
