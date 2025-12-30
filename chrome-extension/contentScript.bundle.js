@@ -171,11 +171,11 @@ function captureTweetScreenshot(shareButton) {
     return;
   }
 
-  console.log("📸 Capturing screenshot...");
-  shareButton.textContent = "✔";
+  console.log("Taking screenshot...");
+  shareButton.innerHTML = '<i class="fas fa-check"></i>';
   shareButton.style.color = "green";
   setTimeout(() => {
-    shareButton.textContent = "📸";
+    shareButton.innerHTML = '<i class="fas fa-camera"></i>';
     shareButton.style.color = "";
   }, 4000);
   // Request injection of html2canvas
@@ -350,11 +350,11 @@ function takeScreenshot(tweetElement) {
       link.download = filename;
       link.click();
 
-      showSuccessMessage('📸 Screenshot captured!');
+      showSuccessMessage('<i class="fas fa-camera"></i> Screenshot captured!');
       document.body.removeChild(screenshotContainer);
 
     }).catch(error => {
-      showSuccessMessage(`❌ Screenshot failed: ${error.message}`);
+      showSuccessMessage(`<i class="fas fa-times-circle"></i> Screenshot failed: ${error.message}`);
       if (document.body.contains(screenshotContainer)) {
         document.body.removeChild(screenshotContainer);
       }
@@ -379,7 +379,7 @@ function getTweetUrl(shareButton) {
 // Function to show a small success notification
 function showSuccessMessage(message) {
   const notification = document.createElement("div");
-  notification.textContent = message;
+  notification.innerHTML = message;
   notification.style.cssText = `
     position: fixed;
     bottom: 20px;
@@ -450,7 +450,7 @@ function appendToneSelector(toolbar) {
       <option value="casual">Casual</option>
       <option value="optimal">Optimal</option>
     </select>
-    <button class="mic-btn" >▶</button>
+    <button class="mic-btn" ><i class="fas fa-microphone"></i></button>
     <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">Generate</button>
     <!--<button class="stop-btn" style="display: none;">🔴 Stop</button>-->
   `;
@@ -472,19 +472,19 @@ function appendToneSelector(toolbar) {
       recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
-        micButton.textContent = "🔴"; // Update button UI
-        showSuccessMessage("🎤 Speech recognition started...");
+        micButton.innerHTML = '<i class="fas fa-stop" style="color: red;"></i>'; // Update button UI
+        showSuccessMessage('<i class="fas fa-microphone"></i> Speech recognition started...');
       };
 
       recognition.onresult = (event) => {
         let speechResult = event.results[0][0].transcript;
         speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
         insertReplyText(speechResult);
-        showSuccessMessage("✅ Speech recognized:", speechResult);
+        showSuccessMessage('<i class="fas fa-check"></i> Speech recognized:', speechResult);
       };
 
       recognition.onerror = (event) => {
-        showSuccessMessage("❌ Speech recognition error:", event.error);
+        showSuccessMessage('<i class="fas fa-exclamation-circle"></i> Speech recognition error:', event.error);
         stopSpeechRecognition(); // Stop only on a real error
       };
 
@@ -500,16 +500,16 @@ function appendToneSelector(toolbar) {
   function stopSpeechRecognition() {
     if (recognition) {
       recognition.stop();
-      micButton.textContent = "▶"; // Reset button UI
-      showSuccessMessage("🛑 Speech recognition stopped.");
+      micButton.innerHTML = '<i class="fas fa-microphone"></i>'; // Reset button UI
+      showSuccessMessage('<i class="fas fa-stop"></i> Speech recognition stopped.');
     }
   }
 
   // Mic button event listener (Manually stop only)
   micButton.addEventListener("click", () => {
-    if (micButton.textContent === "▶") {
+    if (micButton.innerHTML.includes("fa-microphone")) {
       startSpeechRecognition();
-    } else if (micButton.textContent === "🔴") {
+    } else {
       stopSpeechRecognition();
     }
   });
@@ -540,7 +540,7 @@ function appendToneSelector(toolbar) {
       // Create mic button
       const micButton = document.createElement("button");
       micButton.className = "whatsapp-mic-btn";
-      micButton.textContent = "🎤"; // Mic emoji
+      micButton.innerHTML = '<i class="fas fa-microphone"></i>'; // Mic icon
       micButton.style.cssText = `
       position: fixed;
       right: 20px;
@@ -570,19 +570,19 @@ function appendToneSelector(toolbar) {
           recognition.maxAlternatives = 1;
 
           recognition.onstart = () => {
-            micButton.textContent = "🔴"; // Update button UI
-            showSuccessMessage("🎤 Speech recognition started...");
+            micButton.innerHTML = '<i class="fas fa-stop" style="color: red;"></i>'; // Update button UI
+            showSuccessMessage('<i class="fas fa-microphone"></i> Speech recognition started...');
           };
 
           recognition.onresult = (event) => {
             let speechResult = event.results[0][0].transcript;
             speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
             insertReplyText(speechResult);
-            showSuccessMessage("✅ Speech recognized:", speechResult);
+            showSuccessMessage('<i class="fas fa-check"></i> Speech recognized:', speechResult);
           };
 
           recognition.onerror = (event) => {
-            showSuccessMessage("❌ Speech recognition error:", event.error);
+            showSuccessMessage('<i class="fas fa-exclamation-circle"></i> Speech recognition error:', event.error);
             stopSpeechRecognition(); // Stop only on a real error
           };
 
@@ -597,15 +597,15 @@ function appendToneSelector(toolbar) {
       function stopSpeechRecognition() {
         if (recognition) {
           recognition.stop();
-          micButton.textContent = "▶"; // Reset button UI
-          showSuccessMessage("🛑 Speech recognition stopped.");
+          micButton.innerHTML = '<i class="fas fa-microphone"></i>'; // Reset button UI
+          showSuccessMessage('<i class="fas fa-stop"></i> Speech recognition stopped.');
         }
       }
 
       micButton.addEventListener("click", () => {
-        if (micButton.textContent === "▶") {
+        if (micButton.innerHTML.includes("fa-microphone")) {
           startSpeechRecognition();
-        } else if (micButton.textContent === "🔴") {
+        } else {
           stopSpeechRecognition();
         }
       });
@@ -614,7 +614,7 @@ function appendToneSelector(toolbar) {
       // Create mic button
       const micButton = document.createElement("button");
       micButton.className = "whatsapp-mic-btn";
-      micButton.textContent = "🎤"; // Mic emoji
+      micButton.innerHTML = '<i class="fas fa-microphone"></i>'; // Mic icon
       micButton.style.cssText = `
       position: absolute;
       right: 10px;
@@ -643,19 +643,19 @@ function appendToneSelector(toolbar) {
           recognition.maxAlternatives = 1;
 
           recognition.onstart = () => {
-            micButton.textContent = "🔴"; // Update button UI
-            showSuccessMessage("🎤 Speech recognition started...");
+            micButton.innerHTML = '<i class="fas fa-stop" style="color: red;"></i>'; // Update button UI
+            showSuccessMessage('<i class="fas fa-microphone"></i> Speech recognition started...');
           };
 
           recognition.onresult = (event) => {
             let speechResult = event.results[0][0].transcript;
             speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
             insertReplyText(speechResult);
-            showSuccessMessage("✅ Speech recognized:", speechResult);
+            showSuccessMessage('<i class="fas fa-check"></i> Speech recognized:', speechResult);
           };
 
           recognition.onerror = (event) => {
-            showSuccessMessage("❌ Speech recognition error:", event.error);
+            showSuccessMessage('<i class="fas fa-exclamation-circle"></i> Speech recognition error:', event.error);
             stopSpeechRecognition(); // Stop only on a real error
           };
 
@@ -671,16 +671,16 @@ function appendToneSelector(toolbar) {
       function stopSpeechRecognition() {
         if (recognition) {
           recognition.stop();
-          micButton.textContent = "▶"; // Reset button UI
-          showSuccessMessage("🛑 Speech recognition stopped.");
+          micButton.innerHTML = '<i class="fas fa-microphone"></i>'; // Reset button UI
+          showSuccessMessage('<i class="fas fa-stop"></i> Speech recognition stopped.');
         }
       }
 
       // Mic button event listener (Manually stop only)
       micButton.addEventListener("click", () => {
-        if (micButton.textContent === "▶") {
+        if (micButton.innerHTML.includes("fa-microphone")) {
           startSpeechRecognition();
-        } else if (micButton.textContent === "🔴") {
+        } else {
           stopSpeechRecognition();
         }
       });
