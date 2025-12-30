@@ -114,9 +114,24 @@ function extractTextWithEmojis(element) {
     }
   }
 
+  // Handle line breaks
+  if (element.tagName === "BR") {
+    return "\n";
+  }
+
   // Recursively process child nodes
   for (const child of element.childNodes) {
     text += extractTextWithEmojis(child);
+  }
+
+  // Handle block elements by adding a newline if needed, but simple recursion usually handles text flow.
+  // Twitter usually uses <br> or divs. If it's a div, we might want to ensure separation.
+  // However, purely adding \n for BR is often enough for tweet text.
+  // Let's check if we need to add newline for block elements.
+  const style = window.getComputedStyle(element);
+  if (style.display === 'block' || style.display === 'flex' && element.tagName !== 'SPAN') { // Span can be flex too
+    // Ideally we don't want to double up \n if the last child was a BR or block.
+    // But simpler is better for now.
   }
 
   return text;
@@ -128,12 +143,12 @@ function getTweetContextFromShareButton(shareButton) {
   const mainTweetElement = tweetContainer ? tweetContainer.querySelector('[data-testid="tweetText"]') : null;
   if (mainTweetElement) {
     // Use extractTextWithEmojis to preserve emojis from images
-    tweetText = extractTextWithEmojis(mainTweetElement).trim();
+    tweetText = extractTextWithEmojis(mainTweetElement); // Removed .trim() to preserve potential leading/trailing intentional space, or add it back if needed. usually trim is fine.
 
     // Remove hashtags
     tweetText = tweetText.replace(/#\S+/g, "").trim();
-    // Remove extra spaces
-    tweetText = tweetText.replace(/\s\s+/g, " ");
+    // Remove extra spaces - REMOVED to preserve formatting
+    // tweetText = tweetText.replace(/\s\s+/g, " ");
 
     console.log(tweetText);
     return tweetText;
