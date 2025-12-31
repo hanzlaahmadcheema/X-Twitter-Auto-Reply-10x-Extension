@@ -588,13 +588,21 @@ function initializeWhatsAppMicButton() {
       return;
     }
 
-    // Try multiple selectors for WhatsApp input field (WhatsApp Web uses various structures)
-    const whatsappInput = document.querySelector('[contenteditable="true"][data-tab="10"]') ||
-                          document.querySelector('[contenteditable="true"][role="textbox"]') ||
-                          document.querySelector('div[contenteditable="true"][data-tab]') ||
-                          document.querySelector('div[contenteditable="true"][placeholder]') ||
-                          document.querySelector('p.selectable-text.copyable-text[contenteditable="true"]') ||
-                          document.querySelector('div[contenteditable="true"]');
+    // Try multiple selectors for WhatsApp MESSAGE input field (not search box)
+    // Target the chat message input area in the footer, not the sidebar search
+    const whatsappInput = document.querySelector('footer div[contenteditable="true"][data-tab="10"]') ||
+                          document.querySelector('footer div[contenteditable="true"][role="textbox"]') ||
+                          document.querySelector('footer p.selectable-text.copyable-text[contenteditable="true"]') ||
+                          document.querySelector('div[contenteditable="true"][data-tab="10"]:not([aria-label*="Search"], [aria-label*="search"])') ||
+                          document.querySelector('footer div[contenteditable="true"]') ||
+                          // Fallback: find contenteditable that's NOT in the sidebar/panel (search area)
+                          Array.from(document.querySelectorAll('div[contenteditable="true"]')).find(el => {
+                            // Exclude elements that are likely search inputs
+                            const ariaLabel = el.getAttribute('aria-label') || '';
+                            const parent = el.closest('[data-testid*="search"], [role="search"], [class*="search"]');
+                            const isInFooter = el.closest('footer');
+                            return !parent && !ariaLabel.toLowerCase().includes('search') && (isInFooter || el.closest('[data-testid*="conversation"]'));
+                          });
 
     if (whatsappInput) {
       // Find the input container - WhatsApp typically has a footer/input area
@@ -610,50 +618,84 @@ function initializeWhatsAppMicButton() {
       micButton.setAttribute('aria-label', 'Voice input');
       micButton.dataset.state = "idle";
 
-      // Style the button
+      // Style the button (smaller size, no background to match WhatsApp icons)
       micButton.style.cssText = `
-        background-color: #1DA1F2;
-        color: white;
+        background-color: transparent;
+        color: #54656f;
         border: none;
         border-radius: 50%;
-        width: 48px;
-        height: 48px;
-        min-width: 48px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         padding: 0;
-        margin: 0 4px;
+        margin: 0;
         flex-shrink: 0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        transition: background-color 0.2s;
+        transition: opacity 0.2s;
       `;
 
-      // Try to insert into input container, otherwise use fixed positioning
+      // Try to insert into input container next to plus icon (leftmost)
       let inserted = false;
       if (inputContainer && inputContainer !== document.body && inputContainer.tagName !== 'BODY') {
-        // Try to find the button row/group in the footer
-        const buttonRow = inputContainer.querySelector('[role="button"]')?.parentElement ||
-                         inputContainer.querySelector('span[data-icon]')?.parentElement?.parentElement ||
-                         inputContainer;
-        
-        // Try to insert before send button or at the end
-        if (buttonRow && buttonRow !== whatsappInput) {
-          try {
-            // Look for send button or emoji button to insert nearby
-            const sendButton = buttonRow.querySelector('span[data-icon="send"]')?.parentElement ||
-                              buttonRow.querySelector('[aria-label*="Send"], [aria-label*="send"]');
-            if (sendButton && sendButton.parentElement) {
-              sendButton.parentElement.insertBefore(micButton, sendButton);
-              inserted = true;
+        try {
+          // Find plus icon (typically the leftmost button, has data-icon="plus" or "attach")
+          const plusIcon = inputContainer.querySelector('span[data-icon="plus"]')?.parentElement ||
+                          inputContainer.querySelector('span[data-icon="attach"]')?.parentElement ||
+                          inputContainer.querySelector('button[aria-label*="Attach"], button[aria-label*="attach"]') ||
+                          inputContainer.querySelector('button[aria-label*="Plus"], button[aria-label*="plus"]') ||
+                          inputContainer.querySelector('[role="button"][aria-label*="Attach"], [role="button"][aria-label*="attach"]') ||
+                          // Fallback: find the first button in the toolbar (usually the plus/attach icon)
+                          Array.from(inputContainer.querySelectorAll('[role="button"], button, span[data-icon]')).find(btn => {
+                            const icon = btn.querySelector('span[data-icon]');
+                            return icon && (icon.getAttribute('data-icon') === 'plus' || icon.getAttribute('data-icon') === 'attach');
+                          });
+          
+          if (plusIcon && plusIcon.parentElement) {
+            // Insert the mic button right after the plus icon
+            if (plusIcon.nextSibling) {
+              plusIcon.parentElement.insertBefore(micButton, plusIcon.nextSibling);
             } else {
-              buttonRow.appendChild(micButton);
-              inserted = true;
+              plusIcon.parentElement.appendChild(micButton);
             }
-          } catch (e) {
-            console.log('Error inserting button into container:', e);
+            inserted = true;
+            console.log('WhatsApp mic button inserted next to plus icon');
+          } else {
+            // Fallback: find the first button in the toolbar (leftmost position)
+            const buttonRow = inputContainer.querySelector('[role="button"]')?.parentElement ||
+                             inputContainer.querySelector('span[data-icon]')?.parentElement?.parentElement ||
+                             inputContainer.querySelector('div[role="toolbar"]') ||
+                             inputContainer;
+            
+            if (buttonRow && buttonRow !== whatsappInput) {
+              // Find the first button (leftmost - usually plus/attach)
+              const firstButton = Array.from(buttonRow.querySelectorAll('[role="button"], button, span[data-icon]?.parentElement')).find(btn => {
+                return btn && btn.offsetParent !== null; // Only visible buttons
+              });
+              
+              if (firstButton && firstButton.parentElement) {
+                // Insert right after the first button
+                if (firstButton.nextSibling) {
+                  firstButton.parentElement.insertBefore(micButton, firstButton.nextSibling);
+                } else {
+                  firstButton.parentElement.appendChild(micButton);
+                }
+                inserted = true;
+              } else {
+                // Last resort: prepend to button row (leftmost position)
+                if (buttonRow.firstChild) {
+                  buttonRow.insertBefore(micButton, buttonRow.firstChild);
+                } else {
+                  buttonRow.appendChild(micButton);
+                }
+                inserted = true;
+              }
+            }
           }
+        } catch (e) {
+          console.log('Error inserting button into container:', e);
         }
       }
 
@@ -682,44 +724,32 @@ function initializeWhatsAppMicButton() {
             interimResults: false,
             maxAlternatives: 1,
             onResult: (text) => {
-              // Insert text into WhatsApp input
-              try {
-                whatsappInput.focus();
-                
-                // Use clipboard API or direct text insertion
-                const selection = window.getSelection();
-                const range = document.createRange();
-                
-                // Clear existing content or append
-                if (whatsappInput.childNodes.length > 0) {
-                  range.selectNodeContents(whatsappInput);
-                  range.collapse(false);
-                } else {
-                  range.setStart(whatsappInput, 0);
-                  range.setEnd(whatsappInput, 0);
-                }
-                
-                selection.removeAllRanges();
-                selection.addRange(range);
-                
-                // Insert text
-                const textNode = document.createTextNode(text + ' ');
-                range.insertNode(textNode);
-                range.setStartAfter(textNode);
-                range.collapse(true);
-                selection.removeAllRanges();
-                selection.addRange(range);
-                
-                // Trigger input events for WhatsApp
-                whatsappInput.dispatchEvent(new Event('input', { bubbles: true }));
-                whatsappInput.dispatchEvent(new Event('keyup', { bubbles: true }));
-              } catch (err) {
-                console.error('Error inserting text:', err);
-                // Fallback: try setting textContent
-                whatsappInput.textContent = (whatsappInput.textContent || '') + text + ' ';
-                whatsappInput.dispatchEvent(new Event('input', { bubbles: true }));
-              }
-            }
+  try {
+    whatsappInput.focus();
+    const before = whatsappInput.innerText;
+    const ok = document.execCommand('insertText', false, text + ' ');
+    const after = whatsappInput.innerText;
+    // Only run fallback if execCommand failed and value did not change
+    if (!ok || before === after) {
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      const range = document.createRange();
+      range.selectNodeContents(whatsappInput);
+      range.collapse(false);
+      selection.addRange(range);
+      whatsappInput.textContent += text + ' ';
+      whatsappInput.dispatchEvent(new InputEvent('input', {bubbles: true}));
+      whatsappInput.dispatchEvent(new Event('keyup', {bubbles: true}));
+    } else {
+      // Still always fire input event so the send button appears
+      whatsappInput.dispatchEvent(new InputEvent('input', {bubbles: true}));
+      whatsappInput.dispatchEvent(new Event('keyup', {bubbles: true}));
+    }
+    console.log('Speech text inserted in WhatsApp input:', text);
+  } catch (err) {
+    console.error('Error inserting text for WhatsApp:', err);
+  }
+}
           });
         } else {
           speechManager.stop();
