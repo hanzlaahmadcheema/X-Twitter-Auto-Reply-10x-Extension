@@ -8,12 +8,220 @@ const ICONS = {
   copy: '<svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 32 32"><path fill="#1da1f2" d="M8.5 5.25A3.25 3.25 0 0 1 11.75 2h12A3.25 3.25 0 0 1 27 5.25v18a3.25 3.25 0 0 1-3.25 3.25h-12a3.25 3.25 0 0 1-3.25-3.25zM5 8.75c0-1.352.826-2.511 2-3.001v17.75a4.5 4.5 0 0 0 4.5 4.5h11.751a3.25 3.25 0 0 1-3.001 2H11.5A6.5 6.5 0 0 1 5 23.5z"/></svg>' // Using 'file' icon as copy, or standard copy
 };
 
+// Utility: Debounce function
+function debounce(fn, delay) {
+  let timeoutId;
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
 
-// Inject Font Awesome CSS (Keeping it for now as backup or other usages, but user asked to use SVGs instead of <i>)
-const fontAwesomeLink = document.createElement('link');
-fontAwesomeLink.rel = 'stylesheet';
-fontAwesomeLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
-document.head.appendChild(fontAwesomeLink);
+// Utility: Conditional logging
+const DEBUG = false;
+function log(...args) {
+  if (DEBUG) console.log(...args);
+}
+
+// Storage Cache System
+class StorageCache {
+  constructor() {
+    this.cache = {};
+    this.initialized = false;
+    this.init();
+  }
+
+  async init() {
+    try {
+      this.cache = await chrome.storage.sync.get(null);
+      this.initialized = true;
+
+      // Listen for changes
+      chrome.storage.onChanged.addListener((changes) => {
+        Object.keys(changes).forEach(key => {
+          this.cache[key] = changes[key].newValue;
+        });
+      });
+    } catch (error) {
+      console.error('StorageCache init error:', error);
+    }
+  }
+
+  get(key, defaultValue = null) {
+    return this.cache[key] !== undefined ? this.cache[key] : defaultValue;
+  }
+
+  async waitForInit() {
+    if (this.initialized) return;
+    return new Promise((resolve) => {
+      const check = setInterval(() => {
+        if (this.initialized) {
+          clearInterval(check);
+          resolve();
+        }
+      }, 50);
+    });
+  }
+}
+
+const storageCache = new StorageCache();
+
+// Regex pattern cached at module level for performance
+const DASH_REPLACEMENT_REGEX = /\bDash\b|ڈیش/g;
+
+// Speech Recognition Manager (Singleton)
+class SpeechRecognitionManager {
+  constructor() {
+    this.recognition = null;
+    this.isRecording = false;
+    this.currentButton = null;
+    this.currentConfig = null;
+  }
+
+  _setupEventHandlers(config) {
+    if (!this.recognition) return;
+
+    this.recognition.onstart = () => {
+      this.isRecording = true;
+      if (this.currentButton) {
+        this.currentButton.classList.remove('mic-idle');
+        this.currentButton.classList.add('mic-recording');
+        this.currentButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`;
+        this.currentButton.dataset.state = "recording";
+      }
+      showSuccessMessage(`${ICONS.microphone} Speech recognition started...`);
+    };
+
+    this.recognition.onresult = (event) => {
+      let speechResult = event.results[0][0].transcript;
+      speechResult = speechResult.replace(DASH_REPLACEMENT_REGEX, "۔");
+
+      if (this.currentConfig && this.currentConfig.onResult) {
+        this.currentConfig.onResult(speechResult);
+      } else {
+        insertReplyText(speechResult);
+      }
+
+      showSuccessMessage(`${ICONS.check} Speech recognized`);
+    };
+
+    this.recognition.onerror = (event) => {
+      const errorMsg = event.error;
+      let userMessage = `${ICONS.exclamationCircle} Speech recognition error: ${errorMsg}`;
+      
+      // Categorize errors for better user feedback
+      if (errorMsg === 'no-speech' || errorMsg === 'audio-capture') {
+        userMessage = `${ICONS.exclamationCircle} No audio detected. Please check your microphone.`;
+      } else if (errorMsg === 'network') {
+        userMessage = `${ICONS.exclamationCircle} Network error. Please check your connection.`;
+      } else if (errorMsg === 'not-allowed') {
+        userMessage = `${ICONS.exclamationCircle} Microphone permission denied.`;
+      }
+      
+      if (DEBUG) {
+        log('Speech recognition error:', errorMsg);
+      }
+      
+      showSuccessMessage(userMessage);
+      this.stop();
+    };
+
+    this.recognition.onend = () => {
+      this.stop();
+    };
+  }
+
+  start(button, config = {}) {
+    // Stop any existing recording
+    if (this.isRecording) {
+      this.stop();
+    }
+
+    this.currentButton = button;
+    this.currentConfig = config;
+
+    // Clean up existing recognition instance
+    if (this.recognition) {
+      try {
+        this.recognition.stop();
+      } catch (e) {
+        // Ignore errors when stopping
+      }
+      this.recognition = null;
+    }
+
+    // Create new recognition instance
+    this.recognition = new webkitSpeechRecognition();
+    this.recognition.lang = config.lang || "ur-PK";
+    this.recognition.interimResults = config.interimResults || false;
+    this.recognition.maxAlternatives = config.maxAlternatives || 1;
+
+    // Setup fresh event handlers
+    this._setupEventHandlers(config);
+
+    try {
+      this.recognition.start();
+    } catch (error) {
+      if (DEBUG) {
+        log('Speech recognition start error:', error);
+      }
+      console.error('Speech recognition start error:', error);
+      this.stop();
+    }
+  }
+
+  stop() {
+    if (this.recognition && this.isRecording) {
+      try {
+        this.recognition.stop();
+      } catch (error) {
+        if (DEBUG) {
+          log('Speech recognition stop error:', error);
+        }
+        console.error('Speech recognition stop error:', error);
+      }
+    }
+
+    this.isRecording = false;
+
+    if (this.currentButton) {
+      this.currentButton.classList.remove('mic-recording');
+      this.currentButton.classList.add('mic-idle');
+      this.currentButton.innerHTML = ICONS.microphone;
+      this.currentButton.dataset.state = "idle";
+    }
+
+    // Dispose of recognition object
+    if (this.recognition) {
+      // Remove event handlers before disposing
+      this.recognition.onstart = null;
+      this.recognition.onresult = null;
+      this.recognition.onerror = null;
+      this.recognition.onend = null;
+      this.recognition = null;
+    }
+
+    this.currentConfig = null;
+
+    showSuccessMessage(`${ICONS.stop} Speech recognition stopped.`);
+  }
+
+  cleanup() {
+    this.stop();
+    this.currentButton = null;
+  }
+}
+
+const speechManager = new SpeechRecognitionManager();
+
+// Cleanup on page unload/navigation to prevent memory leaks
+window.addEventListener('beforeunload', () => {
+  speechManager.cleanup();
+});
+
+window.addEventListener('pagehide', () => {
+  speechManager.cleanup();
+});
 
 function getTweetContext() {
   let tweetText = "";
@@ -22,7 +230,7 @@ function getTweetContext() {
     document.querySelector('[data-testid="tweet"]');
   if (mainTweetElement) {
     tweetText = mainTweetElement.innerText.trim();
-    console.log(tweetText);
+    log(tweetText);
     return tweetText;
   }
   return "";
@@ -55,7 +263,6 @@ function filterResponse(response) {
 
   const excitementWords = ["wow", "wow,", "wow!", "oh", "oh,", "oh!", "amazing", "awesome", "AI Assistant:", "AI Assistant"];
   const regex = new RegExp(`\\b(${excitementWords.join("|")})\\b`, "gi");
-  //also exclude "بلکل" with a comma after it and then a space
   response = response.replace(/بالکل،\s/g, "");
   response = response.replace(/بالکل ٹھیک!\s/g, "");
   response = response.replace(/بالکل جناب،\s/g, "");
@@ -99,69 +306,55 @@ function insertReplyText(replyText) {
 
 function extractTextWithEmojis(element) {
   let text = "";
-  if (!element) return text;
 
-  // Handle text nodes
-  if (element.nodeType === Node.TEXT_NODE) {
-    return element.textContent;
-  }
-
-  // Handle images (often used for emojis on Twitter)
-  if (element.tagName === "IMG") {
-    const alt = element.getAttribute("alt");
-    if (alt) {
-      return alt;
+  element.childNodes.forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      text += node.textContent;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      if (node.tagName === "IMG" && node.alt) {
+        text += node.alt;
+      } else if (node.tagName === "BR") {
+        text += "\n";
+      } else {
+        text += extractTextWithEmojis(node);
+      }
     }
-  }
-
-  // Handle line breaks
-  if (element.tagName === "BR") {
-    return "\n";
-  }
-
-  // Recursively process child nodes
-  for (const child of element.childNodes) {
-    text += extractTextWithEmojis(child);
-  }
-
-  // Handle block elements by adding a newline if needed, but simple recursion usually handles text flow.
-  // Twitter usually uses <br> or divs. If it's a div, we might want to ensure separation.
-  // However, purely adding \n for BR is often enough for tweet text.
-  // Let's check if we need to add newline for block elements.
-  const style = window.getComputedStyle(element);
-  if (style.display === 'block' || style.display === 'flex' && element.tagName !== 'SPAN') { // Span can be flex too
-    // Ideally we don't want to double up \n if the last child was a BR or block.
-    // But simpler is better for now.
-  }
+  });
 
   return text;
 }
 
 function getTweetContextFromShareButton(shareButton) {
-  let tweetText = "";
-  const tweetContainer = shareButton.closest('[data-testid="tweet"]');
-  const mainTweetElement = tweetContainer ? tweetContainer.querySelector('[data-testid="tweetText"]') : null;
-  if (mainTweetElement) {
-    // Use extractTextWithEmojis to preserve emojis from images
-    tweetText = extractTextWithEmojis(mainTweetElement); // Removed .trim() to preserve potential leading/trailing intentional space, or add it back if needed. usually trim is fine.
-
-    // Remove hashtags
-    tweetText = tweetText.replace(/#\S+/g, "").trim();
-    // Remove extra spaces - REMOVED to preserve formatting
-    // tweetText = tweetText.replace(/\s\s+/g, " ");
-
-    console.log(tweetText);
-    return tweetText;
+  const tweetElement = shareButton.closest('[data-testid="tweet"]');
+  if (!tweetElement) {
+    console.error("Tweet element not found!");
+    return "";
   }
-  return "";
+
+  const mainTweetElement = tweetElement.querySelector('[data-testid="tweetText"]');
+  if (!mainTweetElement) {
+    console.error("Tweet text element not found!");
+    return "";
+  }
+
+  let tweetText = extractTextWithEmojis(mainTweetElement);
+
+  tweetText = tweetText.replace(/#\S+/g, "").trim();
+
+  log(tweetText);
+  return tweetText;
 }
+
+// html2canvas loading optimization
+let html2canvasLoaded = false;
 
 function waitForHtml2Canvas(callback) {
   if (typeof html2canvas !== "undefined") {
-    console.log("✅ html2canvas is available.");
-    callback(); // Execute the callback function
+    log("✅ html2canvas is available.");
+    html2canvasLoaded = true;
+    callback();
   } else {
-    console.log("⏳ Waiting for html2canvas...");
+    log("⏳ Waiting for html2canvas...");
     setTimeout(() => waitForHtml2Canvas(callback), 500);
   }
 }
@@ -174,35 +367,44 @@ function captureTweetScreenshot(shareButton) {
     return;
   }
 
-  console.log("Taking screenshot...");
+  log("Taking screenshot...");
   shareButton.innerHTML = ICONS.check;
   shareButton.style.color = "green";
   setTimeout(() => {
     shareButton.innerHTML = ICONS.camera;
     shareButton.style.color = "";
   }, 4000);
-  // Request injection of html2canvas
-  chrome.runtime.sendMessage({ action: "injectHtml2Canvas" }, (response) => {
-    if (response?.success) {
-      console.log("✅ html2canvas injected successfully.");
-      waitForHtml2Canvas(() => takeScreenshot(tweetElement));
-    } else {
-      console.error("❌ Error injecting html2canvas:", response?.error);
-    }
-  });
+
+  // Only inject if not already loaded
+  if (!html2canvasLoaded) {
+    chrome.runtime.sendMessage({ action: "injectHtml2Canvas" }, (response) => {
+      if (response?.success) {
+        log("✅ html2canvas injected successfully.");
+        waitForHtml2Canvas(() => takeScreenshot(tweetElement));
+      } else {
+        console.error("❌ Error injecting html2canvas:", response?.error);
+      }
+    });
+  } else {
+    takeScreenshot(tweetElement);
+  }
 }
 
-// Helper to convert image to Base64
+// Helper to convert image to Base64 (optimized)
 async function imageToBase64(url) {
   try {
     const response = await fetch(url);
     const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+
+    // Use createImageBitmap for better performance
+    const bitmap = await createImageBitmap(blob);
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0);
+
+    return canvas.toDataURL('image/png');
   } catch (err) {
     console.error("Error converting image to base64:", err);
     return null;
@@ -216,7 +418,7 @@ async function takeScreenshot(tweetElement) {
     return;
   }
 
-  // Hide our injected buttons before screenshot
+  // Hide our injected buttons before screenshot (using visibility instead of display)
   const copyBtn = tweetContainer.querySelector('.copy-tweet-btn');
   const shotBtn = tweetContainer.querySelector('.screenshot-btn');
   if (copyBtn) copyBtn.style.visibility = 'hidden';
@@ -229,7 +431,6 @@ async function takeScreenshot(tweetElement) {
   while (currentElement) {
     const style = getComputedStyle(currentElement);
     const color = style.backgroundColor;
-    // Check if color is not transparent (rgba(0, 0, 0, 0) or generic 'transparent')
     if (color && color !== 'rgba(0, 0, 0, 0)' && color !== 'transparent') {
       backgroundColor = color;
       break;
@@ -237,46 +438,38 @@ async function takeScreenshot(tweetElement) {
     currentElement = currentElement.parentElement;
   }
 
-  // Fallback to body if we still have transparent (should be covered by loop reaching body, but just in case)
   if (backgroundColor === 'transparent' || backgroundColor === 'rgba(0, 0, 0, 0)') {
     backgroundColor = getComputedStyle(document.body).backgroundColor;
   }
 
   // Elements to hide
   const selectorsToHide = [
-    // '.copy-tweet-btn', // Already handled separately but can be consolidated
-    // '.screenshot-btn', // Already handled separately
-    '[role="group"]', // Bottom action bar (Reply, Repost, Like, Share)
-    'a[href*="/analytics"]', // Views count
-    'div[data-testid="caret"]', // 3 dots icon
-    'button[aria-label*="Follow"]', // Follow button
-    'button[data-testid*="grok"]', // Grok icon (if present with this ID)
-    '[aria-label="Grok"]', // Alternate Grok selector
-    'span[data-testid="socialContext"]', // "Reposted" info
+    '[role="group"]',
+    'a[href*="/analytics"]',
+    'div[data-testid="caret"]',
+    'button[aria-label*="Follow"]',
+    'button[data-testid*="grok"]',
+    '[aria-label="Grok"]',
+    'span[data-testid="socialContext"]',
   ];
 
   const hiddenElements = [];
 
-  // Hide generic selectors
   selectorsToHide.forEach(selector => {
     const elements = tweetContainer.querySelectorAll(selector);
     elements.forEach(el => {
-      // Ensure we don't accidentally hide the whole tweet if the selector is too broad
-      // For [role="group"], it targets the action bar at the bottom primarily.
-      hiddenElements.push({ element: el, originalDisplay: el.style.display });
-      el.style.display = 'none';
+      hiddenElements.push({ element: el, originalVisibility: el.style.visibility });
+      el.style.visibility = 'hidden';
     });
   });
 
   // Hide "Translate post" link/button
-  // This is often a button or text.
   const allButtons = tweetContainer.querySelectorAll('button, span');
   allButtons.forEach(el => {
     if (el.innerText === 'Translate post' || el.innerText === 'Show translation') {
-      // Hide the closest clickable parent if it's a span inside a button, or just the element
       const target = el.closest('[role="button"]') || el;
-      hiddenElements.push({ element: target, originalDisplay: target.style.display });
-      target.style.display = 'none';
+      hiddenElements.push({ element: target, originalVisibility: target.style.visibility });
+      target.style.visibility = 'hidden';
     }
   });
 
@@ -285,20 +478,17 @@ async function takeScreenshot(tweetElement) {
   let originalAvatarSrc = '';
   if (avatarImg) {
     originalAvatarSrc = avatarImg.src;
-    // Use the higher quality version if available or just the current one
-    // Twitter avatars usually have format params.
     const base64 = await imageToBase64(originalAvatarSrc);
     if (base64) {
       avatarImg.src = base64;
     }
   }
 
-
   // Use html2canvas directly on the tweet container
   html2canvas(tweetContainer, {
     useCORS: true,
     allowTaint: true,
-    backgroundColor: backgroundColor, // Use detected background
+    backgroundColor: backgroundColor,
   }).then(canvas => {
     const image = canvas.toDataURL('image/png');
     const filename = `tweet-${Date.now()}.png`;
@@ -318,50 +508,260 @@ async function takeScreenshot(tweetElement) {
     if (shotBtn) shotBtn.style.visibility = 'visible';
 
     // Restore other hidden elements
-    hiddenElements.forEach(({ element, originalDisplay }) => {
-      element.style.display = originalDisplay;
+    hiddenElements.forEach(({ element, originalVisibility }) => {
+      element.style.visibility = originalVisibility;
     });
 
     // Restore Avatar
     if (avatarImg && originalAvatarSrc) {
       avatarImg.src = originalAvatarSrc;
     }
-
-    // Reset the camera icon state (it was set to checkmark in captureTweetScreenshot)
-    const shareButton = tweetContainer.querySelector('[aria-label="Share post"]'); //Find closest doesn't work well reversed often, but here we need to find the specific button that triggered it. 
-    // Actually captureTweetScreenshot handles the icon reset on timeout, but we might want to ensure it's correct. 
-    // The captureTweetScreenshot function changes the icon of the PASSED button. 
-    // We don't have reference to the button here easily unless we pass it.
-    // But captureTweetScreenshot sets a timeout to reset it. That is fine.
   });
 }
 
 //#region Get tweet URL
 
 
-// Function to show a small success notification
-function showSuccessMessage(message) {
-  const notification = document.createElement("div");
-  notification.innerHTML = message;
-  notification.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 40pc;
-    background: #1DA1F2;
-    color: white;
-    padding: 20px 25px;
-    border-radius: 5px;
-    font-size: 16px;
-    z-index: 10000;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  `;
-  document.body.appendChild(notification);
+// Notification element singleton for reuse
+let notificationElement = null;
+let notificationTimeout = null;
 
-  setTimeout(() => {
-    notification.remove();
-  }, 3000);
+// Function to show a small success notification (optimized with element reuse)
+function showSuccessMessage(message) {
+  // Create notification element if it doesn't exist
+  if (!notificationElement) {
+    notificationElement = document.createElement("div");
+    notificationElement.className = "speech-extension-notification";
+    notificationElement.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 40pc;
+      background: #1DA1F2;
+      color: white;
+      padding: 20px 25px;
+      border-radius: 5px;
+      font-size: 16px;
+      z-index: 10000;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+      pointer-events: none;
+    `;
+    document.body.appendChild(notificationElement);
+  }
+
+  // Clear existing timeout
+  if (notificationTimeout) {
+    clearTimeout(notificationTimeout);
+  }
+
+  // Update message and show
+  notificationElement.innerHTML = message;
+  notificationElement.style.opacity = "1";
+  notificationElement.style.pointerEvents = "auto";
+
+  // Hide after 2000ms (reduced from 3000ms for faster feedback)
+  notificationTimeout = setTimeout(() => {
+    if (notificationElement) {
+      notificationElement.style.opacity = "0";
+      notificationElement.style.pointerEvents = "none";
+    }
+  }, 2000);
 }
 
+
+//#region WhatsApp Mic Button
+// Initialize WhatsApp mic button independently (runs on WhatsApp pages)
+function initializeWhatsAppMicButton() {
+  // Only run on WhatsApp pages (web.whatsapp.com or whatsapp.com)
+  if (!window.location.hostname.includes('whatsapp.com')) {
+    return;
+  }
+
+  let whatsappObserver = null;
+  let buttonAdded = false;
+
+  // Function to add mic button to WhatsApp input field
+  function addMicToWhatsApp() {
+    // Early return if button already exists
+    if (buttonAdded || document.querySelector(".whatsapp-mic-btn")) {
+      return;
+    }
+
+    // Try multiple selectors for WhatsApp input field (WhatsApp Web uses various structures)
+    const whatsappInput = document.querySelector('[contenteditable="true"][data-tab="10"]') ||
+                          document.querySelector('[contenteditable="true"][role="textbox"]') ||
+                          document.querySelector('div[contenteditable="true"][data-tab]') ||
+                          document.querySelector('div[contenteditable="true"][placeholder]') ||
+                          document.querySelector('p.selectable-text.copyable-text[contenteditable="true"]') ||
+                          document.querySelector('div[contenteditable="true"]');
+
+    if (whatsappInput) {
+      // Find the input container - WhatsApp typically has a footer/input area
+      let inputContainer = whatsappInput.closest('footer') ||
+                          whatsappInput.closest('[role="textbox"]') ||
+                          whatsappInput.closest('div[contenteditable="false"]') ||
+                          whatsappInput.parentElement?.parentElement ||
+                          whatsappInput.parentElement;
+
+      const micButton = document.createElement("button");
+      micButton.className = "whatsapp-mic-btn";
+      micButton.innerHTML = ICONS.microphone;
+      micButton.setAttribute('aria-label', 'Voice input');
+      micButton.dataset.state = "idle";
+
+      // Style the button
+      micButton.style.cssText = `
+        background-color: #1DA1F2;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        margin: 0 4px;
+        flex-shrink: 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transition: background-color 0.2s;
+      `;
+
+      // Try to insert into input container, otherwise use fixed positioning
+      let inserted = false;
+      if (inputContainer && inputContainer !== document.body && inputContainer.tagName !== 'BODY') {
+        // Try to find the button row/group in the footer
+        const buttonRow = inputContainer.querySelector('[role="button"]')?.parentElement ||
+                         inputContainer.querySelector('span[data-icon]')?.parentElement?.parentElement ||
+                         inputContainer;
+        
+        // Try to insert before send button or at the end
+        if (buttonRow && buttonRow !== whatsappInput) {
+          try {
+            // Look for send button or emoji button to insert nearby
+            const sendButton = buttonRow.querySelector('span[data-icon="send"]')?.parentElement ||
+                              buttonRow.querySelector('[aria-label*="Send"], [aria-label*="send"]');
+            if (sendButton && sendButton.parentElement) {
+              sendButton.parentElement.insertBefore(micButton, sendButton);
+              inserted = true;
+            } else {
+              buttonRow.appendChild(micButton);
+              inserted = true;
+            }
+          } catch (e) {
+            console.log('Error inserting button into container:', e);
+          }
+        }
+      }
+
+      // Fallback: fixed positioning near input area
+      if (!inserted) {
+        const rect = whatsappInput.getBoundingClientRect();
+        micButton.style.position = 'fixed';
+        micButton.style.right = '80px';
+        micButton.style.bottom = '20px';
+        micButton.style.zIndex = '99999';
+        document.body.appendChild(micButton);
+        console.log('WhatsApp mic button added as fixed element');
+      } else {
+        console.log('WhatsApp mic button inserted into input container');
+      }
+
+      buttonAdded = true;
+
+      // Add click handler
+      micButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (micButton.dataset.state !== "recording") {
+          speechManager.start(micButton, {
+            lang: "ur-PK",
+            interimResults: false,
+            maxAlternatives: 1,
+            onResult: (text) => {
+              // Insert text into WhatsApp input
+              try {
+                whatsappInput.focus();
+                
+                // Use clipboard API or direct text insertion
+                const selection = window.getSelection();
+                const range = document.createRange();
+                
+                // Clear existing content or append
+                if (whatsappInput.childNodes.length > 0) {
+                  range.selectNodeContents(whatsappInput);
+                  range.collapse(false);
+                } else {
+                  range.setStart(whatsappInput, 0);
+                  range.setEnd(whatsappInput, 0);
+                }
+                
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                // Insert text
+                const textNode = document.createTextNode(text + ' ');
+                range.insertNode(textNode);
+                range.setStartAfter(textNode);
+                range.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                // Trigger input events for WhatsApp
+                whatsappInput.dispatchEvent(new Event('input', { bubbles: true }));
+                whatsappInput.dispatchEvent(new Event('keyup', { bubbles: true }));
+              } catch (err) {
+                console.error('Error inserting text:', err);
+                // Fallback: try setting textContent
+                whatsappInput.textContent = (whatsappInput.textContent || '') + text + ' ';
+                whatsappInput.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+            }
+          });
+        } else {
+          speechManager.stop();
+        }
+      });
+
+      // Disconnect observer once button is added
+      if (whatsappObserver) {
+        whatsappObserver.disconnect();
+        whatsappObserver = null;
+      }
+    } else {
+      // Input not found - will retry via observer
+    }
+  }
+
+  // Try to add button immediately (with small delay to ensure DOM is ready)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(addMicToWhatsApp, 500);
+    });
+  } else {
+    setTimeout(addMicToWhatsApp, 500);
+  }
+
+  // Set up observer to retry if button wasn't added
+  const debouncedAddMic = debounce(() => {
+    if (!buttonAdded && !document.querySelector(".whatsapp-mic-btn")) {
+      addMicToWhatsApp();
+    }
+  }, 500);
+
+  // Observe the entire document for changes (WhatsApp is very dynamic)
+  whatsappObserver = new MutationObserver(debouncedAddMic);
+  whatsappObserver.observe(document.body, { 
+    childList: true, 
+    subtree: true,
+    attributeOldValue: false,
+    characterDataOldValue: false
+  });
+}
+//#endregion
 
 //#region Tone Prompts
 function appendToneSelector(toolbar) {
@@ -375,22 +775,8 @@ function appendToneSelector(toolbar) {
         <option value="The message length should be between 5 and 200 characters">5-200 Ch</option>
         <option value="The length requirement should be between 100 and 400 characters">100-400 Ch</option>
         <option value="The message length should be short but impactful, up to 50 characters">Short</option>
-                <!-- <option value="The message length must align with the tweet's character limit">Tweet Length</option>
-        <option value="The character count should be appropriate for a more extensive message">Extensive</option>
-        <option value="The length should fall between 5 and 200 characters for conciseness">Concise 5-200</option>
-        <option value="The character length should fall between 100 and 400 characters for detailed communication">Detailed 100-400</option>
-        <option value="The message length should be ideal for a mid-length message, ranging from 150 to 250 characters">Mid-Length 150-250</option>
-        <option value="The length should be sufficiently detailed, spanning between 250 and 350 characters">Detailed 250-350</option>-->
     </select>
     <select id="toneSelect">
-      <!--<option value="empathetic">Empath</option>
-      <option value="grateful">Grateful</option>
-      <option value="inspirational">Inspire</option>
-      <option value="insightful">Insightful</option>
-      <option value="informative">Informa</option>
-      <option value="reflective">Reflect</option>
-      <option value="optimistic">Optimistic</option>
-      <option value="critical">Critical</option>-->
       <option value="encouraging">Encourag</option>
       <option value="polite">Polite</option>
       <option value="playful">Playful</option>
@@ -415,271 +801,67 @@ function appendToneSelector(toolbar) {
     </select>
     <button class="mic-btn" >${ICONS.microphone}</button>
     <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">Generate</button>
-    <!--<button class="stop-btn" style="display: none;">🔴 Stop</button>-->
   `;
   toolbar.appendChild(container);
 
   //#region Mic Setting
 
-  const micButton = document.querySelector(".mic-btn");
-  let recognition = null;
+  const micButton = container.querySelector(".mic-btn");
+  micButton.dataset.state = "idle";
+
+  // Mic button event listener
+  micButton.addEventListener("click", () => {
+    if (micButton.dataset.state !== "recording") {
+      speechManager.start(micButton, {
+        lang: "ur-PK",
+        interimResults: false,
+        maxAlternatives: 1
+      });
+    } else {
+      speechManager.stop();
+    }
+  });
+
+  // Double-space shortcut (optimized - only when focused on input)
   let spacePressCount = 0;
   let spaceTimeout;
 
-  // Function to start speech recognition
-  function startSpeechRecognition() {
-    if (!recognition) {
-      recognition = new webkitSpeechRecognition(); // Use Chrome's API
-      recognition.lang = "ur-PK"; // Set language to Urdu
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
+  const replyInput = document.querySelector('[data-testid="tweetTextarea_0"]');
+  if (replyInput) {
+    replyInput.addEventListener("keydown", (event) => {
+      if (event.code === "Space") {
+        spacePressCount++;
 
-      recognition.onstart = () => {
-        micButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`; // Update button UI
-        micButton.dataset.state = "recording";
-        showSuccessMessage(`${ICONS.microphone} Speech recognition started...`);
-      };
+        if (spacePressCount === 2) {
+          event.preventDefault();
+          micButton.click();
+          spacePressCount = 0;
+        }
 
-      recognition.onresult = (event) => {
-        let speechResult = event.results[0][0].transcript;
-        speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
-        insertReplyText(speechResult);
-        showSuccessMessage(`${ICONS.check} Speech recognized:`, speechResult);
-      };
-
-      recognition.onerror = (event) => {
-        showSuccessMessage(`${ICONS.exclamationCircle} Speech recognition error:`, event.error);
-        stopSpeechRecognition(); // Stop only on a real error
-      };
-
-      recognition.onend = () => {
-        stopSpeechRecognition();
-      };
-    }
-
-    recognition.start();
+        clearTimeout(spaceTimeout);
+        spaceTimeout = setTimeout(() => {
+          spacePressCount = 0;
+        }, 300);
+      }
+    });
   }
 
-  // Function to stop speech recognition manually
-  function stopSpeechRecognition() {
-    if (recognition) {
-      recognition.stop();
-      micButton.innerHTML = ICONS.microphone; // Reset button UI
-      micButton.dataset.state = "idle";
-      showSuccessMessage(`${ICONS.stop} Speech recognition stopped.`);
-    }
-  }
-
-  // Mic button event listener (Manually stop only)
-  micButton.addEventListener("click", () => {
-    if (micButton.dataset.state !== "recording") {
-      startSpeechRecognition();
-    } else {
-      stopSpeechRecognition();
-    }
-  });
-
-
-  document.addEventListener("keydown", (event) => {
-    if (event.code === "Space") {
-      spacePressCount++;
-
-      if (spacePressCount === 2) {
-        event.preventDefault(); // Prevent unwanted scrolling
-        micButton.click(); // Simulate mic button click
-        spacePressCount = 0; // Reset counter
-      }
-
-      clearTimeout(spaceTimeout);
-      spaceTimeout = setTimeout(() => {
-        spacePressCount = 0; // Reset counter if not pressed twice in quick succession
-      }, 300);
-    }
-  });
-
-  // Function to add mic button to WhatsApp input field
-  function addMicToWhatsApp() {
-    const whatsappInput = document.querySelector('[contenteditable="true"][data-tab="10"]'); // WhatsApp input field
-
-    if (whatsappInput && !document.querySelector(".whatsapp-mic-btn")) {
-      // Create mic button
-      const micButton = document.createElement("button");
-      micButton.className = "whatsapp-mic-btn";
-      micButton.innerHTML = ICONS.microphone; // Mic icon
-      micButton.style.cssText = `
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      background-color: #1DA1F2;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      cursor: pointer;
-      z-index: 1000;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    `;
-      micButton.dataset.state = "idle";
-
-
-      // Append mic button to the body
-      document.body.appendChild(micButton);
-
-      // Speech recognition setup
-      let recognition = null;
-
-      function startSpeechRecognition() {
-        if (!recognition) {
-          recognition = new webkitSpeechRecognition(); // Use Chrome's API
-          recognition.lang = "ur-PK"; // Set language to Urdu
-          recognition.interimResults = false;
-          recognition.maxAlternatives = 1;
-
-          recognition.onstart = () => {
-            micButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`; // Update button UI
-            micButton.dataset.state = "recording";
-            showSuccessMessage(`${ICONS.microphone} Speech recognition started...`);
-          };
-
-          recognition.onresult = (event) => {
-            let speechResult = event.results[0][0].transcript;
-            speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
-            insertReplyText(speechResult);
-            showSuccessMessage(`${ICONS.check} Speech recognized:`, speechResult);
-          };
-
-          recognition.onerror = (event) => {
-            showSuccessMessage(`${ICONS.exclamationCircle} Speech recognition error:`, event.error);
-            stopSpeechRecognition(); // Stop only on a real error
-          };
-
-          recognition.onend = () => {
-            stopSpeechRecognition();
-          };
-        }
-
-        recognition.start();
-      }
-
-      function stopSpeechRecognition() {
-        if (recognition) {
-          recognition.stop();
-          micButton.innerHTML = ICONS.microphone; // Reset button UI
-          micButton.dataset.state = "idle";
-          showSuccessMessage(`${ICONS.stop} Speech recognition stopped.`);
-        }
-      }
-
-      micButton.addEventListener("click", () => {
-        if (micButton.dataset.state !== "recording") {
-          startSpeechRecognition();
-        } else {
-          stopSpeechRecognition();
-        }
-      });
-    }
-    if (whatsappInput && !document.querySelector(".whatsapp-mic-btn")) {
-      // Create mic button
-      const micButton = document.createElement("button");
-      micButton.className = "whatsapp-mic-btn";
-      micButton.innerHTML = ICONS.microphone; // Mic icon
-      micButton.style.cssText = `
-      position: absolute;
-      right: 10px;
-      bottom: 10px;
-      background: #25D366;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      cursor: pointer;
-      z-index: 1000;
-    `;
-      micButton.dataset.state = "idle";
-
-
-      // Append mic button to the parent of the input field
-      whatsappInput.parentElement.appendChild(micButton);
-
-      // Speech recognition setup
-      let recognition = null;
-
-      function startSpeechRecognition() {
-        if (!recognition) {
-          recognition = new webkitSpeechRecognition(); // Use Chrome's API
-          recognition.lang = "ur-PK"; // Set language to Urdu
-          recognition.interimResults = false;
-          recognition.maxAlternatives = 1;
-
-          recognition.onstart = () => {
-            micButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`; // Update button UI
-            micButton.dataset.state = "recording";
-            showSuccessMessage(`${ICONS.microphone} Speech recognition started...`);
-          };
-
-          recognition.onresult = (event) => {
-            let speechResult = event.results[0][0].transcript;
-            speechResult = speechResult.replace(/\bDash\b|ڈیش/g, "۔"); // Replace "Dash" with Urdu punctuation
-            insertReplyText(speechResult);
-            showSuccessMessage(`${ICONS.check} Speech recognized:`, speechResult);
-          };
-
-          recognition.onerror = (event) => {
-            showSuccessMessage(`${ICONS.exclamationCircle} Speech recognition error:`, event.error);
-            stopSpeechRecognition(); // Stop only on a real error
-          };
-
-          recognition.onend = () => {
-            stopSpeechRecognition();
-          };
-        }
-
-        recognition.start();
-      }
-
-      // Function to stop speech recognition manually
-      function stopSpeechRecognition() {
-        if (recognition) {
-          recognition.stop();
-          micButton.innerHTML = ICONS.microphone; // Reset button UI
-          micButton.dataset.state = "idle";
-          showSuccessMessage(`${ICONS.stop} Speech recognition stopped.`);
-        }
-      }
-
-      // Mic button event listener (Manually stop only)
-      micButton.addEventListener("click", () => {
-        if (micButton.dataset.state !== "recording") {
-          startSpeechRecognition();
-        } else {
-          stopSpeechRecognition();
-        }
-      });
-    }
-  }
-
-  // Observe DOM changes to detect WhatsApp input field
-  const whatsappObserver = new MutationObserver(() => {
-    addMicToWhatsApp();
-  });
-
-  whatsappObserver.observe(document.body, { childList: true, subtree: true });
   const customPromptTextarea = container.querySelector("#customPrompt");
   const toneSelect = container.querySelector("#toneSelect");
   const lengthSelect = container.querySelector("#lengthSelect");
   const generateButton = container.querySelector(".generate-reply-btn");
-  // const stopButton = container.querySelector(".stop-btn");
 
   let isGenerating = false;
 
-  // Restore last selected values
-  chrome.storage.sync.get(["lastTone", "lastLength", "selectedColor"], (data) => {
-    if (data.lastTone) toneSelect.value = data.lastTone;
-    if (data.lastLength) lengthSelect.value = data.lastLength;
-    const defaultColor = data.selectedColor || "#1da1f2";
-    applyColor(defaultColor);
+  // Restore last selected values using cache
+  storageCache.waitForInit().then(() => {
+    const lastTone = storageCache.get("lastTone");
+    const lastLength = storageCache.get("lastLength");
+    const selectedColor = storageCache.get("selectedColor", "#1da1f2");
+
+    if (lastTone) toneSelect.value = lastTone;
+    if (lastLength) lengthSelect.value = lastLength;
+    applyColor(selectedColor);
   });
 
   // Save selections on change
@@ -698,7 +880,6 @@ function appendToneSelector(toolbar) {
     generateButton.textContent = "Generating...";
     generateButton.style.backgroundColor = "red";
     generateButton.disabled = true;
-    // stopButton.style.display = "inline-block";
     showSuccessMessage("Generating reply...");
 
     const tone = toneSelect.value;
@@ -723,37 +904,14 @@ function appendToneSelector(toolbar) {
         isGenerating = false;
         generateButton.disabled = false;
         generateButton.textContent = "Generate";
-        chrome.storage.sync.get(["selectedColor"], (data) => {
-          const defaultColor = data.selectedColor || "#1da1f2";
-          generateButton.style.backgroundColor = defaultColor;
-        });
-        // stopButton.style.display = "none";
+
+        const defaultColor = storageCache.get("selectedColor", "#1da1f2");
+        generateButton.style.backgroundColor = defaultColor;
 
         if (response?.error) {
           showErrorInButton(response.error);
         } else if (response?.reply) {
           insertReplyText(response.reply);
-
-          // Trigger the alarm if enabled
-          // chrome.storage.sync.get(["alarmType", "alarmEnabled", "alarmTime"], (data) => {
-          //   console.log("Alarm settings retrieved from storage:", data);
-
-          //   const { alarmType, alarmEnabled, alarmTime } = data;
-
-          //   if (alarmEnabled) {
-          //     const timeInMs = alarmTime * 60000; // Convert minutes to milliseconds
-          //     console.log("Alarm enabled. Type:", alarmType, "| Time (ms):", timeInMs);
-
-          //     // Trigger the appropriate alarm based on the selected type
-          //     chrome.runtime.sendMessage({
-          //       action: "startAlarm",
-          //       time: timeInMs,
-          //       type: alarmType,
-          //     });
-          //   } else {
-          //     console.log("Alarm is disabled. No notification will be triggered.");
-          //   }
-          // });
         }
       }
     );
@@ -763,21 +921,20 @@ function appendToneSelector(toolbar) {
   function applyColor(color) {
     document.documentElement.style.setProperty("--model-color", color);
 
-    // Apply the color to specific elements in the toolbar
     const toolbar = document.querySelector(".tone-selector-container");
     if (toolbar) {
-      toolbar.style.borderColor = color; // Example: Set the border color of the toolbar
+      toolbar.style.borderColor = color;
     }
 
     const generateButton = document.querySelector(".generate-reply-btn");
     if (generateButton) {
       generateButton.style.backgroundColor = color;
-      generateButton.style.color = "#fff"; // Ensure text remains readable
+      generateButton.style.color = "#fff";
     }
 
     const customPromptTextarea = document.querySelector("#customPrompt");
     if (customPromptTextarea) {
-      customPromptTextarea.style.borderColor = color; // Set border color for text area
+      customPromptTextarea.style.borderColor = color;
     }
   }
 
@@ -794,11 +951,9 @@ function showErrorInButton(message) {
 
     setTimeout(() => {
       generateButton.textContent = "Generate";
-      chrome.storage.sync.get(["selectedColor"], (data) => {
-        const defaultColor = data.selectedColor || "#1da1f2";
-        generateButton.style.backgroundColor = defaultColor;
-        generateButton.style.color = "#fff";
-      });
+      const defaultColor = storageCache.get("selectedColor", "#1da1f2");
+      generateButton.style.backgroundColor = defaultColor;
+      generateButton.style.color = "#fff";
       generateButton.disabled = false;
     }, 3000);
   }
@@ -828,13 +983,11 @@ function insertCopyTweetButton() {
   shareButtons.forEach((shareButton) => {
     const parent = shareButton.parentNode;
 
-    // Avoid duplicate buttons
     if (!parent.querySelector(".copy-tweet-btn") && !parent.querySelector(".screenshot-btn")) {
 
-      // 📋 Copy Tweet Button
       const copyTweetButton = document.createElement("button");
       copyTweetButton.className = "copy-tweet-btn";
-      copyTweetButton.innerHTML = ICONS.copy; // Copy Icon
+      copyTweetButton.innerHTML = ICONS.copy;
       copyTweetButton.style.cssText = `
         padding: 6px;
         color: white;
@@ -846,10 +999,9 @@ function insertCopyTweetButton() {
       `;
       copyTweetButton.addEventListener("click", () => copyTweetText(copyTweetButton, shareButton));
 
-      // 📸 Screenshot Tweet Button
       const screenshotButton = document.createElement("button");
       screenshotButton.className = "screenshot-btn";
-      screenshotButton.innerHTML = ICONS.camera; // Camera Icon
+      screenshotButton.innerHTML = ICONS.camera;
       screenshotButton.style.cssText = `
         padding: 6px;
         color: white;
@@ -862,7 +1014,6 @@ function insertCopyTweetButton() {
       `;
       screenshotButton.addEventListener("click", () => captureTweetScreenshot(screenshotButton));
 
-      // Insert buttons after the Share button
       parent.insertBefore(copyTweetButton, shareButton.nextSibling);
       parent.insertBefore(screenshotButton, shareButton.nextSibling);
     }
@@ -873,10 +1024,9 @@ function insertCopyTweetButton() {
 function copyTweetText(button, shareButton) {
   const tweetText = getTweetContextFromShareButton(shareButton);
   if (tweetText) {
-    // Try navigator.clipboard first (modern, secure method)
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(tweetText).then(() => {
-        console.log("Tweet text copied to clipboard:", tweetText);
+        log("Tweet text copied to clipboard:", tweetText);
         button.innerHTML = ICONS.check;
         button.style.color = "green";
         showSuccessMessage("Text Copied to clipboard!")
@@ -889,7 +1039,6 @@ function copyTweetText(button, shareButton) {
         copyWithFallback(tweetText, button);
       });
     } else {
-      // Use fallback for older browsers
       copyWithFallback(tweetText, button);
     }
   } else {
@@ -910,7 +1059,7 @@ function copyWithFallback(tweetText, button) {
 
   try {
     document.execCommand("copy");
-    console.log("Tweet text copied to clipboard (fallback):", tweetText);
+    log("Tweet text copied to clipboard (fallback):", tweetText);
     button.innerHTML = ICONS.check;
     button.style.color = "green";
     showSuccessMessage("Text Copied to clipboard!")
@@ -935,23 +1084,31 @@ function appendAsidepanel(toolbar2) {
   toolbar2.appendChild(asidePanel);
 }
 
-const observer = new MutationObserver(() => {
+// Debounced observer callbacks
+const debouncedAppendToneSelector = debounce(() => {
   const toolbar = document.querySelector('[class="css-175oi2r r-1iusvr4 r-16y2uox r-1777fci r-1h8ys4a r-1bylmt5 r-13tjlyg r-7qyjyx r-1ftll1t"]');
   if (toolbar && !toolbar.querySelector(".tone-selector-container")) {
     appendToneSelector(toolbar);
   }
-});
+}, 300);
 
-const observer2 = new MutationObserver(() => {
+const debouncedAppendAsidePanel = debounce(() => {
   const toolbar2 = document.querySelector('[role="list"]');
   if (toolbar2 && !toolbar2.querySelector(".aside-panel")) {
     appendAsidepanel(toolbar2);
   }
-});
+}, 300);
 
-const observer3 = new MutationObserver(() => {
+const debouncedInsertCopyTweetButton = debounce(() => {
   insertCopyTweetButton();
-});
+}, 300);
+
+const observer = new MutationObserver(debouncedAppendToneSelector);
+const observer2 = new MutationObserver(debouncedAppendAsidePanel);
+const observer3 = new MutationObserver(debouncedInsertCopyTweetButton);
 
 observer.observe(document.body, { childList: true, subtree: true });
 observer3.observe(document.body, { childList: true, subtree: true });
+
+// Initialize WhatsApp mic button independently (runs on WhatsApp pages)
+initializeWhatsAppMicButton();
