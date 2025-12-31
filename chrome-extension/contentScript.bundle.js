@@ -620,13 +620,13 @@ function initializeWhatsAppMicButton() {
 
       // Style the button (smaller size, no background to match WhatsApp icons)
       micButton.style.cssText = `
-        background-color: transparent;
+        background-color: #1DA1F2;
         color: #54656f;
         border: none;
         border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
