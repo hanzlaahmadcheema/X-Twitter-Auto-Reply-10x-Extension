@@ -29,7 +29,7 @@
       "matches": [
         "*://x.com/*",
         "*://twitter.com/*",
-        "*://whatsapp.com/*"
+        "*://web.whatsapp.com/*"
       ],
       "js": [
         "contentScript.bundle.js"
