@@ -636,15 +636,26 @@ function initializeWhatsAppMicButton() {
         });
     } else if (type === 'media') {
       buttonClass = 'whatsapp-mic-btn-media';
-      // Selectors for media caption input (appears in media upload modal)
-      selectors = [
-        'div[data-testid="media-caption-input"] div[contenteditable="true"]',
-        'div[role="dialog"] div[contenteditable="true"]',
-        'div[data-lexical-editor="true"]',
-        'div[contenteditable="true"][placeholder*="Add a caption"]',
-        'div[contenteditable="true"][aria-label*="caption"]'
-      ];
-      whatsappInput = selectors.map(sel => document.querySelector(sel)).find(el => el);
+      // Universal finder logic for "Right Popup" button
+      // It should prioritize Media Caption, then fallback to Main Message, NEVER Search.
+      const findTarget = () => {
+        // 1. Media
+        const media = document.querySelector('div[data-testid="media-caption-input"] div[contenteditable="true"]') ||
+          document.querySelector('div[role="dialog"] div[contenteditable="true"]') ||
+          document.querySelector('div[contenteditable="true"][aria-label*="caption"]');
+        if (media) return media;
+
+        // 2. Main (Footer) - Strict check to avoid search
+        const main = Array.from(document.querySelectorAll('footer div[contenteditable="true"], div[contenteditable="true"][data-tab="10"]'))
+          .find(el => {
+            const inSide = el.closest('[id="side"]'); // Sidebar contains search
+            const isSearch = el.closest('[role="search"]') || el.getAttribute('aria-label')?.toLowerCase().includes('search');
+            return !inSide && !isSearch;
+          });
+        return main;
+      };
+
+      whatsappInput = findTarget();
     }
 
     if (whatsappInput) {
@@ -771,23 +782,46 @@ function initializeWhatsAppMicButton() {
             maxAlternatives: 1,
             onResult: (text) => {
               try {
-                whatsappInput.focus();
-                const before = whatsappInput.innerText;
+                // Dynamic target resolution for media button (popup)
+                let target = whatsappInput;
+                if (type === 'media') {
+                  // Copy of Finder Logic to ensure we target the CURRENT visible input
+                  const media = document.querySelector('div[data-testid="media-caption-input"] div[contenteditable="true"]') ||
+                    document.querySelector('div[role="dialog"] div[contenteditable="true"]') ||
+                    document.querySelector('div[contenteditable="true"][aria-label*="caption"]');
+
+                  const main = Array.from(document.querySelectorAll('footer div[contenteditable="true"], div[contenteditable="true"][data-tab="10"]'))
+                    .find(el => {
+                      const inSide = el.closest('[id="side"]');
+                      const isSearch = el.closest('[role="search"]') || el.getAttribute('aria-label')?.toLowerCase().includes('search');
+                      return !inSide && !isSearch;
+                    });
+
+                  target = media || main || whatsappInput; // Fallback to original if nothing found
+                }
+
+                if (!target) {
+                  console.error('No valid input target found for speech');
+                  return;
+                }
+
+                target.focus();
+                const before = target.innerText;
                 const ok = document.execCommand('insertText', false, text + ' ');
-                const after = whatsappInput.innerText;
+                const after = target.innerText;
                 if (!ok || before === after) {
                   const selection = window.getSelection();
                   selection.removeAllRanges();
                   const range = document.createRange();
-                  range.selectNodeContents(whatsappInput);
+                  range.selectNodeContents(target);
                   range.collapse(false);
                   selection.addRange(range);
-                  whatsappInput.textContent += text + ' ';
-                  whatsappInput.dispatchEvent(new InputEvent('input', { bubbles: true }));
-                  whatsappInput.dispatchEvent(new Event('keyup', { bubbles: true }));
+                  target.textContent += text + ' ';
+                  target.dispatchEvent(new InputEvent('input', { bubbles: true }));
+                  target.dispatchEvent(new Event('keyup', { bubbles: true }));
                 } else {
-                  whatsappInput.dispatchEvent(new InputEvent('input', { bubbles: true }));
-                  whatsappInput.dispatchEvent(new Event('keyup', { bubbles: true }));
+                  target.dispatchEvent(new InputEvent('input', { bubbles: true }));
+                  target.dispatchEvent(new Event('keyup', { bubbles: true }));
                 }
                 console.log('Speech text inserted in WhatsApp input:', text);
               } catch (err) {
