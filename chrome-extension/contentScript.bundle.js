@@ -108,7 +108,7 @@ class SpeechRecognitionManager {
     this.recognition.onerror = (event) => {
       const errorMsg = event.error;
       let userMessage = `${ICONS.exclamationCircle} Speech recognition error: ${errorMsg}`;
-      
+
       // Categorize errors for better user feedback
       if (errorMsg === 'no-speech' || errorMsg === 'audio-capture') {
         userMessage = `${ICONS.exclamationCircle} No audio detected. Please check your microphone.`;
@@ -117,11 +117,11 @@ class SpeechRecognitionManager {
       } else if (errorMsg === 'not-allowed') {
         userMessage = `${ICONS.exclamationCircle} Microphone permission denied.`;
       }
-      
+
       if (DEBUG) {
         log('Speech recognition error:', errorMsg);
       }
-      
+
       // showSuccessMessage(userMessage);
       this.stop();
     };
@@ -601,9 +601,9 @@ function initializeWhatsAppMicButton() {
   // Function to add mic button to WhatsApp input field
   function addMicToWhatsApp() {
     // Add to main message input
-    if (!mainButtonAdded && !document.querySelector(".whatsapp-mic-btn-main")) {
-      addMicToInput('main');
-    }
+    // if (!mainButtonAdded && !document.querySelector(".whatsapp-mic-btn-main")) {
+    //   addMicToInput('main');
+    // }
 
     // Add to media caption input
     if (!mediaButtonAdded && !document.querySelector(".whatsapp-mic-btn-media")) {
@@ -627,13 +627,13 @@ function initializeWhatsAppMicButton() {
       ];
       // Fallback: find contenteditable that's NOT in the sidebar/panel (search area)
       whatsappInput = selectors.map(sel => document.querySelector(sel)).find(el => el) ||
-                      Array.from(document.querySelectorAll('div[contenteditable="true"]')).find(el => {
-                        // Exclude elements that are likely search inputs
-                        const ariaLabel = el.getAttribute('aria-label') || '';
-                        const parent = el.closest('[data-testid*="search"], [role="search"], [class*="search"]');
-                        const isInFooter = el.closest('footer');
-                        return !parent && !ariaLabel.toLowerCase().includes('search') && (isInFooter || el.closest('[data-testid*="conversation"]'));
-                      });
+        Array.from(document.querySelectorAll('div[contenteditable="true"]')).find(el => {
+          // Exclude elements that are likely search inputs
+          const ariaLabel = el.getAttribute('aria-label') || '';
+          const parent = el.closest('[data-testid*="search"], [role="search"], [class*="search"]');
+          const isInFooter = el.closest('footer');
+          return !parent && !ariaLabel.toLowerCase().includes('search') && (isInFooter || el.closest('[data-testid*="conversation"]'));
+        });
     } else if (type === 'media') {
       buttonClass = 'whatsapp-mic-btn-media';
       // Selectors for media caption input (appears in media upload modal)
@@ -650,10 +650,10 @@ function initializeWhatsAppMicButton() {
     if (whatsappInput) {
       // Find the input container
       let inputContainer = whatsappInput.closest('footer') ||
-                          whatsappInput.closest('[role="textbox"]') ||
-                          whatsappInput.closest('div[contenteditable="false"]') ||
-                          whatsappInput.parentElement?.parentElement ||
-                          whatsappInput.parentElement;
+        whatsappInput.closest('[role="textbox"]') ||
+        whatsappInput.closest('div[contenteditable="false"]') ||
+        whatsappInput.parentElement?.parentElement ||
+        whatsappInput.parentElement;
 
       const micButton = document.createElement("button");
       micButton.className = buttonClass;
@@ -667,9 +667,9 @@ function initializeWhatsAppMicButton() {
         color: #54656f;
         border: none;
         border-radius: 50%;
-        width: 26px;
-        height: 26px;
-        min-width: 26px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
@@ -682,63 +682,60 @@ function initializeWhatsAppMicButton() {
 
       // Try to insert into input container
       let inserted = false;
-      if (inputContainer && inputContainer !== document.body && inputContainer.tagName !== 'BODY') {
+
+      // Force fixed positioning for media button as per user request
+      if (type === 'media') {
+        inserted = false; // Force fallback logic
+      } else if (inputContainer && inputContainer !== document.body && inputContainer.tagName !== 'BODY') {
+        // ... existing insertion logic for main button ...
+        // But since main button is currently disabled, this part might not be reached for main.
+        // However, we should preserve the logic structure for safety.
+
+        // Start of original insertion logic
         try {
-          // For media input, insert at the end of the input area
-          if (type === 'media') {
-            // Find the button row or toolbar in media modal
-            const buttonRow = inputContainer.querySelector('[role="toolbar"]') ||
-                             inputContainer.querySelector('div[role="group"]') ||
-                             inputContainer;
-            if (buttonRow && buttonRow !== whatsappInput) {
-              buttonRow.appendChild(micButton);
-              inserted = true;
-            }
-          } else {
-            // For main input, insert next to plus icon
-            const plusIcon = inputContainer.querySelector('span[data-icon="plus"]')?.parentElement ||
-                            inputContainer.querySelector('span[data-icon="attach"]')?.parentElement ||
-                            inputContainer.querySelector('button[aria-label*="Attach"], button[aria-label*="attach"]') ||
-                            inputContainer.querySelector('button[aria-label*="Plus"], button[aria-label*="plus"]') ||
-                            inputContainer.querySelector('[role="button"][aria-label*="Attach"], [role="button"][aria-label*="attach"]') ||
-                            Array.from(inputContainer.querySelectorAll('[role="button"], button, span[data-icon]')).find(btn => {
-                              const icon = btn.querySelector('span[data-icon]');
-                              return icon && (icon.getAttribute('data-icon') === 'plus' || icon.getAttribute('data-icon') === 'attach');
-                            });
-            
-            if (plusIcon && plusIcon.parentElement) {
-              if (plusIcon.nextSibling) {
-                plusIcon.parentElement.insertBefore(micButton, plusIcon.nextSibling);
-              } else {
-                plusIcon.parentElement.appendChild(micButton);
-              }
-              inserted = true;
+          // For main input, insert next to plus icon
+          const plusIcon = inputContainer.querySelector('span[data-icon="plus"]')?.parentElement ||
+            inputContainer.querySelector('span[data-icon="attach"]')?.parentElement ||
+            inputContainer.querySelector('button[aria-label*="Attach"], button[aria-label*="attach"]') ||
+            inputContainer.querySelector('button[aria-label*="Plus"], button[aria-label*="plus"]') ||
+            inputContainer.querySelector('[role="button"][aria-label*="Attach"], [role="button"][aria-label*="attach"]') ||
+            Array.from(inputContainer.querySelectorAll('[role="button"], button, span[data-icon]')).find(btn => {
+              const icon = btn.querySelector('span[data-icon]');
+              return icon && (icon.getAttribute('data-icon') === 'plus' || icon.getAttribute('data-icon') === 'attach');
+            });
+
+          if (plusIcon && plusIcon.parentElement) {
+            if (plusIcon.nextSibling) {
+              plusIcon.parentElement.insertBefore(micButton, plusIcon.nextSibling);
             } else {
-              const buttonRow = inputContainer.querySelector('[role="button"]')?.parentElement ||
-                               inputContainer.querySelector('span[data-icon]')?.parentElement?.parentElement ||
-                               inputContainer.querySelector('div[role="toolbar"]') ||
-                               inputContainer;
-              
-              if (buttonRow && buttonRow !== whatsappInput) {
-                const firstButton = Array.from(buttonRow.querySelectorAll('[role="button"], button, span[data-icon]?.parentElement')).find(btn => {
-                  return btn && btn.offsetParent !== null;
-                });
-                
-                if (firstButton && firstButton.parentElement) {
-                  if (firstButton.nextSibling) {
-                    firstButton.parentElement.insertBefore(micButton, firstButton.nextSibling);
-                  } else {
-                    firstButton.parentElement.appendChild(micButton);
-                  }
-                  inserted = true;
+              plusIcon.parentElement.appendChild(micButton);
+            }
+            inserted = true;
+          } else {
+            const buttonRow = inputContainer.querySelector('[role="button"]')?.parentElement ||
+              inputContainer.querySelector('span[data-icon]')?.parentElement?.parentElement ||
+              inputContainer.querySelector('div[role="toolbar"]') ||
+              inputContainer;
+
+            if (buttonRow && buttonRow !== whatsappInput) {
+              const firstButton = Array.from(buttonRow.querySelectorAll('[role="button"], button, span[data-icon]?.parentElement')).find(btn => {
+                return btn && btn.offsetParent !== null;
+              });
+
+              if (firstButton && firstButton.parentElement) {
+                if (firstButton.nextSibling) {
+                  firstButton.parentElement.insertBefore(micButton, firstButton.nextSibling);
                 } else {
-                  if (buttonRow.firstChild) {
-                    buttonRow.insertBefore(micButton, buttonRow.firstChild);
-                  } else {
-                    buttonRow.appendChild(micButton);
-                  }
-                  inserted = true;
+                  firstButton.parentElement.appendChild(micButton);
                 }
+                inserted = true;
+              } else {
+                if (buttonRow.firstChild) {
+                  buttonRow.insertBefore(micButton, buttonRow.firstChild);
+                } else {
+                  buttonRow.appendChild(micButton);
+                }
+                inserted = true;
               }
             }
           }
@@ -751,8 +748,8 @@ function initializeWhatsAppMicButton() {
       if (!inserted) {
         const rect = whatsappInput.getBoundingClientRect();
         micButton.style.position = 'fixed';
-        micButton.style.right = type === 'media' ? '120px' : '80px';
-        micButton.style.bottom = '20px';
+        micButton.style.right = '20px';
+        micButton.style.bottom = type === 'media' ? '120px' : '20px';
         micButton.style.zIndex = '99999';
         document.body.appendChild(micButton);
       }
@@ -773,30 +770,30 @@ function initializeWhatsAppMicButton() {
             interimResults: false,
             maxAlternatives: 1,
             onResult: (text) => {
-  try {
-    whatsappInput.focus();
-    const before = whatsappInput.innerText;
-    const ok = document.execCommand('insertText', false, text + ' ');
-    const after = whatsappInput.innerText;
-    if (!ok || before === after) {
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      const range = document.createRange();
-      range.selectNodeContents(whatsappInput);
-      range.collapse(false);
-      selection.addRange(range);
-      whatsappInput.textContent += text + ' ';
-      whatsappInput.dispatchEvent(new InputEvent('input', {bubbles: true}));
-      whatsappInput.dispatchEvent(new Event('keyup', {bubbles: true}));
-    } else {
-      whatsappInput.dispatchEvent(new InputEvent('input', {bubbles: true}));
-      whatsappInput.dispatchEvent(new Event('keyup', {bubbles: true}));
-    }
-    console.log('Speech text inserted in WhatsApp input:', text);
-  } catch (err) {
-    console.error('Error inserting text for WhatsApp:', err);
-  }
-}
+              try {
+                whatsappInput.focus();
+                const before = whatsappInput.innerText;
+                const ok = document.execCommand('insertText', false, text + ' ');
+                const after = whatsappInput.innerText;
+                if (!ok || before === after) {
+                  const selection = window.getSelection();
+                  selection.removeAllRanges();
+                  const range = document.createRange();
+                  range.selectNodeContents(whatsappInput);
+                  range.collapse(false);
+                  selection.addRange(range);
+                  whatsappInput.textContent += text + ' ';
+                  whatsappInput.dispatchEvent(new InputEvent('input', { bubbles: true }));
+                  whatsappInput.dispatchEvent(new Event('keyup', { bubbles: true }));
+                } else {
+                  whatsappInput.dispatchEvent(new InputEvent('input', { bubbles: true }));
+                  whatsappInput.dispatchEvent(new Event('keyup', { bubbles: true }));
+                }
+                console.log('Speech text inserted in WhatsApp input:', text);
+              } catch (err) {
+                console.error('Error inserting text for WhatsApp:', err);
+              }
+            }
           });
         } else {
           speechManager.stop();
@@ -818,16 +815,15 @@ function initializeWhatsAppMicButton() {
 
   // Set up observer to retry if button wasn't added
   const debouncedAddMic = debounce(() => {
-    if ((!mainButtonAdded && !document.querySelector(".whatsapp-mic-btn-main")) ||
-        (!mediaButtonAdded && !document.querySelector(".whatsapp-mic-btn-media"))) {
+    if ((!mediaButtonAdded && !document.querySelector(".whatsapp-mic-btn-media"))) {
       addMicToWhatsApp();
     }
   }, 500);
 
   // Observe the entire document for changes (WhatsApp is very dynamic)
   whatsappObserver = new MutationObserver(debouncedAddMic);
-  whatsappObserver.observe(document.body, { 
-    childList: true, 
+  whatsappObserver.observe(document.body, {
+    childList: true,
     subtree: true,
     attributeOldValue: false,
     characterDataOldValue: false
