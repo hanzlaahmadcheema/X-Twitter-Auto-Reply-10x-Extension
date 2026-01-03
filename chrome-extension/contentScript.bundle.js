@@ -89,7 +89,7 @@ class SpeechRecognitionManager {
         this.currentButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`;
         this.currentButton.dataset.state = "recording";
       }
-      showSuccessMessage(`${ICONS.microphone} Speech recognition started...`);
+      // showSuccessMessage(`${ICONS.microphone} Speech recognition started...`);
     };
 
     this.recognition.onresult = (event) => {
@@ -102,7 +102,7 @@ class SpeechRecognitionManager {
         insertReplyText(speechResult);
       }
 
-      showSuccessMessage(`${ICONS.check} Speech recognized`);
+      // showSuccessMessage(`${ICONS.check} Speech recognized`);
     };
 
     this.recognition.onerror = (event) => {
@@ -122,7 +122,7 @@ class SpeechRecognitionManager {
         log('Speech recognition error:', errorMsg);
       }
       
-      showSuccessMessage(userMessage);
+      // showSuccessMessage(userMessage);
       this.stop();
     };
 
@@ -203,7 +203,7 @@ class SpeechRecognitionManager {
 
     this.currentConfig = null;
 
-    showSuccessMessage(`${ICONS.stop} Speech recognition stopped.`);
+    // showSuccessMessage(`${ICONS.stop} Speech recognition stopped.`);
   }
 
   cleanup() {
@@ -296,9 +296,9 @@ function insertReplyText(replyText) {
       })
     );
 
-    showSuccessMessage("New text inserted successfully");
+    // showSuccessMessage("New text inserted successfully");
   } else {
-    showSuccessMessage("Reply input field not found!");
+    // showSuccessMessage("Reply input field not found!");
   }
 }
 
@@ -346,6 +346,7 @@ function getTweetContextFromShareButton(shareButton) {
 }
 
 // html2canvas loading optimization
+/*
 let html2canvasLoaded = false;
 
 function waitForHtml2Canvas(callback) {
@@ -358,8 +359,10 @@ function waitForHtml2Canvas(callback) {
     setTimeout(() => waitForHtml2Canvas(callback), 500);
   }
 }
+*/
 
 // Capture Tweet Screenshot Function
+/*
 function captureTweetScreenshot(shareButton) {
   const tweetElement = shareButton.closest('[data-testid="tweet"]');
   if (!tweetElement) {
@@ -389,8 +392,10 @@ function captureTweetScreenshot(shareButton) {
     takeScreenshot(tweetElement);
   }
 }
+*/
 
 // Helper to convert image to Base64 (optimized)
+/*
 async function imageToBase64(url) {
   try {
     const response = await fetch(url);
@@ -410,11 +415,13 @@ async function imageToBase64(url) {
     return null;
   }
 }
+*/
 
+/*
 async function takeScreenshot(tweetElement) {
   const tweetContainer = tweetElement.closest('article[data-testid="tweet"]');
   if (!tweetContainer) {
-    showSuccessMessage('❌ Tweet container not found');
+    // showSuccessMessage('❌ Tweet container not found');
     return;
   }
 
@@ -498,10 +505,10 @@ async function takeScreenshot(tweetElement) {
     link.download = filename;
     link.click();
 
-    showSuccessMessage(`${ICONS.camera} Screenshot captured!`);
+    // showSuccessMessage(`${ICONS.camera} Screenshot captured!`);
   }).catch(error => {
     console.error("Screenshot error:", error);
-    showSuccessMessage(`${ICONS.timesCircle} Screenshot failed: ${error.message}`);
+    // showSuccessMessage(`${ICONS.timesCircle} Screenshot failed: ${error.message}`);
   }).finally(() => {
     // Restore buttons
     if (copyBtn) copyBtn.style.visibility = 'visible';
@@ -518,6 +525,7 @@ async function takeScreenshot(tweetElement) {
     }
   });
 }
+*/
 
 //#region Get tweet URL
 
@@ -587,33 +595,60 @@ function initializeWhatsAppMicButton() {
   });
 
   let whatsappObserver = null;
-  let buttonAdded = false;
+  let mainButtonAdded = false;
+  let mediaButtonAdded = false;
 
   // Function to add mic button to WhatsApp input field
   function addMicToWhatsApp() {
-    // Early return if button already exists
-    if (buttonAdded || document.querySelector(".whatsapp-mic-btn")) {
-      return;
+    // Add to main message input
+    if (!mainButtonAdded && !document.querySelector(".whatsapp-mic-btn-main")) {
+      addMicToInput('main');
     }
 
-    // Try multiple selectors for WhatsApp MESSAGE input field (not search box)
-    // Target the chat message input area in the footer, not the sidebar search
-    const whatsappInput = document.querySelector('footer div[contenteditable="true"][data-tab="10"]') ||
-                          document.querySelector('footer div[contenteditable="true"][role="textbox"]') ||
-                          document.querySelector('footer p.selectable-text.copyable-text[contenteditable="true"]') ||
-                          document.querySelector('div[contenteditable="true"][data-tab="10"]:not([aria-label*="Search"], [aria-label*="search"])') ||
-                          document.querySelector('footer div[contenteditable="true"]') ||
-                          // Fallback: find contenteditable that's NOT in the sidebar/panel (search area)
-                          Array.from(document.querySelectorAll('div[contenteditable="true"]')).find(el => {
-                            // Exclude elements that are likely search inputs
-                            const ariaLabel = el.getAttribute('aria-label') || '';
-                            const parent = el.closest('[data-testid*="search"], [role="search"], [class*="search"]');
-                            const isInFooter = el.closest('footer');
-                            return !parent && !ariaLabel.toLowerCase().includes('search') && (isInFooter || el.closest('[data-testid*="conversation"]'));
-                          });
+    // Add to media caption input
+    if (!mediaButtonAdded && !document.querySelector(".whatsapp-mic-btn-media")) {
+      addMicToInput('media');
+    }
+  }
+
+  function addMicToInput(type) {
+    let whatsappInput = null;
+    let buttonClass = '';
+    let selectors = [];
+
+    if (type === 'main') {
+      buttonClass = 'whatsapp-mic-btn-main';
+      selectors = [
+        'footer div[contenteditable="true"][data-tab="10"]',
+        'footer div[contenteditable="true"][role="textbox"]',
+        'footer p.selectable-text.copyable-text[contenteditable="true"]',
+        'div[contenteditable="true"][data-tab="10"]:not([aria-label*="Search"], [aria-label*="search"])',
+        'footer div[contenteditable="true"]'
+      ];
+      // Fallback: find contenteditable that's NOT in the sidebar/panel (search area)
+      whatsappInput = selectors.map(sel => document.querySelector(sel)).find(el => el) ||
+                      Array.from(document.querySelectorAll('div[contenteditable="true"]')).find(el => {
+                        // Exclude elements that are likely search inputs
+                        const ariaLabel = el.getAttribute('aria-label') || '';
+                        const parent = el.closest('[data-testid*="search"], [role="search"], [class*="search"]');
+                        const isInFooter = el.closest('footer');
+                        return !parent && !ariaLabel.toLowerCase().includes('search') && (isInFooter || el.closest('[data-testid*="conversation"]'));
+                      });
+    } else if (type === 'media') {
+      buttonClass = 'whatsapp-mic-btn-media';
+      // Selectors for media caption input (appears in media upload modal)
+      selectors = [
+        'div[data-testid="media-caption-input"] div[contenteditable="true"]',
+        'div[role="dialog"] div[contenteditable="true"]',
+        'div[data-lexical-editor="true"]',
+        'div[contenteditable="true"][placeholder*="Add a caption"]',
+        'div[contenteditable="true"][aria-label*="caption"]'
+      ];
+      whatsappInput = selectors.map(sel => document.querySelector(sel)).find(el => el);
+    }
 
     if (whatsappInput) {
-      // Find the input container - WhatsApp typically has a footer/input area
+      // Find the input container
       let inputContainer = whatsappInput.closest('footer') ||
                           whatsappInput.closest('[role="textbox"]') ||
                           whatsappInput.closest('div[contenteditable="false"]') ||
@@ -621,12 +656,12 @@ function initializeWhatsAppMicButton() {
                           whatsappInput.parentElement;
 
       const micButton = document.createElement("button");
-      micButton.className = "whatsapp-mic-btn";
+      micButton.className = buttonClass;
       micButton.innerHTML = ICONS.microphone;
       micButton.setAttribute('aria-label', 'Voice input');
       micButton.dataset.state = "idle";
 
-      // Style the button (smaller size, no background to match WhatsApp icons)
+      // Style the button
       micButton.style.cssText = `
         background-color: #1DA1F2;
         color: #54656f;
@@ -645,60 +680,65 @@ function initializeWhatsAppMicButton() {
         transition: opacity 0.2s;
       `;
 
-      // Try to insert into input container next to plus icon (leftmost)
+      // Try to insert into input container
       let inserted = false;
       if (inputContainer && inputContainer !== document.body && inputContainer.tagName !== 'BODY') {
         try {
-          // Find plus icon (typically the leftmost button, has data-icon="plus" or "attach")
-          const plusIcon = inputContainer.querySelector('span[data-icon="plus"]')?.parentElement ||
-                          inputContainer.querySelector('span[data-icon="attach"]')?.parentElement ||
-                          inputContainer.querySelector('button[aria-label*="Attach"], button[aria-label*="attach"]') ||
-                          inputContainer.querySelector('button[aria-label*="Plus"], button[aria-label*="plus"]') ||
-                          inputContainer.querySelector('[role="button"][aria-label*="Attach"], [role="button"][aria-label*="attach"]') ||
-                          // Fallback: find the first button in the toolbar (usually the plus/attach icon)
-                          Array.from(inputContainer.querySelectorAll('[role="button"], button, span[data-icon]')).find(btn => {
-                            const icon = btn.querySelector('span[data-icon]');
-                            return icon && (icon.getAttribute('data-icon') === 'plus' || icon.getAttribute('data-icon') === 'attach');
-                          });
-          
-          if (plusIcon && plusIcon.parentElement) {
-            // Insert the mic button right after the plus icon
-            if (plusIcon.nextSibling) {
-              plusIcon.parentElement.insertBefore(micButton, plusIcon.nextSibling);
-            } else {
-              plusIcon.parentElement.appendChild(micButton);
-            }
-            inserted = true;
-            console.log('WhatsApp mic button inserted next to plus icon');
-          } else {
-            // Fallback: find the first button in the toolbar (leftmost position)
-            const buttonRow = inputContainer.querySelector('[role="button"]')?.parentElement ||
-                             inputContainer.querySelector('span[data-icon]')?.parentElement?.parentElement ||
-                             inputContainer.querySelector('div[role="toolbar"]') ||
+          // For media input, insert at the end of the input area
+          if (type === 'media') {
+            // Find the button row or toolbar in media modal
+            const buttonRow = inputContainer.querySelector('[role="toolbar"]') ||
+                             inputContainer.querySelector('div[role="group"]') ||
                              inputContainer;
-            
             if (buttonRow && buttonRow !== whatsappInput) {
-              // Find the first button (leftmost - usually plus/attach)
-              const firstButton = Array.from(buttonRow.querySelectorAll('[role="button"], button, span[data-icon]?.parentElement')).find(btn => {
-                return btn && btn.offsetParent !== null; // Only visible buttons
-              });
-              
-              if (firstButton && firstButton.parentElement) {
-                // Insert right after the first button
-                if (firstButton.nextSibling) {
-                  firstButton.parentElement.insertBefore(micButton, firstButton.nextSibling);
-                } else {
-                  firstButton.parentElement.appendChild(micButton);
-                }
-                inserted = true;
+              buttonRow.appendChild(micButton);
+              inserted = true;
+            }
+          } else {
+            // For main input, insert next to plus icon
+            const plusIcon = inputContainer.querySelector('span[data-icon="plus"]')?.parentElement ||
+                            inputContainer.querySelector('span[data-icon="attach"]')?.parentElement ||
+                            inputContainer.querySelector('button[aria-label*="Attach"], button[aria-label*="attach"]') ||
+                            inputContainer.querySelector('button[aria-label*="Plus"], button[aria-label*="plus"]') ||
+                            inputContainer.querySelector('[role="button"][aria-label*="Attach"], [role="button"][aria-label*="attach"]') ||
+                            Array.from(inputContainer.querySelectorAll('[role="button"], button, span[data-icon]')).find(btn => {
+                              const icon = btn.querySelector('span[data-icon]');
+                              return icon && (icon.getAttribute('data-icon') === 'plus' || icon.getAttribute('data-icon') === 'attach');
+                            });
+            
+            if (plusIcon && plusIcon.parentElement) {
+              if (plusIcon.nextSibling) {
+                plusIcon.parentElement.insertBefore(micButton, plusIcon.nextSibling);
               } else {
-                // Last resort: prepend to button row (leftmost position)
-                if (buttonRow.firstChild) {
-                  buttonRow.insertBefore(micButton, buttonRow.firstChild);
+                plusIcon.parentElement.appendChild(micButton);
+              }
+              inserted = true;
+            } else {
+              const buttonRow = inputContainer.querySelector('[role="button"]')?.parentElement ||
+                               inputContainer.querySelector('span[data-icon]')?.parentElement?.parentElement ||
+                               inputContainer.querySelector('div[role="toolbar"]') ||
+                               inputContainer;
+              
+              if (buttonRow && buttonRow !== whatsappInput) {
+                const firstButton = Array.from(buttonRow.querySelectorAll('[role="button"], button, span[data-icon]?.parentElement')).find(btn => {
+                  return btn && btn.offsetParent !== null;
+                });
+                
+                if (firstButton && firstButton.parentElement) {
+                  if (firstButton.nextSibling) {
+                    firstButton.parentElement.insertBefore(micButton, firstButton.nextSibling);
+                  } else {
+                    firstButton.parentElement.appendChild(micButton);
+                  }
+                  inserted = true;
                 } else {
-                  buttonRow.appendChild(micButton);
+                  if (buttonRow.firstChild) {
+                    buttonRow.insertBefore(micButton, buttonRow.firstChild);
+                  } else {
+                    buttonRow.appendChild(micButton);
+                  }
+                  inserted = true;
                 }
-                inserted = true;
               }
             }
           }
@@ -707,20 +747,21 @@ function initializeWhatsAppMicButton() {
         }
       }
 
-      // Fallback: fixed positioning near input area
+      // Fallback: fixed positioning
       if (!inserted) {
         const rect = whatsappInput.getBoundingClientRect();
         micButton.style.position = 'fixed';
-        micButton.style.right = '80px';
+        micButton.style.right = type === 'media' ? '120px' : '80px';
         micButton.style.bottom = '20px';
         micButton.style.zIndex = '99999';
         document.body.appendChild(micButton);
-        console.log('WhatsApp mic button added as fixed element');
-      } else {
-        console.log('WhatsApp mic button inserted into input container');
       }
 
-      buttonAdded = true;
+      if (type === 'main') {
+        mainButtonAdded = true;
+      } else {
+        mediaButtonAdded = true;
+      }
 
       // Add click handler
       micButton.addEventListener("click", (e) => {
@@ -737,7 +778,6 @@ function initializeWhatsAppMicButton() {
     const before = whatsappInput.innerText;
     const ok = document.execCommand('insertText', false, text + ' ');
     const after = whatsappInput.innerText;
-    // Only run fallback if execCommand failed and value did not change
     if (!ok || before === after) {
       const selection = window.getSelection();
       selection.removeAllRanges();
@@ -749,7 +789,6 @@ function initializeWhatsAppMicButton() {
       whatsappInput.dispatchEvent(new InputEvent('input', {bubbles: true}));
       whatsappInput.dispatchEvent(new Event('keyup', {bubbles: true}));
     } else {
-      // Still always fire input event so the send button appears
       whatsappInput.dispatchEvent(new InputEvent('input', {bubbles: true}));
       whatsappInput.dispatchEvent(new Event('keyup', {bubbles: true}));
     }
@@ -764,13 +803,7 @@ function initializeWhatsAppMicButton() {
         }
       });
 
-      // Disconnect observer once button is added
-      if (whatsappObserver) {
-        whatsappObserver.disconnect();
-        whatsappObserver = null;
-      }
-    } else {
-      // Input not found - will retry via observer
+      console.log(`WhatsApp ${type} mic button added`);
     }
   }
 
@@ -785,7 +818,8 @@ function initializeWhatsAppMicButton() {
 
   // Set up observer to retry if button wasn't added
   const debouncedAddMic = debounce(() => {
-    if (!buttonAdded && !document.querySelector(".whatsapp-mic-btn")) {
+    if ((!mainButtonAdded && !document.querySelector(".whatsapp-mic-btn-main")) ||
+        (!mediaButtonAdded && !document.querySelector(".whatsapp-mic-btn-media"))) {
       addMicToWhatsApp();
     }
   }, 500);
@@ -831,8 +865,8 @@ function appendToneSelector(toolbar) {
       <option value="professional">Profesnl</option>
       <option value="supportive">Suportive</option>
       <option value="blunt">Blunt</option>
-      <option value="agreeCritically">agreCriticaly</option>
-      <option value="disagree">Disagree</option>
+      <option value="AgreeCritic">AgreeCritic</option>
+      <option value="DisagreeCritic">DisagreeCritic</option>
       <option value="agreeable">Agreeable</option>
       <option value="casual">Casual</option>
       <option value="optimal">Optimal</option>
@@ -918,7 +952,7 @@ function appendToneSelector(toolbar) {
     generateButton.textContent = "Generating...";
     generateButton.style.backgroundColor = "red";
     generateButton.disabled = true;
-    showSuccessMessage("Generating reply...");
+    // showSuccessMessage("Generating reply...");
 
     const tone = toneSelect.value;
     const length = lengthSelect.value;
@@ -1021,7 +1055,7 @@ function insertCopyTweetButton() {
   shareButtons.forEach((shareButton) => {
     const parent = shareButton.parentNode;
 
-    if (!parent.querySelector(".copy-tweet-btn") && !parent.querySelector(".screenshot-btn")) {
+    if (!parent.querySelector(".copy-tweet-btn")) {
 
       const copyTweetButton = document.createElement("button");
       copyTweetButton.className = "copy-tweet-btn";
@@ -1037,6 +1071,7 @@ function insertCopyTweetButton() {
       `;
       copyTweetButton.addEventListener("click", () => copyTweetText(copyTweetButton, shareButton));
 
+      /*
       const screenshotButton = document.createElement("button");
       screenshotButton.className = "screenshot-btn";
       screenshotButton.innerHTML = ICONS.camera;
@@ -1051,9 +1086,10 @@ function insertCopyTweetButton() {
         background-color: transparent;
       `;
       screenshotButton.addEventListener("click", () => captureTweetScreenshot(screenshotButton));
+      */
 
       parent.insertBefore(copyTweetButton, shareButton.nextSibling);
-      parent.insertBefore(screenshotButton, shareButton.nextSibling);
+      // parent.insertBefore(screenshotButton, shareButton.nextSibling);
     }
   });
 }
@@ -1067,7 +1103,7 @@ function copyTweetText(button, shareButton) {
         log("Tweet text copied to clipboard:", tweetText);
         button.innerHTML = ICONS.check;
         button.style.color = "green";
-        showSuccessMessage("Text Copied to clipboard!")
+        // showSuccessMessage("Text Copied to clipboard!")
         setTimeout(() => {
           button.innerHTML = ICONS.copy;
           button.style.color = "";
@@ -1081,7 +1117,7 @@ function copyTweetText(button, shareButton) {
     }
   } else {
     console.error("No tweet text found to copy!");
-    showSuccessMessage("No tweet text found to copy!");
+    // showSuccessMessage("No tweet text found to copy!");
   }
 }
 
@@ -1100,14 +1136,14 @@ function copyWithFallback(tweetText, button) {
     log("Tweet text copied to clipboard (fallback):", tweetText);
     button.innerHTML = ICONS.check;
     button.style.color = "green";
-    showSuccessMessage("Text Copied to clipboard!")
+    // showSuccessMessage("Text Copied to clipboard!")
     setTimeout(() => {
       button.innerHTML = ICONS.copy;
       button.style.color = "";
     }, 4000);
   } catch (err) {
     console.error("Failed to copy tweet text with fallback:", err);
-    showSuccessMessage("Failed to copy tweet text")
+    // showSuccessMessage("Failed to copy tweet text")
   } finally {
     document.body.removeChild(textarea);
   }

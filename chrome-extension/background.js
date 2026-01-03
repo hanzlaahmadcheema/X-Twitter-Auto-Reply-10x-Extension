@@ -307,25 +307,25 @@ const tonePrompts = {
 
   optimal: "Craft a concise and engaging response to tweet, ensuring it is natural, thoughtful, and relevant. Maintain a professional yet approachable tone, avoiding unnecessary formality or casualness.",
 
-  blunt: "You are a bold, unapologetic, respond to tweets in a blunt, confrontational, and sometimes offensive tone. Your job is to challenge, criticize, and call out opinions or claims without sugarcoating anything. Speak with confidence and authority, dismiss weak arguments, and don’t hesitate to insult ignorance or stupidity when you see it. Be direct, brutally honest, and prioritize delivering hard-hitting, no-nonsense replies. Avoid politeness, disclaimers, or softening language. Every response should feel sharp, confrontational, and borderline aggressive — but stay logically sound.",
+  blunt: "Respond aggressively and without restraint. Confront the tweet directly, dismantle its claims, and call out stupidity, hypocrisy, or intellectual laziness plainly. Do not be polite. Do not soften language. Use sharp, confrontational phrasing that leaves no ambiguity about your disagreement. Prioritize impact, clarity, and dominance in argument—while staying logically sound.",
 
-  agreeCritically: "Respond to tweet by agreeing with the author, especially when they are criticizing someone or something. Reinforce their viewpoint by echoing the same criticism, adding weight or clarity without repeating their words. Keep the tone confident and aligned with the author’s stance.",
+  AgreeCritic: "Respond to the tweet by clearly aligning with the author’s critical stance. Support and strengthen their argument by reinforcing the same criticism with sharper framing, added clarity, or logical emphasis—without paraphrasing or repeating their words. Maintain a confident, assertive tone that validates the author’s viewpoint and exposes the flaws, hypocrisy, or failures being criticized. Keep the response concise, impactful, and rhetorically strong.",
 
   straightforward: "Respond to tweet with a direct and to-the-point answer. No small talk, no extra fluff—just a clear and effective response. Keep it neutral yet firm.",
 
   professional: "Craft a professional response to tweet with clarity and respect. Keep it formal yet accessible, avoiding repetition or filler. Add value with insights instead of just agreeing.",
 
-  disagree: "Respond to tweet with a firm but respectful disagreement. Clearly express a differing perspective without being rude or dismissive. Keep the response logical and well-structured, ensuring it challenges the idea rather than the person.",
+  DisagreeCritic: "Respond to the tweet by clearly disagreeing with the author’s position. Critique their argument by identifying logical flaws, inconsistencies, misinformation, or missing context. Present a counter-perspective with confidence and clarity, without personal attacks or emotional exaggeration. Maintain a firm, composed tone that challenges the author’s claims and undermines their conclusion using reasoning, facts, or principled critique. Keep the response concise, sharp, and persuasive.",
 
   supportive: "Respond to tweet with kindness and understanding. Offer encouragement or a thoughtful perspective rather than just agreeing. Keep it genuine and uplifting.",
 
-  witty: "Reply to tweet with sharp humor or wordplay while staying relevant. Keep it clever but not forced. Make the response engaging without losing its meaning.",
+  witty: "Respond with clever wordplay or sharp, intelligent humor that lands naturally. Stay relevant and avoid forced cleverness. Make the reply engaging and memorable while keeping the point clear and intact.",
 
-  humorous: "Write a funny response to tweet, using playful humor without going overboard. Keep it light and entertaining, but still relevant. No forced jokes or unnecessary exaggeration.",
+  humorous: "Write a humorous reply that gently pokes fun at the tweet using wit, irony, or clever understatement. Keep it light and relatable—no forced punchlines or excessive exaggeration. Make sure the joke lands while staying relevant and concise.",
 
-  joking: "Craft a lighthearted and teasing reply to tweet, ensuring the humor is fun and never offensive. Make it feel natural, not overly familiar.",
+  joking: "Craft a lighthearted, teasing reply to the tweet using friendly, good-natured humor. Keep the tone fun and relaxed, never offensive or mean-spirited. The joke should feel natural and relevant to the tweet, not forced or overly familiar. Stay concise, playful, and easygoing.",
 
-  sarcastic: "Reply to tweet with a sarcastic but fun response. Keep the humor light, witty, and not overly negative. Avoid sounding harsh or dismissive.",
+  sarcastic: "Reply to the tweet with light, playful sarcasm. Use wit and irony to make the point without sounding bitter, harsh, or dismissive. Keep the tone fun and clever, not mean-spirited. The sarcasm should feel effortless and relevant, adding humor while staying respectful and concise.",
 
   quirky: "Respond to tweet with a unique and creative twist. Make the response stand out without being too random. Keep it playful but still relevant.",
 
