@@ -786,15 +786,24 @@ function initializeWhatsAppMicButton() {
                 let target = whatsappInput;
                 if (type === 'media') {
                   // Copy of Finder Logic to ensure we target the CURRENT visible input
-                  const media = document.querySelector('div[data-testid="media-caption-input"] div[contenteditable="true"]') ||
-                    document.querySelector('div[role="dialog"] div[contenteditable="true"]') ||
-                    document.querySelector('div[contenteditable="true"][aria-label*="caption"]');
+                  // Expanded selectors for better detection
+                  const mediaSelectors = [
+                    'div[data-testid="media-caption-input"] div[contenteditable="true"]',
+                    'div[role="dialog"] div[contenteditable="true"]',
+                    'div[contenteditable="true"][aria-label*="caption"]',
+                    'div[contenteditable="true"][placeholder*="caption"]',
+                    'div[class*="media"] div[contenteditable="true"]'
+                  ];
+
+                  const media = mediaSelectors
+                    .map(sel => document.querySelector(sel))
+                    .find(el => el && el.offsetParent !== null); // Must be visible
 
                   const main = Array.from(document.querySelectorAll('footer div[contenteditable="true"], div[contenteditable="true"][data-tab="10"]'))
                     .find(el => {
                       const inSide = el.closest('[id="side"]');
                       const isSearch = el.closest('[role="search"]') || el.getAttribute('aria-label')?.toLowerCase().includes('search');
-                      return !inSide && !isSearch;
+                      return !inSide && !isSearch && el.offsetParent !== null;
                     });
 
                   target = media || main || whatsappInput; // Fallback to original if nothing found
