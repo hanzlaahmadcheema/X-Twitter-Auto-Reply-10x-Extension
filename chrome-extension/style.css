@@ -107,7 +107,7 @@
 }
 
 .premium-dropdown-current {
-  background: rgba(255, 255, 255, 0.05);
+  background: #1da1f2;
   color: #eff3f4;
   padding: 8px 12px;
   border-radius: 12px;
@@ -248,7 +248,7 @@
 
 /* Mic Button */
 .mic-btn {
-  background: rgba(255, 255, 255, 0.05);
+  background: #1da1f2;
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #eff3f4;
   width: 36px;

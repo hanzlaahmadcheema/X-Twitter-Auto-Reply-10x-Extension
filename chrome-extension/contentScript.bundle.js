@@ -661,9 +661,9 @@ function initializeWhatsAppMicButton() {
   // Function to add mic button to WhatsApp input field
   function addMicToWhatsApp() {
     // Add to main message input
-    if (!mainButtonAdded && !document.querySelector(".whatsapp-mic-btn-main")) {
-      addMicToInput('main');
-    }
+    // if (!mainButtonAdded && !document.querySelector(".whatsapp-mic-btn-main")) {
+    //   addMicToInput('main');
+    // }
 
     // Add to media caption input
     if (!mediaButtonAdded && !document.querySelector(".whatsapp-mic-btn-media")) {
@@ -970,7 +970,7 @@ async function appendToneSelector(toolbar) {
 
     const current = document.createElement("div");
     current.className = "premium-dropdown-current";
-    current.innerHTML = `<span class="label">Select ${type}</span> <i class="fas fa-chevron-down"></i>`;
+    current.innerHTML = `<span class="label">Select ${type}</span>`;
 
     const list = document.createElement("div");
     list.className = "premium-dropdown-list hidden";
@@ -990,7 +990,7 @@ async function appendToneSelector(toolbar) {
     });
 
     const selectItem = (opt) => {
-      current.innerHTML = `<span class="label">${opt.label}</span> <i class="fas fa-chevron-down"></i>`;
+      current.innerHTML = `<span class="label">${opt.label}</span>`;
       wrapper.dataset.value = opt.id;
       // Trigger change event for storage save
       const event = new CustomEvent("change", { detail: opt.id });
@@ -1141,7 +1141,7 @@ async function appendToneSelector(toolbar) {
     if (isGenerating) return;
 
     isGenerating = true;
-    generateButton.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Thinking...`;
+    generateButton.innerHTML = `Thinking...`;
     generateButton.disabled = true;
 
     const tone = toneSelect.value;
