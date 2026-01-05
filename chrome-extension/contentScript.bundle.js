@@ -23,6 +23,28 @@ function log(...args) {
   if (DEBUG) console.log(...args);
 }
 
+// Utility: Find the best input target (Media Caption or Standard Reply)
+function getBestInputTarget() {
+  // 1. Check for Media Caption Input (Dialogs or Specific Test IDs)
+  const mediaInput =
+    document.querySelector('[data-testid="media-caption-input"] [contenteditable="true"]') ||
+    document.querySelector('div[role="dialog"] [contenteditable="true"]') ||
+    document.querySelector('[aria-label*="caption"][contenteditable="true"]') ||
+    document.querySelector('[placeholder*="caption"][contenteditable="true"]');
+
+  if (mediaInput && (mediaInput.offsetParent !== null || mediaInput.getClientRects().length > 0)) {
+    return mediaInput;
+  }
+
+  // 2. Fallback to Standard Reply Input
+  const standardInput =
+    document.querySelector('[data-testid="tweetTextarea_0"]') ||
+    document.querySelector('div[contenteditable="true"][role="textbox"]') ||
+    document.querySelector('footer [contenteditable="true"]');
+
+  return standardInput;
+}
+
 // Storage Cache System
 class StorageCache {
   constructor() {
@@ -299,27 +321,23 @@ function filterResponse(response) {
 
 function insertReplyText(replyText) {
   const filteredText = filterResponse(replyText);
-  const replyInput = document.querySelector('[data-testid="tweetTextarea_0"]');
+  const targetInput = getBestInputTarget();
 
-  if (replyInput) {
-    replyInput.focus();
-
-    replyInput.value = "";
+  if (targetInput) {
+    targetInput.focus();
+    // targetInput.value = ""; // Don't clear for speech if we want to append, but for AI generation we usually replace.
+    // However, this function is primarily used by voice recognition's final result.
 
     const dataTransfer = new DataTransfer();
     dataTransfer.setData("text/plain", filteredText + " ");
 
-    replyInput.dispatchEvent(
+    targetInput.dispatchEvent(
       new ClipboardEvent("paste", {
         clipboardData: dataTransfer,
         bubbles: true,
         cancelable: true,
       })
     );
-
-    // showSuccessMessage("New text inserted successfully");
-  } else {
-    // showSuccessMessage("Reply input field not found!");
   }
 }
 
@@ -622,9 +640,9 @@ function initializeWhatsAppMicButton() {
   // Function to add mic button to WhatsApp input field
   function addMicToWhatsApp() {
     // Add to main message input
-    // if (!mainButtonAdded && !document.querySelector(".whatsapp-mic-btn-main")) {
-    //   addMicToInput('main');
-    // }
+    if (!mainButtonAdded && !document.querySelector(".whatsapp-mic-btn-main")) {
+      addMicToInput('main');
+    }
 
     // Add to media caption input
     if (!mediaButtonAdded && !document.querySelector(".whatsapp-mic-btn-media")) {
@@ -848,21 +866,7 @@ function initializeWhatsAppMicButton() {
                 });
 
                 // Decide target based on button type
-                let target = null;
-                if (type === 'media') {
-                  // For media button, ONLY target media input or any other visible non-footer input
-                  target = mediaInput || allInputs.find(el => !isSearchInput(el) && !el.closest('footer') && el.offsetParent !== null);
-                } else {
-                  // For main button, prefer main input
-                  target = mainInput || mediaInput;
-                }
-
-                if (!target) {
-                  // Final fallback for main button only, or if media button has no other choice
-                  if (type !== 'media') {
-                    target = (whatsappInput && whatsappInput.offsetParent !== null ? whatsappInput : null);
-                  }
-                }
+                let target = getBestInputTarget();
 
                 if (!target) {
                   console.error('No valid input target found for speech');
@@ -938,23 +942,89 @@ async function appendToneSelector(toolbar) {
     chrome.runtime.sendMessage({ action: "getConfig" }, resolve);
   });
 
-  const toneOptions = config.tones.map(t => `<option value="${t.id}">${t.label}</option>`).join("");
-  const lengthOptions = config.lengths.map(l => `<option value="${l.id}">${l.label}</option>`).join("");
+  const createDropdown = (id, options, type) => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "premium-dropdown-wrapper";
+    wrapper.id = `${id}Wrapper`;
+
+    const current = document.createElement("div");
+    current.className = "premium-dropdown-current";
+    current.innerHTML = `<span class="label">Select ${type}</span> <i class="fas fa-chevron-down"></i>`;
+
+    const list = document.createElement("div");
+    list.className = "premium-dropdown-list hidden";
+
+    options.forEach(opt => {
+      const item = document.createElement("div");
+      item.className = "premium-dropdown-item";
+      item.dataset.value = opt.id;
+      item.innerHTML = `<i class="${opt.icon}"></i> ${opt.label}`;
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        selectItem(opt);
+        list.classList.add("hidden");
+        wrapper.classList.remove("open");
+      });
+      list.appendChild(item);
+    });
+
+    const selectItem = (opt) => {
+      current.innerHTML = `<i class="${opt.icon}"></i> <span class="label">${opt.label}</span> <i class="fas fa-chevron-down"></i>`;
+      wrapper.dataset.value = opt.id;
+      // Trigger change event for storage save
+      const event = new CustomEvent("change", { detail: opt.id });
+      wrapper.dispatchEvent(event);
+    };
+
+    current.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = !list.classList.contains("hidden");
+      document.querySelectorAll(".premium-dropdown-list").forEach(l => l.classList.add("hidden"));
+      document.querySelectorAll(".premium-dropdown-wrapper").forEach(w => w.classList.remove("open"));
+      if (!isOpen) {
+        list.classList.remove("hidden");
+        wrapper.classList.add("open");
+      }
+    });
+
+    wrapper.appendChild(current);
+    wrapper.appendChild(list);
+
+    // Add a hidden value getter to mimic select
+    Object.defineProperty(wrapper, 'value', {
+      get: function () { return this.dataset.value; },
+      set: function (val) {
+        const opt = options.find(o => o.id === val);
+        if (opt) selectItem(opt);
+      }
+    });
+
+    return wrapper;
+  };
+
+  const toneDrop = createDropdown("toneSelect", config.tones, "Tone");
+  const lengthDrop = createDropdown("lengthSelect", config.lengths, "Length");
 
   container.innerHTML = `
-      <textarea id="customPrompt" placeholder="What's on your mind? (Optional custom prompt)"></textarea>
-    <select id="lengthSelect">
-      ${lengthOptions}
-    </select>
-    <select id="toneSelect">
-      ${toneOptions}
-    </select>
-    <button class="mic-btn" title="Voice Input">${ICONS.microphone}</button>
-    <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">
-      <i class="fas fa-magic"></i> Generate
-    </button>
+    <textarea id="customPrompt" placeholder="What's on your mind? (Optional custom prompt)"></textarea>
+    <div class="dropdowns-row"></div>
+    <div class="actions-row">
+      <button class="mic-btn" title="Voice Input">${ICONS.microphone}</button>
+      <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">
+        <i class="fas fa-magic"></i> Generate
+      </button>
+    </div>
   `;
+
+  container.querySelector(".dropdowns-row").appendChild(lengthDrop);
+  container.querySelector(".dropdowns-row").appendChild(toneDrop);
   toolbar.appendChild(container);
+
+  // Close dropdowns on outside click
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".premium-dropdown-list").forEach(l => l.classList.add("hidden"));
+    document.querySelectorAll(".premium-dropdown-wrapper").forEach(w => w.classList.remove("open"));
+  });
 
   //#region Mic Setting
 
@@ -979,9 +1049,9 @@ async function appendToneSelector(toolbar) {
   let spacePressCount = 0;
   let spaceTimeout;
 
-  const replyInput = document.querySelector('[data-testid="tweetTextarea_0"]');
-  if (replyInput) {
-    replyInput.addEventListener("keydown", (event) => {
+  const targetInput = getBestInputTarget();
+  if (targetInput) {
+    targetInput.addEventListener("keydown", (event) => {
       if (event.code === "Space") {
         spacePressCount++;
 
@@ -1000,8 +1070,8 @@ async function appendToneSelector(toolbar) {
   }
 
   const customPromptTextarea = container.querySelector("#customPrompt");
-  const toneSelect = container.querySelector("#toneSelect");
-  const lengthSelect = container.querySelector("#lengthSelect");
+  const toneSelect = toneDrop;
+  const lengthSelect = lengthDrop;
   const generateButton = container.querySelector(".generate-reply-btn");
 
   let isGenerating = false;
@@ -1012,22 +1082,27 @@ async function appendToneSelector(toolbar) {
     const lastLength = storageCache.get("lastLength");
     const selectedColor = storageCache.get("selectedColor", "#1da1f2");
 
-    if (lastTone && Array.from(toneSelect.options).some(o => o.value === lastTone)) {
+    if (lastTone && config.tones.some(o => o.id === lastTone)) {
       toneSelect.value = lastTone;
+    } else if (config.tones.length > 0) {
+      toneSelect.value = config.tones[config.tones.length - 1].id; // Default to Optimal
     }
-    if (lastLength && Array.from(lengthSelect.options).some(o => o.value === lastLength)) {
+
+    if (lastLength && config.lengths.some(o => o.id === lastLength)) {
       lengthSelect.value = lastLength;
+    } else if (config.lengths.length > 0) {
+      lengthSelect.value = config.lengths[1].id; // Default to As Tweet
     }
     applyColor(selectedColor);
   });
 
   // Save selections on change
-  toneSelect.addEventListener("change", () => {
-    chrome.storage.sync.set({ lastTone: toneSelect.value });
+  toneSelect.addEventListener("change", (e) => {
+    chrome.storage.sync.set({ lastTone: e.detail });
   });
 
-  lengthSelect.addEventListener("change", () => {
-    chrome.storage.sync.set({ lastLength: lengthSelect.value });
+  lengthSelect.addEventListener("change", (e) => {
+    chrome.storage.sync.set({ lastLength: e.detail });
   });
 
   generateButton.addEventListener("click", async () => {
@@ -1086,13 +1161,11 @@ async function appendToneSelector(toolbar) {
 
   function insertStreamingChunk(chunk, fullReply) {
     const filteredFull = filterResponse(fullReply);
-    const replyInput = document.querySelector('[data-testid="tweetTextarea_0"]');
-    if (replyInput) {
-      // Use DataTransfer to simulate a "paste" for the full filtered text so far
-      // This is more reliable for X's complex editor than setting innerText
+    const targetInput = getBestInputTarget();
+    if (targetInput) {
       const dataTransfer = new DataTransfer();
       dataTransfer.setData("text/plain", filteredFull);
-      replyInput.dispatchEvent(new ClipboardEvent("paste", {
+      targetInput.dispatchEvent(new ClipboardEvent("paste", {
         clipboardData: dataTransfer,
         bubbles: true,
         cancelable: true

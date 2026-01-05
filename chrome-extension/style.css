@@ -61,48 +61,143 @@
   box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
 }
 
-/* Base Select Styles */
+/* Base Select/Dropdown Styles */
 #toneSelect,
-#langSelect,
 #lengthSelect {
   appearance: none;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--model-color);
+  background: linear-gradient(135deg, var(--model-color), #0d8bd9);
+  border: none;
   color: white;
   padding: 8px 32px 8px 14px;
   border-radius: 12px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  box-shadow: 0 4px 12px rgba(29, 161, 242, 0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
-  background-size: 12px;
+  background-size: 10px;
 }
 
 #toneSelect:hover,
-#langSelect:hover,
 #lengthSelect:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: var(--model-color);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(29, 161, 242, 0.4);
+  filter: brightness(1.1);
 }
 
 #toneSelect:focus,
-#langSelect:focus,
 #lengthSelect:focus {
-  border-color: var(--model-color);
-  box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.3);
+}
+
+/* Premium Custom Dropdown */
+.premium-dropdown-wrapper {
+  position: relative;
+  min-width: 140px;
+  user-select: none;
+}
+
+.premium-dropdown-current {
+  background: linear-gradient(135deg, var(--model-color), #0d8bd9);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(29, 161, 242, 0.25);
+  transition: all 0.2s ease;
+}
+
+.premium-dropdown-wrapper.open .premium-dropdown-current {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  transform: translateY(-1px);
+}
+
+.premium-dropdown-current i:last-child {
+  margin-left: auto;
+  font-size: 10px;
+}
+
+.premium-dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #16181c;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: none;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  z-index: 10000;
+  max-height: 250px;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.premium-dropdown-item {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #eff3f4;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.2s ease;
+}
+
+.premium-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--model-color);
+}
+
+.premium-dropdown-item i {
+  width: 16px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.premium-dropdown-item:hover i {
+  color: var(--model-color);
+}
+
+.dropdowns-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
 }
 
 /* Options within select - note that styling options is limited in browsers */
 #toneSelect option,
-#langSelect option,
 #lengthSelect option {
   background-color: #16181c;
   color: white;
+  padding: 10px;
+  font-weight: normal;
+  text-transform: none;
+  /* Reset uppercase for options */
 }
 
 /* Generate Button */
@@ -190,14 +285,22 @@
    Assuming it is a custom one injected by extension based on original CSS. */
 textarea {
   width: 100%;
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
   font-family: inherit;
-  font-size: 16px;
+  font-size: 14px;
   resize: none;
   outline: none;
-  margin-top: 10px;
+  margin-bottom: 2px;
+  padding: 10px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+textarea:focus {
+  border-color: var(--model-color);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Copy Tweet Button */

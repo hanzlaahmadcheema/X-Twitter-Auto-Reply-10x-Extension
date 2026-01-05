@@ -50,3 +50,26 @@ body {
         100% { background-position: 200% 0; }
     }
 }
+@layer utilities {
+    .premium-select {
+        appearance: none;
+        background: linear-gradient(135deg, #1da1f2, #0d8bd9);
+        border: none;
+        color: white;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 12px rgba(29, 161, 242, 0.25);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 10px;
+    }
+
+    .premium-select:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(29, 161, 242, 0.4);
+        filter: brightness(1.1);
+    }
+}
