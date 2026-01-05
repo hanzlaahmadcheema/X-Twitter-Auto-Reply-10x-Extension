@@ -25,6 +25,20 @@ function log(...args) {
 
 // Utility: Find the best input target (Media Caption or Standard Reply)
 function getBestInputTarget() {
+  const isSearchInput = (el) => {
+    const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+    const placeholder = (el.getAttribute('placeholder') || '').toLowerCase();
+    const dataTestid = (el.getAttribute('data-testid') || '').toLowerCase();
+    const role = (el.getAttribute('role') || '').toLowerCase();
+
+    return ariaLabel.includes('search') ||
+      placeholder.includes('search') ||
+      dataTestid.includes('search') ||
+      role === 'searchbox' ||
+      el.closest('[role="search"]') ||
+      el.closest('[data-testid="SearchBox_Search_Input"]');
+  };
+
   // 1. Check for Media Caption Input (Dialogs or Specific Test IDs)
   const mediaInput =
     document.querySelector('[data-testid="media-caption-input"] [contenteditable="true"]') ||
@@ -32,7 +46,7 @@ function getBestInputTarget() {
     document.querySelector('[aria-label*="caption"][contenteditable="true"]') ||
     document.querySelector('[placeholder*="caption"][contenteditable="true"]');
 
-  if (mediaInput && (mediaInput.offsetParent !== null || mediaInput.getClientRects().length > 0)) {
+  if (mediaInput && !isSearchInput(mediaInput) && (mediaInput.offsetParent !== null || mediaInput.getClientRects().length > 0)) {
     return mediaInput;
   }
 
@@ -42,7 +56,13 @@ function getBestInputTarget() {
     document.querySelector('div[contenteditable="true"][role="textbox"]') ||
     document.querySelector('footer [contenteditable="true"]');
 
-  return standardInput;
+  if (standardInput && !isSearchInput(standardInput)) {
+    return standardInput;
+  }
+
+  // 3. Final Fallback: any visible contenteditable that isn't searching
+  return Array.from(document.querySelectorAll('div[contenteditable="true"]'))
+    .find(el => !isSearchInput(el) && (el.offsetParent !== null || el.getClientRects().length > 0));
 }
 
 // Storage Cache System
@@ -1289,11 +1309,13 @@ function copyWithFallback(tweetText, button) {
 
 // Observers and Initialization
 const debouncedAppendToneSelector = debounce(() => {
-  const toolbar = document.querySelector('[class="css-175oi2r r-1iusvr4 r-16y2uox r-1777fci r-1h8ys4a r-1bylmt5 r-13tjlyg r-7qyjyx r-1ftll1t"]');
-  if (toolbar && !toolbar.querySelector(".tone-selector-container")) {
-    appendToneSelector(toolbar);
-    syncTheme();
-  }
+  const toolbars = document.querySelectorAll('[class="css-175oi2r r-1iusvr4 r-16y2uox r-1777fci r-1h8ys4a r-1bylmt5 r-13tjlyg r-7qyjyx r-1ftll1t"]');
+  toolbars.forEach(toolbar => {
+    if (!toolbar.querySelector(".tone-selector-container") && !toolbar.querySelector(".mic-btn")) {
+      appendToneSelector(toolbar);
+      syncTheme();
+    }
+  });
 }, 300);
 
 const debouncedInsertCopyTweetButton = debounce(() => {
