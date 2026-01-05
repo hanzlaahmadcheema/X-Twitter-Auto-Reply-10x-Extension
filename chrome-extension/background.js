@@ -1,71 +1,260 @@
 let alarmTimeout;
 let continuousAlarmInterval;
 let currentAlarmType = null; // Track the active alarm type
+const DEBUG = false;
+function log(...args) {
+  if (DEBUG) console.log(...args);
+}
+
+const CONFIG = {
+  DEFAULT_MODEL: "gemini-2.5-flash",
+  OLLAMA_BASE_URL: "http://127.0.0.1:11434",
+  API_TIMEOUT: 30000,
+  SYSTEM_PROMPT_TEMPLATE: (persona, tone, accountName, lang, length, customPrompt) => `
+    You are a human — crafting natural, thoughtful, and human-like replies on X (Twitter).
+    
+    **Your Identity:** ${persona || "A helpful and engaging Twitter user"}
+    **Desired Tone:** ${tone}
+    
+    **Context:**
+    - Replying to: ${accountName || "Unknown User"}
+    - Language: ${lang}
+    - Length: ${length}
+    
+    **Strict Guidelines:**
+    - NO hashtags, NO emojis, NO "Wow" or "Huh" interjections.
+    - NO automated-sounding phrases like "You are correct" or "بلکل درست فرمایا".
+    - SOUND human and handwritten. Never mention you are an AI.
+    - Base the reply directly on the tweet's real-time context.
+    - ${customPrompt ? `Specific Instruction: ${customPrompt}` : ""}
+  `,
+  TONES: [
+    { id: "encouraging", label: "💡 Encouraging" },
+    { id: "polite", label: "🤝 Polite" },
+    { id: "playful", label: "🎮 Playful" },
+    { id: "engaging", label: "💬 Engaging" },
+    { id: "curious", label: "❓ Curious" },
+    { id: "neutral", label: "⚪ Neutral" },
+    { id: "witty", label: "⚡ Witty" },
+    { id: "joking", label: "🤣 Joking" },
+    { id: "quirky", label: "🌀 Quirky" },
+    { id: "humorous", label: "😂 Humorous" },
+    { id: "sarcastic", label: "🙄 Sarcastic" },
+    { id: "negative", label: "🚫 Negative" },
+    { id: "straightforward", label: "🎯 Straight" },
+    { id: "professional", label: "💼 Professional" },
+    { id: "supportive", label: "❤️ Supportive" },
+    { id: "blunt", label: "🔪 Blunt" },
+    { id: "AgreeCritic", label: "🔎 AgreeCritic" },
+    { id: "DisagreeCritic", label: "🥊 DisagreeCritic" },
+    { id: "agreeable", label: "✅ Agreeable" },
+    { id: "casual", label: "🏠 Casual" },
+    { id: "optimal", label: "✨ Optimal" }
+  ],
+  LENGTHS: [
+    { id: "short", label: "⚡ Short", value: "short but impactful, up to 50 characters" },
+    { id: "as_tweet", label: "📏 As Tweet", value: "match the typical tweet length" },
+    { id: "lengthy", label: "📜 Lengthy", value: "sufficient for a lengthy message" },
+    { id: "range_5_200", label: "💬 5-200 Ch", value: "between 5 and 200 characters" },
+    { id: "range_100_400", label: "📝 100-400 Ch", value: "between 100 and 400 characters" }
+  ]
+};
+
+const tonePrompts = {
+  encouraging: "Be supportive, positive, and motivating.",
+  polite: "Maintain a respectful, courteous, and professional demeanor.",
+  playful: "Be lighthearted, fun, and use subtle wit.",
+  engaging: "Ask a follow-up question or invite further conversation.",
+  curious: "Express genuine interest and ask for more details.",
+  neutral: "Give a balanced, middle-ground response without strong bias.",
+  witty: "Use clever, sharp humor and wordplay.",
+  joking: "Make a friendly joke or use situational humor.",
+  quirky: "Be unconventional, unique, and slightly eccentric.",
+  humorous: "Find the funny side and make people smile.",
+  sarcastic: "Use light sarcasm or irony to make a point.",
+  negative: "Express disagreement or criticism in a firm but civil way.",
+  straightforward: "Be direct, clear, and concise without fluff.",
+  professional: "Sound like an industry expert or formal authority.",
+  supportive: "Offer help, validation, or emotional backing.",
+  blunt: "Be very honest and direct, even if it's slightly sharp.",
+  AgreeCritic: "Agree with the core point while offering constructive criticism.",
+  DisagreeCritic: "Respectfully disagree and point out flaws in reasoning.",
+  agreeable: "Strongly agree and reinforce the user's point.",
+  casual: "Sound like a close friend talking in a relaxed setting.",
+  optimal: "The most balanced and effective response for social engagement."
+};
+
+// Helper to generate prompt
+function getSystemPrompt(message, customPersona) {
+  const toneDesc = tonePrompts[message.tone] || tonePrompts.optimal;
+  const lengthObj = CONFIG.LENGTHS.find(l => l.id === message.length) || CONFIG.LENGTHS[1];
+  const langReq = message.lang || "The response language should match the tweet";
+  const lengthReq = lengthObj.value;
+
+  return CONFIG.SYSTEM_PROMPT_TEMPLATE(
+    customPersona,
+    toneDesc,
+    message.accountName,
+    langReq,
+    lengthReq,
+    message.customPrompt
+  );
+}
+
+
+// Streaming Support via Ports
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== "replyStreaming") return;
+
+  port.onMessage.addListener(async (message) => {
+    if (message.action === "generateReply") {
+      const systemPrompt = getSystemPrompt(message, customPersona);
+
+      try {
+        if (selectedModel === "gemini") {
+          const model = geminiModel || CONFIG.DEFAULT_MODEL;
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${selectedApiKey}`;
+
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: `${systemPrompt}\n\nPrompt: ${message.text}` }] }]
+            })
+          });
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let fullReply = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n");
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                try {
+                  const jsonData = JSON.parse(line.substring(6));
+                  const text = jsonData?.candidates?.[0]?.content?.parts?.[0]?.text;
+                  if (text) {
+                    fullReply += text;
+                    port.postMessage({ chunk: text, fullReply });
+                  }
+                } catch (e) { /* partial chunk */ }
+              }
+            }
+          }
+          port.postMessage({ done: true, fullReply });
+
+        } else if (selectedModel === "ollama") {
+          const model = ollamaModel || "gemma2:9b";
+          const baseUrl = ollamaUrl || "http://127.0.0.1:11434";
+          const response = await fetch(`${baseUrl}/api/generate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: model,
+              system: systemPrompt,
+              prompt: prompt,
+              stream: true
+            })
+          });
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let fullReply = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            try {
+              const jsonData = JSON.parse(chunk);
+              if (jsonData.response) {
+                fullReply += jsonData.response;
+                port.postMessage({ chunk: jsonData.response, fullReply });
+              }
+              if (jsonData.done) break;
+            } catch (e) { /* partial json */ }
+          }
+          port.postMessage({ done: true, fullReply });
+
+        } else {
+          // Fallback for other models or error
+          port.postMessage({ error: "Streaming is currently optimized for Gemini and Ollama. Please use those for best results." });
+        }
+      } catch (error) {
+        port.postMessage({ error: error.message });
+      }
+    }
+  });
+});
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "getConfig") {
+    sendResponse({ tones: CONFIG.TONES, lengths: CONFIG.LENGTHS });
+    return true;
+  }
+
+  if (message.action === "testConnection") {
+    (async () => {
+      try {
+        if (message.model === "gemini") {
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${message.key}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ parts: [{ text: "hi" }] }] })
+          });
+          const data = await response.json();
+          if (data.error) throw new Error(data.error.message);
+          sendResponse({ success: true });
+        } else if (message.model === "ollama") {
+          const response = await fetch(`${message.url}/api/tags`);
+          if (response.ok) sendResponse({ success: true });
+          else throw new Error("Ollama not responding");
+        }
+      } catch (e) {
+        sendResponse({ success: false, error: e.message });
+      }
+    })();
+    return true; // keep channel open
+  }
+
   if (message.action === "generateReply") {
     chrome.storage.sync.get(
-      ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "ollamaModel", "ollamaUrl"],
+      ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "ollamaModel", "ollamaUrl", "customPersona"],
       async (data) => {
-        const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, ollamaModel, ollamaUrl } = data;
+        const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, ollamaModel, ollamaUrl, customPersona } = data;
 
         if (!selectedApiKey && selectedModel !== "ollama") {
           sendResponse({ error: "API key not set. Please select an API key." });
           return;
         }
-        console.log("Selected API Key:", selectedApiKey);
-        const tonePrompt = tonePrompts[message.tone];
-        if (!tonePrompt) {
-          sendResponse({ error: "Invalid tone selected." });
-          return;
-        }
 
-        const prompt = message.text
-          .replace("{text}", message.text || "No text provided")
-        console.log("Generated Prompt:", prompt);
+        const systemPrompt = getSystemPrompt(message, customPersona);
+        const prompt = message.text;
+
         let apiUrl, payload, headers;
 
         if (selectedModel === "gemini") {
-          const model = geminiModel || "gemini-2.5-flash";
-          console.log(`Using Gemini model: ${model}`); // Log Gemini model
-
-          const systemPrompt = `
-          You are a human — crafting natural, thoughtful, and human-like replies to tweets on X (formerly Twitter), based on the user's selected tone and preferences.
-          
-          **Tone:** ${tonePrompt}
-          
-          Tweet's Author: ${message.accountName}
-          **Guidelines:**
-          - Avoid: "You are correct", "You are right"
-          - Avoid in Urdu: "بلکل درست فرمایا آپ نے", "بلکل بجا فرمایا آپ نے", "بلکل ٹھیک ہے", "بلکل", "بلکل درست کہہ رہے ہیں"
-          - No hashtags, emojis, or interjections like "Wow" or "Huh"
-          - Keep gender-neutral
-          - ${message.lang}
-          - ${message.length}
-          - Base your reply directly on the real-time tweet context.
-          - Make it sound naturally handwritten, not like AI.
-          - Don't mention Authors name
-          ${message.customPrompt ? `Reply to the tweet something like this: ${message.customPrompt}` : ""}
-          `;
-
-          console.log("System Prompt:", systemPrompt); // Log system prompt
-          console.log("Tone Prompt:", prompt); // Log tone prompt
+          const model = geminiModel || CONFIG.DEFAULT_MODEL;
           apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${selectedApiKey}`;
           payload = {
             contents: [{
-              parts: [
-                { text: `${systemPrompt}\n\n${prompt}` }
-              ]
+              parts: [{ text: `${systemPrompt}\n\nPrompt: ${prompt}` }]
             }]
           };
           headers = { "Content-Type": "application/json" };
         } else if (selectedModel === "grok") {
           const model = grokModel || "grok-beta";
-          console.log(`Using Grok model: ${model}`); // Log Grok model
           apiUrl = "https://api.x.ai/v1/chat/completions";
           payload = {
             messages: [
-              { role: "system", content: "You are Grok, a chatbot for generating concise and contextually relevant replies to tweets in a Twitter extension." },
+              { role: "system", content: systemPrompt },
               { role: "user", content: prompt },
             ],
             model: model,
@@ -77,7 +266,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           };
         } else if (selectedModel === "openai") {
           const model = openaiModel || "openai/gpt-4o";
-          console.log(`Using OpenAI model: ${model}`); // Log OpenAI model
           apiUrl = 'https://api.edenai.run/v2/text/chat/';
           payload = {
             response_as_dict: true,
@@ -88,23 +276,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             max_tokens: 1000,
             providers: [`${model}`],
             text: prompt,
-            "chatbot_global_action": `You are a human — crafting natural, thoughtful, and human-like replies to tweets on X (formerly Twitter), based on the user's selected tone and preferences.
-          
-          **Tone:** ${tonePrompt}
-          
-          Tweet's Author: ${message.accountName}
-          **Guidelines:**
-          - Avoid: "You are correct", "You are right"
-          - Avoid in Urdu: "بلکل درست فرمایا آپ نے", "بلکل بجا فرمایا آپ نے", "بلکل ٹھیک ہے", "بلکل", "بلکل درست کہہ رہے ہیں"
-          - No hashtags, emojis, or interjections like "Wow" or "Huh"
-          - Keep gender-neutral
-          - ${message.lang}
-          - ${message.length}
-          - Base your reply directly on the real-time tweet context.
-          - Make it sound naturally handwritten, not like AI.
-          - Don't mention Authors name
-          ${message.customPrompt ? `Reply to the tweet something like this: ${message.customPrompt}` : ""}`
-
+            chatbot_global_action: systemPrompt
           };
           headers = {
             "Content-Type": "application/json",
@@ -118,146 +290,87 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           })
             .then(response => response.json())
             .then(data => {
-              console.log('API Response:', data); // Log the full response for debugging
               const responseData = data[`${model}`];
-              if (responseData) {
-                let replyText = '';
-                if (responseData.standardized_response && responseData.standardized_response.generated_text) {
-                  replyText = responseData.standardized_response.generated_text;
-                } else if (responseData.generated_text) {
-                  replyText = responseData.generated_text;
-                }
-
-                if (replyText) {
-                  console.log(replyText);
-                  sendResponse({ reply: replyText });
-                } else {
-                  sendResponse({ error: 'Error: No AI response received.' });
-                }
-              } else {
-                sendResponse({ error: 'Error: No AI response received.' });
-              }
+              const replyText = responseData?.standardized_response?.generated_text || responseData?.generated_text;
+              if (replyText) sendResponse({ reply: replyText });
+              else sendResponse({ error: 'No AI response received.' });
             })
-            .catch(error => {
-              console.error('Error:', error);
-              sendResponse({ error: 'Error generating AI response.' });
-            });
-          return; // Ensure the response is sent asynchronously
+            .catch(e => sendResponse({ error: e.message }));
+          return;
         } else if (selectedModel === "ollama") {
           const model = ollamaModel || "gemma2:9b";
-          const baseUrl = ollamaUrl || "http://127.0.0.1:11434";
-          console.log(`Using Ollama model: ${model} at ${baseUrl}`);
+          const baseUrl = ollamaUrl || CONFIG.OLLAMA_BASE_URL;
           apiUrl = `${baseUrl}/api/generate`;
           payload = {
             model: model,
             prompt: prompt,
-            system: `You are a human — crafting natural, thoughtful, and human-like replies to tweets on X (formerly Twitter), based on the user's selected tone and preferences.
-            
-            **Tone:** ${tonePrompt}
-            
-            Tweet's Author: ${message.accountName}
-            **Guidelines:**
-            - Avoid: "You are correct", "You are right"
-            - No hashtags, emojis, or interjections like "Wow" or "Huh"
-            - Keep gender-neutral
-            - ${message.lang}
-            - ${message.length}
-            - Base your reply directly on the real-time tweet context.
-            - Make it sound naturally handwritten, not like AI.
-            - Don't mention Authors name
-            ${message.customPrompt ? `Reply to the tweet something like this: ${message.customPrompt}` : ""}`,
+            system: systemPrompt,
             stream: false
           };
           headers = { "Content-Type": "application/json" };
         } else {
-          console.error("Error: Invalid model selected.");
-          sendResponse({ error: "Error: Invalid model selected." });
+          sendResponse({ error: "Invalid model selected." });
           return;
         }
 
         try {
-          console.log(`Sending request to ${selectedModel} API at ${apiUrl}`);
           const response = await fetch(apiUrl, {
             method: "POST",
             headers: headers,
             body: JSON.stringify(payload),
           });
 
-          const responseText = await response.text();
-          let data;
-          try {
-            data = JSON.parse(responseText);
-          } catch (e) {
-            data = responseText;
-          }
-
-          if (!response.ok) {
-            console.error(`${selectedModel} API Error Response:`, responseText);
-            throw new Error(`API Error: ${response.status} ${response.statusText} - ${typeof data === 'string' ? data : JSON.stringify(data)}`);
-          }
-
-          console.log(`${selectedModel} API Response:`, data);
-
+          const data = await response.json();
           let reply;
-          if (selectedModel === "gemini") {
-            reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-          } else if (selectedModel === "ollama") {
-            reply = data?.response;
-          } else {
-            reply = data?.choices?.[0]?.message?.content;
-          }
+          if (selectedModel === "gemini") reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          else if (selectedModel === "ollama") reply = data?.response;
+          else reply = data?.choices?.[0]?.message?.content;
 
-          if (reply) {
-            sendResponse({ reply: reply });
-          } else {
-            console.error(`${selectedModel} empty reply in data:`, data);
-            sendResponse({ error: `Error: ${selectedModel} returned an empty response.` });
-          }
+          if (reply) sendResponse({ reply: reply });
+          else sendResponse({ error: `${selectedModel} returned an empty response.` });
         } catch (error) {
-          console.error(`${selectedModel} API Error:`, error);
-          sendResponse({ error: `Error: ${error.message}` });
+          sendResponse({ error: error.message });
         }
       }
     );
-
     return true;
   }
 
   if (message.action === "startAlarm") {
     const { time, type } = message;
-    console.log(`Starting alarm. Type: ${type} | Time: ${time}ms`);
+    log(`Starting alarm. Type: ${type} | Time: ${time}ms`);
 
     // Check if the requested alarm type is already active
     if (currentAlarmType === type) {
-      console.log(`Alarm of type "${type}" is already active. No need to restart.`);
+      log(`Alarm of type "${type}" is already active. No need to restart.`);
       return;
     }
 
     // Clear existing alarms or intervals
     clearTimeout(alarmTimeout);
     clearInterval(continuousAlarmInterval);
-    console.log("Cleared previous alarms and intervals.");
+    log("Cleared previous alarms and intervals.");
 
     // Set the new alarm type
     currentAlarmType = type;
 
     if (type === "onGenerate") {
       // One-time notification
-      console.log("Setting a one-time alarm for 'Notify on Generate'.");
+      log("Setting a one-time alarm for 'Notify on Generate'.");
       alarmTimeout = setTimeout(() => {
         sendNotification();
         currentAlarmType = null; // Reset the current alarm type after execution
       }, time);
     } else if (type === "interval") {
       // Continuous notifications
-      console.log("Starting a continuous notification alarm.");
+      log("Starting a continuous notification alarm.");
       continuousAlarmInterval = setInterval(() => {
         sendNotification();
       }, time);
     }
   } else if (message.action === "stopAlarm") {
     // Stop both one-time and continuous alarms
-    console.log("Stopping all alarms.");
+    log("Stopping all alarms.");
     clearTimeout(alarmTimeout);
     clearInterval(continuousAlarmInterval);
     currentAlarmType = null; // Reset the current alarm type
@@ -283,81 +396,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+// End of file cleanup
 function sendNotification() {
-  chrome.notifications.create(
-    {
-      type: "image", // Use "image" for a larger notification banner
-      iconUrl: "icons/icon-128.png", // Replace with your extension's icon
-      title: "Time to Engage on Twitter!", // Notification title
-      message: "It's time to generate another reply and stay active!", // Notification message
-      imageUrl: "images/x-notification-banner.png", // Larger image for the notification
-      buttons: [{ title: "Got It!" }], // Button for user acknowledgment
-      priority: 2, // High priority for visibility
-    },
-    (notificationId) => {
-      console.log("Notification created with ID:", notificationId);
-    }
-  );
+  chrome.notifications.create({
+    type: "basic",
+    iconUrl: "icons/icon-128.png",
+    title: "Twitter Engagement",
+    message: "It's time to generate another reply!",
+    priority: 2
+  });
 }
-
-
-
-const tonePrompts = {
-  casual: "Reply to tweet in a natural and engaging way. Keep it light, relaxed, and conversational—like a real person chatting. No forced jokes, just an easy-flowing response.",
-
-  optimal: "Craft a concise and engaging response to tweet, ensuring it is natural, thoughtful, and relevant. Maintain a professional yet approachable tone, avoiding unnecessary formality or casualness.",
-
-  blunt: "Respond aggressively and without restraint. Confront the tweet directly, dismantle its claims, and call out stupidity, hypocrisy, or intellectual laziness plainly. Do not be polite. Do not soften language. Use sharp, confrontational phrasing that leaves no ambiguity about your disagreement. Prioritize impact, clarity, and dominance in argument—while staying logically sound.",
-
-  AgreeCritic: "Respond to the tweet by clearly aligning with the author’s critical stance. Support and strengthen their argument by reinforcing the same criticism with sharper framing, added clarity, or logical emphasis—without paraphrasing or repeating their words. Maintain a confident, assertive tone that validates the author’s viewpoint and exposes the flaws, hypocrisy, or failures being criticized. Keep the response concise, impactful, and rhetorically strong.",
-
-  straightforward: "Respond to tweet with a direct and to-the-point answer. No small talk, no extra fluff—just a clear and effective response. Keep it neutral yet firm.",
-
-  professional: "Craft a professional response to tweet with clarity and respect. Keep it formal yet accessible, avoiding repetition or filler. Add value with insights instead of just agreeing.",
-
-  DisagreeCritic: "Respond to the tweet by clearly disagreeing with the author’s position. Critique their argument by identifying logical flaws, inconsistencies, misinformation, or missing context. Present a counter-perspective with confidence and clarity, without personal attacks or emotional exaggeration. Maintain a firm, composed tone that challenges the author’s claims and undermines their conclusion using reasoning, facts, or principled critique. Keep the response concise, sharp, and persuasive.",
-
-  supportive: "Respond to tweet with kindness and understanding. Offer encouragement or a thoughtful perspective rather than just agreeing. Keep it genuine and uplifting.",
-
-  witty: "Respond with clever wordplay or sharp, intelligent humor that lands naturally. Stay relevant and avoid forced cleverness. Make the reply engaging and memorable while keeping the point clear and intact.",
-
-  humorous: "Write a humorous reply that gently pokes fun at the tweet using wit, irony, or clever understatement. Keep it light and relatable—no forced punchlines or excessive exaggeration. Make sure the joke lands while staying relevant and concise.",
-
-  joking: "Craft a lighthearted, teasing reply to the tweet using friendly, good-natured humor. Keep the tone fun and relaxed, never offensive or mean-spirited. The joke should feel natural and relevant to the tweet, not forced or overly familiar. Stay concise, playful, and easygoing.",
-
-  sarcastic: "Reply to the tweet with light, playful sarcasm. Use wit and irony to make the point without sounding bitter, harsh, or dismissive. Keep the tone fun and clever, not mean-spirited. The sarcasm should feel effortless and relevant, adding humor while staying respectful and concise.",
-
-  quirky: "Respond to tweet with a unique and creative twist. Make the response stand out without being too random. Keep it playful but still relevant.",
-
-  encouraging: "Write a motivating and uplifting reply to tweet, using positive language that inspires confidence. Avoid excessive praise—keep it meaningful.",
-
-  optimistic: "Respond to tweet with a positive and hopeful tone, focusing on opportunities and bright sides. Keep it uplifting without being unrealistic.",
-
-  grateful: "Express sincere appreciation in response to tweet. Keep it heartfelt and genuine rather than generic.",
-
-  inspirational: "Write an inspiring response to tweet, using meaningful language to uplift and empower. Avoid clichés—keep it authentic.",
-
-  informative: "Provide a clear and factual reply to tweet, focusing on educating or clarifying without unnecessary complexity.",
-
-  insightful: "Offer a thoughtful and insightful response to tweet, adding depth to the conversation with meaningful observations. Avoid redundancy.",
-
-  empathetic: "Show understanding and compassion in your reply to tweet, acknowledging emotions or experiences respectfully.",
-
-  curious: "Ask a thoughtful and relevant question in response to tweet, encouraging elaboration. Keep it open-ended and directly related to the tweet.",
-
-  agreeable: "Respond to tweet with a supportive and reinforcing tone. Express agreement in a way that adds value rather than just repeating the original point. Keep it natural and engaging.",
-
-  critical: "Provide a well-reasoned critique of tweet. Be analytical, not aggressive. Keep the feedback balanced, constructive, and insightful—offering a perspective that adds value rather than just disagreeing.",
-
-  neutral: "Reply to tweet with a balanced and objective response. Keep it clear, concise, and neutral without unnecessary elaboration or personal opinions. ",
-
-  polite: "Write a respectful and courteous reply to tweet. Maintain a thoughtful and considerate tone, even in disagreement.",
-
-  reflective: "Compose a deep and introspective response to tweet, adding meaningful insights. Keep it thought-provoking without being overly abstract.",
-
-  engaging: "Encourage interaction with an open-ended question or discussion in reply to tweet. Keep it inviting and natural. Stay focused on the topic without unnecessary diversions.",
-
-  playful: "Reply to tweet with a fun and energetic tone. Keep it lighthearted and engaging without being off-topic. Ensure the response adds to the conversation in a creative way.",
-
-  negative: "Respond to tweet with a clear and reasoned critique. Stay firm but respectful—no emotional language or personal attacks. Ensure the stance is well-articulated and professional.",
-};

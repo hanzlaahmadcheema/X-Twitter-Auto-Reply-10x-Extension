@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help & FAQ | X-Reply Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/font-awesome.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="input.css">
+    <style>
+        body {
+            width: 400px;
+            min-height: 500px;
+            margin: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Chirp', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .help-container {
+            padding: 1.5rem;
+        }
+
+        .faq-item {
+            margin-bottom: 1rem;
+        }
+
+        .faq-question {
+            font-weight: bold;
+            color: var(--twitter-blue, #1da1f2);
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .faq-answer {
+            font-size: 0.8rem;
+            color: #71767b;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body class="bg-black text-white">
+    <header class="sticky top-0 z-50 glass border-b border-white/10 p-4 flex items-center gap-3">
+        <a href="popup.html" class="p-2 hover:bg-white/10 rounded-full transition-all">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="text-lg font-black tracking-tight">Help Center</h1>
+    </header>
+
+    <main class="help-container flex flex-col gap-6 overflow-y-auto">
+        <!-- API Key Guides -->
+        <section class="glass rounded-2xl p-5 flex flex-col gap-4">
+            <h2
+                class="text-sm font-black text-twitter-text flex items-center gap-2 border-b border-white/10 pb-2 m-0 uppercase tracking-widest">
+                <i class="fas fa-key text-twitter-blue"></i> Getting API Keys
+            </h2>
+
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-bold text-sm">Google Gemini (Recommended)</h3>
+                    <p class="text-xs text-twitter-text-secondary mb-2">Free and fast. Most reliable for this extension.
+                    </p>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                        class="text-xs text-twitter-blue hover:underline">Get Gemini Key →</a>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-sm">X.ai (Grok)</h3>
+                    <p class="text-xs text-twitter-text-secondary mb-2">Native experience for X users.</p>
+                    <a href="https://console.x.ai/" target="_blank"
+                        class="text-xs text-twitter-blue hover:underline">Get Grok Key →</a>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-sm">OpenAI (GPT-4o)</h3>
+                    <p class="text-xs text-twitter-text-secondary mb-2">Premium quality replies.</p>
+                    <a href="https://platform.openai.com/api-keys" target="_blank"
+                        class="text-xs text-twitter-blue hover:underline">Get OpenAI Key →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="glass rounded-2xl p-5 flex flex-col gap-4">
+            <h2
+                class="text-sm font-black text-twitter-text flex items-center gap-2 border-b border-white/10 pb-2 m-0 uppercase tracking-widest">
+                <i class="fas fa-question-circle text-twitter-blue"></i> FAQ
+            </h2>
+
+            <div class="faq-item">
+                <div class="faq-question">Is it free?</div>
+                <div class="faq-answer">The extension is free. You only pay for the AI usage (many models like Gemini
+                    have free tiers).</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">How to use voice input?</div>
+                <div class="faq-answer">Click the microphone icon in the reply box, or press [Space] twice quickly to
+                    start recording.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">What is "Thread History"?</div>
+                <div class="faq-answer">The AI reads the previous posts in the conversation to ensure the reply makes
+                    sense in context.</div>
+            </div>
+        </section>
+
+        <footer class="text-center py-4">
+            <p class="text-[10px] text-twitter-text-secondary">X-Reply Agent v2.5.0 • Powered by AI</p>
+        </footer>
+    </main>
+</body>
+
+</html>

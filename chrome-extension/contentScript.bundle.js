@@ -236,6 +236,27 @@ function getTweetContext() {
   return "";
 }
 
+function getTweetThreadContext() {
+  const threadTexts = [];
+  // Get main tweet
+  const mainTweet = getTweetContext();
+  if (mainTweet) threadTexts.push(`Current Post: ${mainTweet}`);
+
+  // Try to get parent tweets (X usually shows them in a conversation thread)
+  const conversation = document.querySelectorAll('[data-testid="tweetText"]');
+  conversation.forEach((el, index) => {
+    const text = el.innerText.trim();
+    if (text && !threadTexts.includes(`Context ${index}: ${text}`)) {
+      // Only add if it's not the main tweet (approximate check)
+      if (text !== mainTweet) {
+        threadTexts.unshift(`Parent Post ${index}: ${text}`);
+      }
+    }
+  });
+
+  return threadTexts.slice(-3).join("\n\n"); // Last 3 posts for context
+}
+
 function getReplyAccountDetails() {
   const tweetContainer =
     document.querySelector('[data-testid="tweet"]') ||
@@ -639,18 +660,22 @@ function initializeWhatsAppMicButton() {
       // Universal finder logic for "Right Popup" button
       // It should prioritize Media Caption, then fallback to Main Message, NEVER Search.
       const findTarget = () => {
-        // 1. Media
+        // 1. Media Caption Input (Standard)
+        // 2. Any contenteditable in a dialog (Media View is usually a dialog)
+        // 3. Caption input specifically by aria-label
         const media = document.querySelector('div[data-testid="media-caption-input"] div[contenteditable="true"]') ||
           document.querySelector('div[role="dialog"] div[contenteditable="true"]') ||
-          document.querySelector('div[contenteditable="true"][aria-label*="caption"]');
-        if (media) return media;
+          document.querySelector('div[contenteditable="true"][aria-label*="caption"]') ||
+          document.querySelector('div[contenteditable="true"][placeholder*="caption"]');
+
+        if (media && media.offsetParent !== null) return media;
 
         // 2. Main (Footer) - Strict check to avoid search
         const main = Array.from(document.querySelectorAll('footer div[contenteditable="true"], div[contenteditable="true"][data-tab="10"]'))
           .find(el => {
             const inSide = el.closest('[id="side"]'); // Sidebar contains search
             const isSearch = el.closest('[role="search"]') || el.getAttribute('aria-label')?.toLowerCase().includes('search');
-            return !inSide && !isSearch;
+            return !inSide && !isSearch && el.offsetParent !== null;
           });
         return main;
       };
@@ -782,31 +807,61 @@ function initializeWhatsAppMicButton() {
             maxAlternatives: 1,
             onResult: (text) => {
               try {
-                // Dynamic target resolution for media button (popup)
-                let target = whatsappInput;
+                // Get all potential inputs
+                const allInputs = Array.from(document.querySelectorAll('div[contenteditable="true"]'));
+
+                // Helper to check if an element is a search box
+                const isSearchInput = (el) => {
+                  const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+                  return el.closest('[role="search"]') ||
+                    el.closest('[id="side"]') ||
+                    ariaLabel.includes('search');
+                };
+
+                // Find Media Caption Input (Strict & Lexical-aware)
+                const mediaInput = allInputs.find(el => {
+                  if (isSearchInput(el)) return false;
+                  if (el.closest('footer')) return false;
+
+                  const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+                  const placeholder = (el.getAttribute('placeholder') || '').toLowerCase();
+                  const dataTestid = (el.getAttribute('data-testid') || '').toLowerCase();
+                  const isLexical = el.getAttribute('data-lexical-editor') === 'true';
+
+                  const hasCaptionKeywords = ariaLabel.includes('caption') ||
+                    placeholder.includes('caption') ||
+                    dataTestid.includes('caption');
+
+                  const isDialog = el.closest('[role="dialog"]');
+                  const isMediaContainer = el.closest('[data-testid="media-caption-input"]') ||
+                    el.closest('[class*="media"]');
+
+                  // High confidence check: visible, non-footer, Lexical editor in a dialog or with caption keywords
+                  return (isLexical || hasCaptionKeywords || isDialog || isMediaContainer) &&
+                    (el.offsetParent !== null || el.getClientRects().length > 0);
+                });
+
+                // Find Main Chat Input
+                const mainInput = allInputs.find(el => {
+                  if (isSearchInput(el)) return false;
+                  return el.closest('footer') && el.offsetParent !== null;
+                });
+
+                // Decide target based on button type
+                let target = null;
                 if (type === 'media') {
-                  // Copy of Finder Logic to ensure we target the CURRENT visible input
-                  // Expanded selectors for better detection
-                  const mediaSelectors = [
-                    'div[data-testid="media-caption-input"] div[contenteditable="true"]',
-                    'div[role="dialog"] div[contenteditable="true"]',
-                    'div[contenteditable="true"][aria-label*="caption"]',
-                    'div[contenteditable="true"][placeholder*="caption"]',
-                    'div[class*="media"] div[contenteditable="true"]'
-                  ];
+                  // For media button, ONLY target media input or any other visible non-footer input
+                  target = mediaInput || allInputs.find(el => !isSearchInput(el) && !el.closest('footer') && el.offsetParent !== null);
+                } else {
+                  // For main button, prefer main input
+                  target = mainInput || mediaInput;
+                }
 
-                  const media = mediaSelectors
-                    .map(sel => document.querySelector(sel))
-                    .find(el => el && el.offsetParent !== null); // Must be visible
-
-                  const main = Array.from(document.querySelectorAll('footer div[contenteditable="true"], div[contenteditable="true"][data-tab="10"]'))
-                    .find(el => {
-                      const inSide = el.closest('[id="side"]');
-                      const isSearch = el.closest('[role="search"]') || el.getAttribute('aria-label')?.toLowerCase().includes('search');
-                      return !inSide && !isSearch && el.offsetParent !== null;
-                    });
-
-                  target = media || main || whatsappInput; // Fallback to original if nothing found
+                if (!target) {
+                  // Final fallback for main button only, or if media button has no other choice
+                  if (type !== 'media') {
+                    target = (whatsappInput && whatsappInput.offsetParent !== null ? whatsappInput : null);
+                  }
                 }
 
                 if (!target) {
@@ -815,23 +870,22 @@ function initializeWhatsAppMicButton() {
                 }
 
                 target.focus();
-                const before = target.innerText;
-                const ok = document.execCommand('insertText', false, text + ' ');
-                const after = target.innerText;
-                if (!ok || before === after) {
-                  const selection = window.getSelection();
-                  selection.removeAllRanges();
-                  const range = document.createRange();
-                  range.selectNodeContents(target);
-                  range.collapse(false);
-                  selection.addRange(range);
-                  target.textContent += text + ' ';
-                  target.dispatchEvent(new InputEvent('input', { bubbles: true }));
-                  target.dispatchEvent(new Event('keyup', { bubbles: true }));
-                } else {
-                  target.dispatchEvent(new InputEvent('input', { bubbles: true }));
-                  target.dispatchEvent(new Event('keyup', { bubbles: true }));
-                }
+
+                // Use DataTransfer and paste event which is more reliable for Lexical/complex editors
+                const dataTransfer = new DataTransfer();
+                dataTransfer.setData("text/plain", text + " ");
+                const pasteEvent = new ClipboardEvent("paste", {
+                  clipboardData: dataTransfer,
+                  bubbles: true,
+                  cancelable: true,
+                });
+
+                target.dispatchEvent(pasteEvent);
+
+                // Trigger input events as backup
+                target.dispatchEvent(new InputEvent('input', { bubbles: true }));
+                target.dispatchEvent(new Event('keyup', { bubbles: true }));
+
                 console.log('Speech text inserted in WhatsApp input:', text);
               } catch (err) {
                 console.error('Error inserting text for WhatsApp:', err);
@@ -875,43 +929,30 @@ function initializeWhatsAppMicButton() {
 //#endregion
 
 //#region Tone Prompts
-function appendToneSelector(toolbar) {
+async function appendToneSelector(toolbar) {
   const container = document.createElement("div");
   container.className = "tone-selector-container";
+
+  // Fetch config from background
+  const config = await new Promise(resolve => {
+    chrome.runtime.sendMessage({ action: "getConfig" }, resolve);
+  });
+
+  const toneOptions = config.tones.map(t => `<option value="${t.id}">${t.label}</option>`).join("");
+  const lengthOptions = config.lengths.map(l => `<option value="${l.id}">${l.label}</option>`).join("");
+
   container.innerHTML = `
-      <textarea id="customPrompt" placeholder="Custom Prompt"></textarea>
+      <textarea id="customPrompt" placeholder="What's on your mind? (Optional custom prompt)"></textarea>
     <select id="lengthSelect">
-        <option value="The message length should match the typical tweet length">As Tweet</option>
-        <option value="The length should be sufficient for a lengthy message">Lengthy</option>
-        <option value="The message length should be between 5 and 200 characters">5-200 Ch</option>
-        <option value="The length requirement should be between 100 and 400 characters">100-400 Ch</option>
-        <option value="The message length should be short but impactful, up to 50 characters">Short</option>
+      ${lengthOptions}
     </select>
     <select id="toneSelect">
-      <option value="encouraging">Encourag</option>
-      <option value="polite">Polite</option>
-      <option value="playful">Playful</option>
-      <option value="engaging">Engaging</option>
-      <option value="curious">Curious</option>
-      <option value="neutral">Neutral</option>
-      <option value="witty">Witty</option>
-      <option value="joking">Joking</option>
-      <option value="quirky">Quirky</option>
-      <option value="humorous">Humrous</option>
-      <option value="sarcastic">Sarcastic</option>
-      <option value="negative">Negative</option>
-      <option value="straightforward">Straight</option>
-      <option value="professional">Profesnl</option>
-      <option value="supportive">Suportive</option>
-      <option value="blunt">Blunt</option>
-      <option value="AgreeCritic">AgreeCritic</option>
-      <option value="DisagreeCritic">DisagreeCritic</option>
-      <option value="agreeable">Agreeable</option>
-      <option value="casual">Casual</option>
-      <option value="optimal">Optimal</option>
+      ${toneOptions}
     </select>
-    <button class="mic-btn" >${ICONS.microphone}</button>
-    <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">Generate</button>
+    <button class="mic-btn" title="Voice Input">${ICONS.microphone}</button>
+    <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">
+      <i class="fas fa-magic"></i> Generate
+    </button>
   `;
   toolbar.appendChild(container);
 
@@ -923,8 +964,9 @@ function appendToneSelector(toolbar) {
   // Mic button event listener
   micButton.addEventListener("click", () => {
     if (micButton.dataset.state !== "recording") {
+      const selectedLang = storageCache.get("speechLang", "ur-PK");
       speechManager.start(micButton, {
-        lang: "ur-PK",
+        lang: selectedLang,
         interimResults: false,
         maxAlternatives: 1
       });
@@ -970,8 +1012,12 @@ function appendToneSelector(toolbar) {
     const lastLength = storageCache.get("lastLength");
     const selectedColor = storageCache.get("selectedColor", "#1da1f2");
 
-    if (lastTone) toneSelect.value = lastTone;
-    if (lastLength) lengthSelect.value = lastLength;
+    if (lastTone && Array.from(toneSelect.options).some(o => o.value === lastTone)) {
+      toneSelect.value = lastTone;
+    }
+    if (lastLength && Array.from(lengthSelect.options).some(o => o.value === lastLength)) {
+      lengthSelect.value = lastLength;
+    }
     applyColor(selectedColor);
   });
 
@@ -988,102 +1034,82 @@ function appendToneSelector(toolbar) {
     if (isGenerating) return;
 
     isGenerating = true;
-    generateButton.textContent = "Generating...";
-    generateButton.style.backgroundColor = "red";
+    generateButton.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Thinking...`;
     generateButton.disabled = true;
-    // showSuccessMessage("Generating reply...");
 
     const tone = toneSelect.value;
     const length = lengthSelect.value;
     const customPrompt = customPromptTextarea.value.trim();
-    const tweetContext = getTweetContext();
+    const threadContext = getTweetThreadContext();
     const { accountUserName, accountName } = getReplyAccountDetails();
 
+    const replyInput = document.querySelector('[data-testid="tweetTextarea_0"]');
+    if (replyInput) {
+      replyInput.focus();
+      // Clear previous if user wants, or keep it. Let's clear for a fresh start.
+      // replyInput.innerText = ""; 
+    }
 
-    chrome.runtime.sendMessage(
-      {
-        action: "generateReply",
-        text: tweetContext,
-        customPrompt: customPrompt,
-        tone: tone,
-        lang: "The response language should match the language of the tweet",
-        length: length,
-        accountName: accountName,
-        accountUserName: accountUserName,
-      },
-      (response) => {
+    const port = chrome.runtime.connect({ name: "replyStreaming" });
+
+    port.onMessage.addListener((response) => {
+      if (response.error) {
         isGenerating = false;
         generateButton.disabled = false;
         generateButton.textContent = "Generate";
-
+        showErrorInButton(response.error);
+        port.disconnect();
+      } else if (response.chunk) {
+        // Word-by-word injection logic
+        insertStreamingChunk(response.chunk, response.fullReply);
+      } else if (response.done) {
+        isGenerating = false;
+        generateButton.disabled = false;
+        generateButton.innerHTML = `<i class="fas fa-magic"></i> Generate`;
         const defaultColor = storageCache.get("selectedColor", "#1da1f2");
         generateButton.style.backgroundColor = defaultColor;
-
-        if (response?.error) {
-          showErrorInButton(response.error);
-        } else if (response?.reply) {
-          insertReplyText(response.reply);
-        }
+        port.disconnect();
       }
-    );
+    });
+
+    port.postMessage({
+      action: "generateReply",
+      text: threadContext,
+      customPrompt: customPrompt,
+      tone: tone,
+      lang: "The response language should match the language of the tweet",
+      length: length,
+      accountName: accountName,
+      accountUserName: accountUserName,
+    });
   });
+
+  function insertStreamingChunk(chunk, fullReply) {
+    const filteredFull = filterResponse(fullReply);
+    const replyInput = document.querySelector('[data-testid="tweetTextarea_0"]');
+    if (replyInput) {
+      // Use DataTransfer to simulate a "paste" for the full filtered text so far
+      // This is more reliable for X's complex editor than setting innerText
+      const dataTransfer = new DataTransfer();
+      dataTransfer.setData("text/plain", filteredFull);
+      replyInput.dispatchEvent(new ClipboardEvent("paste", {
+        clipboardData: dataTransfer,
+        bubbles: true,
+        cancelable: true
+      }));
+    }
+  }
 
 
   function applyColor(color) {
     document.documentElement.style.setProperty("--model-color", color);
-
     const toolbar = document.querySelector(".tone-selector-container");
-    if (toolbar) {
-      toolbar.style.borderColor = color;
-    }
-
+    if (toolbar) toolbar.style.borderColor = color;
     const generateButton = document.querySelector(".generate-reply-btn");
     if (generateButton) {
       generateButton.style.backgroundColor = color;
       generateButton.style.color = "#fff";
     }
-
-    const customPromptTextarea = document.querySelector("#customPrompt");
-    if (customPromptTextarea) {
-      customPromptTextarea.style.borderColor = color;
-    }
-  }
-
-}
-
-function showErrorInButton(message) {
-  const generateButton = document.querySelector(".generate-reply-btn");
-  if (generateButton) {
-    generateButton.textContent = message;
-    generateButton.style.backgroundColor = "red";
-    generateButton.style.color = "#fff";
-    generateButton.disabled = true;
-
-
-    setTimeout(() => {
-      generateButton.textContent = "Generate";
-      const defaultColor = storageCache.get("selectedColor", "#1da1f2");
-      generateButton.style.backgroundColor = defaultColor;
-      generateButton.style.color = "#fff";
-      generateButton.disabled = false;
-    }, 3000);
-  }
-}
-
-function stopErrorInButton(message) {
-  const generateButton = document.querySelector(".generate-reply-btn");
-  if (generateButton) {
-    generateButton.textContent = message;
-    generateButton.style.backgroundColor = "orange";
-    generateButton.style.color = "#fff";
-    generateButton.disabled = true;
-
-    setTimeout(() => {
-      generateButton.textContent = "Generate";
-      generateButton.style.backgroundColor = "#000";
-      generateButton.style.color = "#1da1f2";
-      generateButton.disabled = false;
-    }, 2000);
   }
 }
 
@@ -1188,27 +1214,12 @@ function copyWithFallback(tweetText, button) {
   }
 }
 
-function appendAsidepanel(toolbar2) {
-  const asidePanel = document.createElement("div");
-  asidePanel.className = "aside-panel";
-  asidePanel.innerHTML = `
-    <li role="listitem" tabindex="0" class  ="css-175oi2r r-1mmae3n r-3pj75a r-1loqt21 r-o7ynqc r-6416eg r-1ny4l3l" data-testid="UserCell"><div class="css-175oi2r r-18u37iz"><div class="css-175oi2r r-18kxxzh r-1wron08 r-onrtq4 r-1777fci"><div class="css-175oi2r r-1wbh5a2 r-dnmrzs"><div class="css-175oi2r r-bztko3 r-1adg3ll r-13qz1uu" data-testid="UserAvatar-Container-hanzlaahmad164" style="height: 40px;"><div class="r-1adg3ll r-13qz1uu" style="padding-bottom: 100%;"></div><div class="r-1p0dtai r-1pi2tsx r-1d2f490 r-u8s1d r-ipm5af r-13qz1uu"><div class="css-175oi2r r-1adg3ll r-1pi2tsx r-13qz1uu r-45ll9u r-u8s1d r-1v2oles r-176fswd"><div class="r-1adg3ll r-13qz1uu" style="padding-bottom: 100%;"></div><div class="r-1p0dtai r-1pi2tsx r-1d2f490 r-u8s1d r-ipm5af r-13qz1uu"><div class="css-175oi2r r-sdzlij r-1udh08x r-5f1w11 r-u8s1d r-8jfcpp" style="width: calc(100% + 4px); height: calc(100% + 4px);"><a href="/hanzlaahmad164" aria-hidden="true" role="link" tabindex="-1" class="css-175oi2r r-1pi2tsx r-13qz1uu r-o7ynqc r-6416eg r-1ny4l3l" style="background-color: rgba(0, 0, 0, 0);"><div class="css-175oi2r r-sdzlij r-1udh08x r-633pao r-45ll9u r-u8s1d r-1v2oles r-176fswd" style="width: calc(100% - 4px); height: calc(100% - 4px);"><div class="css-175oi2r r-1pi2tsx r-13qz1uu" style="background-color: rgba(0, 0, 0, 0);"></div></div><div class="css-175oi2r r-sdzlij r-1udh08x r-633pao r-45ll9u r-u8s1d r-1v2oles r-176fswd" style="width: calc(100% - 4px); height: calc(100% - 4px);"><div class="css-175oi2r r-1pi2tsx r-13qz1uu r-kemksi"></div></div><div class="css-175oi2r r-sdzlij r-1udh08x r-633pao r-45ll9u r-u8s1d r-1v2oles r-176fswd" style="background-color: rgb(0, 0, 0); width: calc(100% - 4px); height: calc(100% - 4px);"><div class="css-175oi2r r-1adg3ll r-1udh08x" style=""><div class="r-1adg3ll r-13qz1uu" style="padding-bottom: 100%;"></div><div class="r-1p0dtai r-1pi2tsx r-1d2f490 r-u8s1d r-ipm5af r-13qz1uu"><div class="css-175oi2r r-1mlwlqe r-1udh08x r-417010 r-1p0dtai r-1d2f490 r-u8s1d r-zchlnj r-ipm5af"><div class="css-175oi2r r-1niwhzg r-vvn4in r-u6sd8q r-1p0dtai r-1pi2tsx r-1d2f490 r-u8s1d r-zchlnj r-ipm5af r-13qz1uu r-1wyyakw r-4gszlv" style="background-image: url(&quot;https://pbs.twimg.com/profile_images/1757325040482131968/v5fST_Vf_x96.jpg&quot;);"></div><img alt="" draggable="true" src="https://pbs.twimg.com/profile_images/1757325040482131968/v5fST_Vf_x96.jpg" class="css-9pa8cd"></div></div></div></div><div class="css-175oi2r r-sdzlij r-1udh08x r-45ll9u r-u8s1d r-1v2oles r-176fswd" style="width: calc(100% - 4px); height: calc(100% - 4px);"><div class="css-175oi2r r-172uzmj r-1pi2tsx r-13qz1uu r-o7ynqc r-6416eg r-1ny4l3l"></div></div></a></div></div></div></div></div></div></div></div><div class="css-175oi2r r-1iusvr4 r-16y2uox r-1777fci"><div class="css-175oi2r r-1awozwy r-18u37iz r-1wtj0ep"><div class="css-175oi2r r-1wbh5a2 r-dnmrzs r-1ny4l3l"><div class="css-175oi2r r-1wbh5a2 r-dnmrzs r-1ny4l3l"><div class="css-175oi2r r-1wbh5a2 r-dnmrzs"><a href="/hanzlaahmad164" role="link" class="css-175oi2r r-1wbh5a2 r-dnmrzs r-1ny4l3l r-1loqt21"><div class="css-175oi2r r-1awozwy r-18u37iz r-dnmrzs"><div dir="ltr" class="css-146c3p1 r-bcqeeo r-1ttztb7 r-qvutc0 r-1qd0xha r-a023e6 r-rjixqe r-b88u0q r-1awozwy r-6koalj r-1udh08x r-3s2u2q" style="text-overflow: unset; color: rgb(231, 233, 234);"><span class="css-1jxf684 r-dnmrzs r-1udh08x r-3s2u2q r-bcqeeo r-1ttztb7 r-qvutc0 r-poiln3" style="text-overflow: unset;"><span class="css-1jxf684 r-bcqeeo r-1ttztb7 r-qvutc0 r-poiln3" style="text-overflow: unset;">Hanzla Ahmad</span><span class="css-1jxf684 r-bcqeeo r-1ttztb7 r-qvutc0 r-poiln3 r-9iso6" style="text-overflow: unset;"></span></span></div><div dir="ltr" class="css-146c3p1 r-bcqeeo r-1ttztb7 r-qvutc0 r-1qd0xha r-a023e6 r-rjixqe r-16dba41 r-xoduu5 r-18u37iz r-1q142lx" style="text-overflow: unset; color: rgb(231, 233, 234);"><span class="css-1jxf684 r-bcqeeo r-1ttztb7 r-qvutc0 r-poiln3 r-1awozwy r-xoduu5" style="text-overflow: unset;"><svg viewBox="0 0 22 22" aria-label="Verified account" role="img" class="r-4qtqp9 r-yyyyoo r-1xvli5t r-bnwqim r-lrvibr r-m6rgpd r-1cvl2hr r-f9ja8p r-og9te1 r-3t4u6i" data-testid="icon-verified"><g><path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"></path></g></svg></span></div></div></a></div><div class="css-175oi2r r-1awozwy r-18u37iz r-1wbh5a2"><div class="css-175oi2r r-1wbh5a2 r-dnmrzs"><a href="/hanzlaahmad164" role="link" tabindex="-1" class="css-175oi2r r-1wbh5a2 r-dnmrzs r-1ny4l3l r-1loqt21"><div class="css-175oi2r"><div dir="ltr" class="css-146c3p1 r-dnmrzs r-1udh08x r-3s2u2q r-bcqeeo r-1ttztb7 r-qvutc0 r-1qd0xha r-a023e6 r-rjixqe r-16dba41 r-18u37iz r-1wvb978" style="text-overflow: unset; color: rgb(113, 118, 123);"><span class="css-1jxf684 r-bcqeeo r-1ttztb7 r-qvutc0 r-poiln3" style="text-overflow: unset;">@hanzlaahmad164</span></div></div></a></div></div></div></div><div class="css-175oi2r r-1cwvpvk" style="min-width: 0px;"><a href="/hanzlaahmad164" aria-label="Follow @hanzlaahmad164" class="css-175oi2r r-sdzlij r-1phboty r-rs99b7 r-lrvibr r-15ysp7h r-4wgw6l r-3pj75a r-1loqt21 r-o7ynqc r-6416eg r-1ny4l3l" style="background-color: rgb(239, 243, 244); border-color: rgba(0, 0, 0, 0);"><div dir="ltr" class="css-146c3p1 r-bcqeeo r-qvutc0 r-1qd0xha r-q4m81j r-a023e6 r-rjixqe r-b88u0q r-1awozwy r-6koalj r-18u37iz r-16y2uox r-1777fci" style="text-overflow: unset; color: rgb(15, 20, 25);"><span class="css-1jxf684 r-dnmrzs r-1udh08x r-3s2u2q r-bcqeeo r-1ttztb7 r-qvutc0 r-poiln3 r-1b43r93 r-1cwl3u0" style="text-overflow: unset;"><span class="css-1jxf684 r-bcqeeo r-1ttztb7 r-qvutc0 r-poiln3" style="text-overflow: unset;">Follow</span></span></div></a></div></div></div></div></li>
-  `;
-  toolbar2.appendChild(asidePanel);
-}
-
-// Debounced observer callbacks
+// Observers and Initialization
 const debouncedAppendToneSelector = debounce(() => {
   const toolbar = document.querySelector('[class="css-175oi2r r-1iusvr4 r-16y2uox r-1777fci r-1h8ys4a r-1bylmt5 r-13tjlyg r-7qyjyx r-1ftll1t"]');
   if (toolbar && !toolbar.querySelector(".tone-selector-container")) {
     appendToneSelector(toolbar);
-  }
-}, 300);
-
-const debouncedAppendAsidePanel = debounce(() => {
-  const toolbar2 = document.querySelector('[role="list"]');
-  if (toolbar2 && !toolbar2.querySelector(".aside-panel")) {
-    appendAsidepanel(toolbar2);
+    syncTheme();
   }
 }, 300);
 
@@ -1217,7 +1228,6 @@ const debouncedInsertCopyTweetButton = debounce(() => {
 }, 300);
 
 const observer = new MutationObserver(debouncedAppendToneSelector);
-const observer2 = new MutationObserver(debouncedAppendAsidePanel);
 const observer3 = new MutationObserver(debouncedInsertCopyTweetButton);
 
 observer.observe(document.body, { childList: true, subtree: true });
@@ -1225,3 +1235,35 @@ observer3.observe(document.body, { childList: true, subtree: true });
 
 // Initialize WhatsApp mic button independently (runs on WhatsApp pages)
 initializeWhatsAppMicButton();
+
+// Theme Sync Logic
+function syncTheme() {
+  const container = document.querySelector(".tone-selector-container");
+  if (!container) return;
+
+  const isDark = getComputedStyle(document.body).backgroundColor !== "rgb(255, 255, 255)";
+
+  if (isDark) {
+    container.style.background = "rgba(255, 255, 255, 0.03)";
+    container.style.borderColor = "rgba(255, 255, 255, 0.08)";
+    container.style.color = "white";
+    container.querySelectorAll("select").forEach(s => {
+      s.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+      s.style.color = "white";
+      s.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`;
+    });
+  } else {
+    container.style.background = "rgba(0, 0, 0, 0.03)";
+    container.style.borderColor = "rgba(0, 0, 0, 0.08)";
+    container.style.color = "#0f1419";
+    container.querySelectorAll("select").forEach(s => {
+      s.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+      s.style.color = "#0f1419";
+      s.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f1419'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`;
+    });
+  }
+}
+
+// Watch for theme changes
+const themeObserver = new MutationObserver(syncTheme);
+themeObserver.observe(document.body, { attributes: true, attributeFilter: ["style", "class"] });

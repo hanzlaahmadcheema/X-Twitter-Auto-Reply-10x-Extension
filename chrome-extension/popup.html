@@ -9,190 +9,288 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
-<body class="bg-twitter-black text-twitter-text font-chirp w-[450px] p-6 flex flex-col gap-8">
+<body
+  class="bg-[#000000] text-twitter-text font-chirp w-[450px] p-6 flex flex-col gap-8 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-[#1d9bf022] via-black to-black">
 
-  <header class="text-center border-b border-twitter-border pb-4 mb-2">
-    <h1 class="text-xl font-bold flex items-center justify-center gap-2">
-      <i class="fab fa-twitter text-twitter-blue"></i> Auto Reply 10x
+  <header class="text-center pb-4 mb-2 animate-in fade-in slide-in-from-top duration-700 relative">
+    <div class="absolute right-0 top-0">
+      <a href="help.html" title="Help & Guides"
+        class="p-2 text-twitter-text-secondary hover:text-twitter-blue transition-all">
+        <i class="fas fa-question-circle text-xl"></i>
+      </a>
+    </div>
+    <h1 class="text-2xl font-black flex items-center justify-center gap-3 tracking-tight">
+      <div class="p-2 bg-twitter-blue rounded-lg shadow-[0_0_20px_rgba(29,155,240,0.4)]">
+        <i class="fab fa-twitter text-white text-lg"></i>
+      </div>
+      <span>Auto Reply <span class="text-twitter-blue">10x</span></span>
     </h1>
-    <p class="text-twitter-text-secondary text-sm mt-1">AI-Powered Replies</p>
+    <p class="text-twitter-text-secondary text-sm mt-2 font-medium opacity-80">Elevate your engagement with AI precision
+    </p>
   </header>
 
   <main class="flex flex-col gap-8">
     <!-- Model Selection Card -->
-    <section class="bg-twitter-dark-gray border border-twitter-border rounded-xl p-6 flex flex-col gap-6">
-      <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 border-b border-twitter-border pb-3 m-0">
-        <i class="fas fa-robot text-twitter-text-secondary text-sm"></i> Select Model
+    <section class="glass rounded-2xl p-6 flex flex-col gap-6 micro-bounce">
+      <h2
+        class="text-base font-bold text-twitter-text flex items-center gap-2 border-b border-twitter-border/50 pb-3 m-0">
+        <i class="fas fa-microchip text-twitter-blue text-sm"></i> Intelligence Engine
       </h2>
       <div class="grid grid-cols-2 gap-4">
-        <label class="cursor-pointer">
+        <label class="cursor-pointer group">
           <input type="radio" name="model" value="gemini" checked class="hidden peer">
           <div
-            class="flex flex-col items-center justify-center p-3 border border-twitter-border rounded-xl transition-all peer-checked:border-twitter-blue peer-checked:bg-twitter-blue/10">
+            class="flex flex-col items-center justify-center p-3 border border-white/5 rounded-xl transition-all peer-checked:border-twitter-blue peer-checked:bg-twitter-blue/20 hover:bg-white/5">
             <span class="text-xl mb-1 text-twitter-text-secondary peer-checked:text-twitter-blue"><i
                 class="fas fa-gem"></i></span>
-            <span class="text-xs text-twitter-text-secondary font-bold peer-checked:text-twitter-blue">Gemini</span>
+            <span
+              class="text-xs text-twitter-text-secondary font-bold peer-checked:text-twitter-blue group-hover:text-twitter-text">Gemini</span>
           </div>
         </label>
-        <label class="cursor-pointer">
+        <label class="cursor-pointer group">
           <input type="radio" name="model" value="openai" class="hidden peer">
           <div
-            class="flex flex-col items-center justify-center p-3 border border-twitter-border rounded-xl transition-all peer-checked:border-twitter-blue peer-checked:bg-twitter-blue/10">
+            class="flex flex-col items-center justify-center p-3 border border-white/5 rounded-xl transition-all peer-checked:border-twitter-blue peer-checked:bg-twitter-blue/20 hover:bg-white/5">
             <span class="text-xl mb-1 text-twitter-text-secondary peer-checked:text-twitter-blue"><i
                 class="fas fa-bolt"></i></span>
-            <span class="text-xs text-twitter-text-secondary font-bold peer-checked:text-twitter-blue">EdenAI</span>
+            <span
+              class="text-xs text-twitter-text-secondary font-bold peer-checked:text-twitter-blue group-hover:text-twitter-text">EdenAI</span>
           </div>
         </label>
-        <label class="cursor-pointer">
+        <label class="cursor-pointer group">
           <input type="radio" name="model" value="grok" class="hidden peer">
           <div
-            class="flex flex-col items-center justify-center p-3 border border-twitter-border rounded-xl transition-all peer-checked:border-twitter-blue peer-checked:bg-twitter-blue/10">
+            class="flex flex-col items-center justify-center p-3 border border-white/5 rounded-xl transition-all peer-checked:border-twitter-blue peer-checked:bg-twitter-blue/20 hover:bg-white/5">
             <span class="text-xl mb-1 text-twitter-text-secondary peer-checked:text-twitter-blue"><i
                 class="fas fa-brain"></i></span>
-            <span class="text-xs text-twitter-text-secondary font-bold peer-checked:text-twitter-blue">Grok</span>
+            <span
+              class="text-xs text-twitter-text-secondary font-bold peer-checked:text-twitter-blue group-hover:text-twitter-text">Grok</span>
           </div>
         </label>
-        <label class="cursor-pointer">
+        <label class="cursor-pointer group">
           <input type="radio" name="model" value="ollama" class="hidden peer">
           <div
-            class="flex flex-col items-center justify-center p-3 border border-twitter-border rounded-xl transition-all peer-checked:border-twitter-blue peer-checked:bg-twitter-blue/10">
+            class="flex flex-col items-center justify-center p-3 border border-white/5 rounded-xl transition-all peer-checked:border-twitter-blue peer-checked:bg-twitter-blue/20 hover:bg-white/5">
             <span class="text-xl mb-1 text-twitter-text-secondary peer-checked:text-twitter-blue"><i
                 class="fas fa-terminal"></i></span>
-            <span class="text-xs text-twitter-text-secondary font-bold peer-checked:text-twitter-blue">Ollama</span>
+            <span
+              class="text-xs text-twitter-text-secondary font-bold peer-checked:text-twitter-blue group-hover:text-twitter-text">Ollama</span>
           </div>
         </label>
       </div>
 
       <!-- Model Specific Options -->
-      <div id="geminiOptions" class="block">
-        <label for="geminiModelSelect" class="block text-xs font-medium text-twitter-text-secondary mb-1">Gemini
+      <div id="geminiOptions" class="block animate-in fade-in slide-in-from-right-2">
+        <label for="geminiModelSelect"
+          class="block text-xs font-semibold text-twitter-text-secondary mb-2 tracking-wide uppercase">Gemini
           Model</label>
         <div class="relative">
           <select id="geminiModelSelect"
-            class="w-full p-3 bg-black border border-twitter-border rounded-lg text-sm text-twitter-text appearance-none outline-none focus:border-twitter-blue transition-colors">
+            class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-twitter-text appearance-none outline-none focus:border-twitter-blue transition-all cursor-pointer">
             <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
             <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
             <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
             <option value="gemini-3-pro">Gemini 3 Pro</option>
             <option value="gemini-3-pro-preview">Gemini 3 Pro Preview</option>
-
           </select>
           <div
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
             <i class="fas fa-chevron-down"></i>
           </div>
         </div>
       </div>
 
-      <div id="openaiOptions" class="hidden">
-        <label for="openaiModelSelect" class="block text-xs font-medium text-twitter-text-secondary mb-1">EdenAI
+      <div id="openaiOptions" class="hidden animate-in fade-in slide-in-from-right-2">
+        <label for="openaiModelSelect"
+          class="block text-xs font-semibold text-twitter-text-secondary mb-2 tracking-wide uppercase">EdenAI
           Model</label>
         <div class="relative">
           <select id="openaiModelSelect"
-            class="w-full p-3 bg-black border border-twitter-border rounded-lg text-sm text-twitter-text appearance-none outline-none focus:border-twitter-blue transition-colors">
+            class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-twitter-text appearance-none outline-none focus:border-twitter-blue transition-all cursor-pointer">
             <option value="openai/gpt-4o">GPT-4o</option>
             <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
             <option value="xai/grok-2">XAI - Grok 2</option>
           </select>
           <div
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
             <i class="fas fa-chevron-down"></i>
           </div>
         </div>
       </div>
 
-      <div id="grokOptions" class="hidden">
-        <label for="grokModelSelect" class="block text-xs font-medium text-twitter-text-secondary mb-1">Grok
+      <div id="grokOptions" class="hidden animate-in fade-in slide-in-from-right-2">
+        <label for="grokModelSelect"
+          class="block text-xs font-semibold text-twitter-text-secondary mb-2 tracking-wide uppercase">Grok
           Model</label>
         <div class="relative">
           <select id="grokModelSelect"
-            class="w-full p-3 bg-black border border-twitter-border rounded-lg text-sm text-twitter-text appearance-none outline-none focus:border-twitter-blue transition-colors">
+            class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-twitter-text appearance-none outline-none focus:border-twitter-blue transition-all cursor-pointer">
             <option value="grok-2-vision-1212">Grok 2 Vision 1212</option>
             <option value="grok-2-1212">Grok 2 1212</option>
             <option value="grok-vision-beta">Grok Vision Beta</option>
             <option value="grok-beta">Grok Beta</option>
           </select>
           <div
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
             <i class="fas fa-chevron-down"></i>
           </div>
         </div>
       </div>
 
-      <div id="ollamaOptions" class="hidden">
-        <label for="ollamaModelSelect" class="block text-xs font-medium text-twitter-text-secondary mb-1">Ollama
+      <div id="ollamaOptions" class="hidden animate-in fade-in slide-in-from-right-2">
+        <label for="ollamaModelSelect"
+          class="block text-xs font-semibold text-twitter-text-secondary mb-2 tracking-wide uppercase">Ollama
           Model</label>
         <div class="relative">
           <select id="ollamaModelSelect"
-            class="w-full p-3 bg-black border border-twitter-border rounded-lg text-sm text-twitter-text appearance-none outline-none focus:border-twitter-blue transition-colors">
+            class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-twitter-text appearance-none outline-none focus:border-twitter-blue transition-all cursor-pointer">
             <option value="gemma2:9b">Gemma 2 9b</option>
             <option value="llama3">Llama 3</option>
             <option value="mistral">Mistral</option>
           </select>
           <div
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
             <i class="fas fa-chevron-down"></i>
           </div>
         </div>
         <div class="mt-4">
-          <label for="ollamaUrlInput" class="block text-xs font-medium text-twitter-text-secondary mb-1">Ollama URL
-            (optional)</label>
-          <input type="text" id="ollamaUrlInput" placeholder="http://127.0.0.1:11434"
-            class="w-full p-2.5 bg-black border border-twitter-border rounded-lg text-sm text-twitter-text outline-none focus:border-twitter-blue transition-colors">
+          <label for="ollamaUrlInput"
+            class="block text-xs font-semibold text-twitter-text-secondary mb-2 tracking-wide uppercase">Ollama
+            URL</label>
+          <div class="flex gap-2">
+            <input type="text" id="ollamaUrlInput" placeholder="http://127.0.0.1:11434"
+              class="flex-1 p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-twitter-text outline-none focus:border-twitter-blue transition-all">
+            <button id="testOllamaBtn" title="Test Ollama Connection"
+              class="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-twitter-text-secondary hover:text-twitter-text transition-all cursor-pointer">
+              <i class="fas fa-plug"></i>
+            </button>
+          </div>
         </div>
       </div>
+    </section>
 
     </section>
 
     <!-- API Keys Card -->
-    <section class="bg-twitter-dark-gray border border-twitter-border rounded-xl p-6 flex flex-col gap-6">
-      <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 border-b border-twitter-border pb-3 m-0">
-        <i class="fas fa-key text-twitter-text-secondary text-sm"></i> API Keys
+    <section class="glass rounded-2xl p-6 flex flex-col gap-6 micro-bounce">
+      <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 border-b border-white/10 pb-3 m-0">
+        <i class="fas fa-key text-twitter-blue text-sm"></i> Authentication
       </h2>
       <div class="flex gap-2">
-        <input type="text" id="newApiKey" placeholder="Enter new API Key"
-          class="flex-1 p-2.5 bg-black border border-twitter-border rounded-lg text-sm text-twitter-text outline-none focus:border-twitter-blue transition-colors">
-        <button id="addApiKeyBtn"
-          class="p-2.5 bg-twitter-blue text-white rounded-lg hover:bg-[#1a8cd8] transition-colors cursor-pointer border-none w-10 flex items-center justify-center">
+        <input type="text" id="newApiKey" placeholder="Paste your API key here"
+          class="flex-1 p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-twitter-text outline-none focus:border-twitter-blue transition-all">
+        <button id="addApiKeyBtn" title="Add Key"
+          class="p-3 bg-twitter-blue text-white rounded-xl hover:bg-[#1a8cd8] transition-all cursor-pointer border-none shadow-[0_4px_12px_rgba(29,155,240,0.3)] flex items-center justify-center">
           <i class="fas fa-plus"></i>
         </button>
+        <button id="testKeyBtn" title="Test Selected Key"
+          class="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-twitter-text-secondary hover:text-twitter-text transition-all cursor-pointer flex items-center justify-center">
+          <i class="fas fa-vial"></i>
+        </button>
       </div>
-      <div id="apiKeysContainer" class="flex flex-col gap-2 max-h-[150px] overflow-y-auto">
+      </div>
+      <div id="apiKeysContainer" class="flex flex-col gap-3 max-h-[160px] overflow-y-auto pr-1">
         <!-- API Keys will be injected here -->
       </div>
     </section>
 
-    <!-- Appearance Card -->
-    <section class="bg-twitter-dark-gray border border-twitter-border rounded-xl p-6 flex flex-col gap-6">
-      <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 border-b border-twitter-border pb-3 m-0">
-        <i class="fas fa-palette text-twitter-text-secondary text-sm"></i> Appearance
+    <!-- Personalization Card -->
+    <section class="glass rounded-2xl p-6 flex flex-col gap-6 micro-bounce">
+      <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 border-b border-white/10 pb-3 m-0">
+        <i class="fas fa-user-ninja text-twitter-blue text-sm"></i> AI Persona
       </h2>
       <div>
-        <label for="colorSelect" class="block text-xs font-medium text-twitter-text-secondary mb-1">Theme
-          Color</label>
+        <label for="customPersona"
+          class="block text-xs font-semibold text-twitter-text-secondary mb-3 tracking-wide uppercase">Your Writing
+          Style</label>
+        <textarea id="customPersona" placeholder="e.g. A tech enthusiast who love web3 and minimalist design..."
+          class="w-full h-24 p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-twitter-text outline-none focus:border-twitter-blue transition-all resize-none"></textarea>
+        <p class="text-[10px] text-twitter-text-secondary mt-2">This helps the AI sound more like you.</p>
+      </div>
+    </section>
+
+    <!-- Language Card -->
+    <section class="glass rounded-2xl p-6 flex flex-col gap-6 micro-bounce">
+      <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 border-b border-white/10 pb-3 m-0">
+        <i class="fas fa-globe text-twitter-blue text-sm"></i> Voice Language
+      </h2>
+      <div>
+        <label for="speechLang"
+          class="block text-xs font-semibold text-twitter-text-secondary mb-3 tracking-wide uppercase">Recognition
+          Language</label>
         <div class="relative">
-          <select id="colorSelect"
-            class="w-full p-3 bg-black border border-twitter-border rounded-lg text-sm text-twitter-text appearance-none outline-none focus:border-twitter-blue transition-colors">
-            <option value="#1da1f2">Twitter Blue</option>
-            <option value="#794bc4">Purple</option>
-            <option value="#e0245e">Pink</option>
-            <option value="#17bf63">Green</option>
-            <option value="#f45d22">Orange</option>
+          <select id="speechLang"
+            class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-twitter-text appearance-none outline-none focus:border-twitter-blue transition-all cursor-pointer">
+            <option value="en-US">English (US)</option>
+            <option value="ur-PK">Urdu (Pakistan)</option>
+            <option value="hi-IN">Hindi (India)</option>
+            <option value="es-ES">Spanish</option>
+            <option value="fr-FR">French</option>
           </select>
           <div
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
             <i class="fas fa-chevron-down"></i>
           </div>
         </div>
       </div>
     </section>
+
+    <!-- Appearance Card -->
+    <section class="glass rounded-2xl p-6 flex flex-col gap-6 micro-bounce">
+      <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 border-b border-white/10 pb-3 m-0">
+        <i class="fas fa-palette text-twitter-blue text-sm"></i> Visual Theme
+      </h2>
+      <div>
+        <label for="colorSelect"
+          class="block text-xs font-semibold text-twitter-text-secondary mb-3 tracking-wide uppercase">Primary
+          Highlight</label>
+        <div class="relative">
+          <select id="colorSelect"
+            class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-twitter-text appearance-none outline-none focus:border-twitter-blue transition-all cursor-pointer">
+            <option value="#1da1f2">Twitter Blue</option>
+            <option value="#794bc4">Deep Purple</option>
+            <option value="#e0245e">Radiant Pink</option>
+            <option value="#17bf63">Vibrant Green</option>
+            <option value="#f45d22">Energetic Orange</option>
+          </select>
+          <div
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Data Management Card -->
+    <section class="glass rounded-2xl p-6 flex flex-col gap-6 micro-bounce">
+      <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 border-b border-white/10 pb-3 m-0">
+        <i class="fas fa-database text-twitter-blue text-sm"></i> Data Management
+      </h2>
+      <div class="grid grid-cols-2 gap-4">
+        <button id="exportSettingsBtn"
+          class="flex flex-col items-center justify-center p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all group">
+          <i class="fas fa-file-export text-twitter-blue text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+          <span class="text-xs font-bold text-twitter-text">Backup</span>
+        </button>
+        <button id="importSettingsBtn"
+          class="flex flex-col items-center justify-center p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all group">
+          <i class="fas fa-file-import text-twitter-blue text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+          <span class="text-xs font-bold text-twitter-text">Restore</span>
+        </button>
+        <input type="file" id="importFileInput" accept=".json" class="hidden">
+      </div>
+      <p class="text-[10px] text-twitter-text-secondary text-center">Backup includes your API keys and persona settings.
+      </p>
+    </section>
+
   </main>
 
-  <footer class="mt-auto flex flex-col items-center gap-3">
-    <p id="status" class="h-5 text-xs text-twitter-blue text-center m-0"></p>
+  <footer class="mt-auto flex flex-col items-center gap-4">
+    <p id="status" class="h-5 text-sm font-medium text-twitter-blue text-center m-0 animate-pulse"></p>
     <button id="saveSettingsBtn"
-      class="w-full py-3 px-8 bg-twitter-text text-black font-bold rounded-full hover:bg-[#d7dbdc] transition-transform hover:-translate-y-px border-none cursor-pointer text-sm">Save
-      Settings</button>
+      class="w-full py-4 px-8 bg-white text-black font-black rounded-full hover:bg-[#eff3f4] active:scale-95 transition-all border-none cursor-pointer text-sm shadow-[0_8px_24px_rgba(255,255,255,0.1)]">
+      SAVE ALL CHANGES
+    </button>
   </footer>
   <script src="popup.js"></script>
 </body>

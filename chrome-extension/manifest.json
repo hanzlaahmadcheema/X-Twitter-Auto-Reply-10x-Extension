@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Twitter Reply Assistant",
-  "version": "3.0",
-  "description": "Generate replies with contextual tones on Twitter.",
+  "name": "Auto Reply 10x: AI Engagement Agent",
+  "version": "3.0.0",
+  "description": "Premium AI-powered engagement assistant for X (Twitter). Context-aware, multilingual, and voice-enabled.",
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self';",
     "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval'; child-src 'self';"

@@ -18,6 +18,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // const stopAlarmButton = document.getElementById("stopAlarm");
   // const apiKeyInput = document.getElementById("tweetpikApiKey");
   const colorSelect = document.getElementById("colorSelect");
+  const customPersonaInput = document.getElementById("customPersona");
+  const speechLangSelect = document.getElementById("speechLang");
+  const testKeyBtn = document.getElementById("testKeyBtn");
+  const testOllamaBtn = document.getElementById("testOllamaBtn");
+  const exportSettingsBtn = document.getElementById("exportSettingsBtn");
+  const importSettingsBtn = document.getElementById("importSettingsBtn");
+  const importFileInput = document.getElementById("importFileInput");
   const status = document.getElementById("status");
 
   let state = {
@@ -29,11 +36,13 @@ document.addEventListener("DOMContentLoaded", () => {
     ollamaModel: "gemma2:9b",
     ollamaUrl: "http://127.0.0.1:11434",
     apiKeys: [],
+    customPersona: "",
+    speechLang: "en-US",
   };
 
   // Restore saved settings
   chrome.storage.sync.get(
-    ["selectedModel", "selectedApiKey", "geminiModel", "openaiModel", "grokModel", "ollamaModel", "ollamaUrl", "apiKeys", "selectedColor"],
+    ["selectedModel", "selectedApiKey", "geminiModel", "openaiModel", "grokModel", "ollamaModel", "ollamaUrl", "apiKeys", "selectedColor", "customPersona", "speechLang"],
     (data) => {
       state = { ...state, ...data };
 
@@ -67,6 +76,10 @@ document.addEventListener("DOMContentLoaded", () => {
         colorSelect.value = state.selectedColor;
         updateColor(state.selectedColor);
       }
+
+      // Restore persona and language
+      if (state.customPersona) customPersonaInput.value = state.customPersona;
+      if (state.speechLang) speechLangSelect.value = state.speechLang;
     }
   );
 
@@ -118,9 +131,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const ollamaModel = ollamaModelSelect.value;
     const ollamaUrl = ollamaUrlInput.value.trim() || "http://localhost:11434";
     const selectedColor = colorSelect.value;
+    const customPersona = customPersonaInput.value.trim();
+    const speechLang = speechLangSelect.value;
 
     chrome.storage.sync.set(
-      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, openaiModel, grokModel, ollamaModel, ollamaUrl, selectedColor },
+      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, openaiModel, grokModel, ollamaModel, ollamaUrl, selectedColor, customPersona, speechLang },
       () => {
         updateColor(selectedColor);
         status.textContent = "Settings saved!";
@@ -130,6 +145,81 @@ document.addEventListener("DOMContentLoaded", () => {
     if (window.location.href === "https://x.com" || window.location.href === "https://twitter.com") {
       window.location.reload();
     }
+  });
+
+  testKeyBtn.addEventListener("click", () => {
+    const selectedApiKey = document.querySelector('input[name="apiKey"]:checked')?.value;
+    if (!selectedApiKey) {
+      showStatus("Please select an API key first", "#f45d22");
+      return;
+    }
+    showStatus("Testing key...", "#1da1f2");
+    chrome.runtime.sendMessage({
+      action: "testConnection",
+      model: state.selectedModel,
+      key: selectedApiKey
+    }, (response) => {
+      if (response?.success) showStatus("✅ Key is valid!", "#17bf63");
+      else showStatus("❌ Error: " + (response?.error || "Unknown"), "#e0245e");
+    });
+  });
+
+  testOllamaBtn.addEventListener("click", () => {
+    const url = ollamaUrlInput.value.trim() || "http://127.0.0.1:11434";
+    showStatus("Testing Ollama...", "#1da1f2");
+    chrome.runtime.sendMessage({
+      action: "testConnection",
+      model: "ollama",
+      url: url
+    }, (response) => {
+      if (response?.success) showStatus("✅ Ollama is online!", "#17bf63");
+      else showStatus("❌ Error: " + (response?.error || "Connection failed"), "#e0245e");
+    });
+  });
+
+  function showStatus(text, color) {
+    status.textContent = text;
+    status.style.color = color;
+    setTimeout(() => {
+      status.textContent = "";
+    }, 4000);
+  }
+
+  // Backup & Restore Logic
+  exportSettingsBtn.addEventListener("click", () => {
+    chrome.storage.sync.get(null, (data) => {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `twitter_reply_settings_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showStatus("✅ Backup downloaded!", "#17bf63");
+    });
+  });
+
+  importSettingsBtn.addEventListener("click", () => importFileInput.click());
+
+  importFileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        chrome.storage.sync.clear(() => {
+          chrome.storage.sync.set(data, () => {
+            showStatus("✅ Settings restored! Reloading...", "#17bf63");
+            setTimeout(() => window.location.reload(), 1500);
+          });
+        });
+      } catch (err) {
+        showStatus("❌ Invalid backup file", "#e0245e");
+      }
+    };
+    reader.readAsText(file);
   });
 
   // Handle model selection changes
@@ -186,16 +276,26 @@ document.addEventListener("DOMContentLoaded", () => {
         const keyDiv = document.createElement("div");
         keyDiv.className = "api-key-item";
 
+        // Mask the key: show first 6 and last 4 chars
+        const maskedKey = key.length > 10
+          ? `${key.substring(0, 6)}...${key.substring(key.length - 4)}`
+          : "********";
+
         keyDiv.innerHTML = `
           <input type="radio" name="apiKey" value="${key}" ${key === selectedApiKey ? "checked" : ""
           }>
-          <span class="api-key-name">${name}</span>
-          <button class="edit-api-key-btn" data-key="${key}" data-name="${name}">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="delete-api-key-btn" data-key="${key}">
-            <i class="fas fa-trash-alt"></i>
-          </button>
+          <div class="flex flex-col flex-1 truncate ml-2">
+            <span class="text-sm font-bold text-twitter-text truncate">${name}</span>
+            <span class="text-[10px] text-twitter-text-secondary font-mono">${maskedKey}</span>
+          </div>
+          <div class="flex gap-1 ml-auto">
+            <button class="edit-api-key-btn p-2 hover:bg-white/10 rounded-lg transition-all" data-key="${key}" data-name="${name}">
+              <i class="fas fa-edit text-twitter-text-secondary text-xs"></i>
+            </button>
+            <button class="delete-api-key-btn p-2 hover:bg-white/10 rounded-lg transition-all" data-key="${key}">
+              <i class="fas fa-trash-alt text-twitter-text-secondary text-xs"></i>
+            </button>
+          </div>
         `;
 
         apiKeysContainer.appendChild(keyDiv);
