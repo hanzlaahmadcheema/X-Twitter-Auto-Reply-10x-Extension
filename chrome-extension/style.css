@@ -53,12 +53,13 @@
   padding: 8px 12px;
   flex-wrap: wrap;
   font-family: 'Chirp', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: rgba(255, 255, 255, 0.03);
+  background: transparent;
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  /* border: 1px solid rgba(255, 255, 255, 0.08); */
   border-radius: 16px;
   box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
 }
 
 /* Base Select/Dropdown Styles */
@@ -186,6 +187,14 @@
   width: 100%;
 }
 
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
 /* Options within select - note that styling options is limited in browsers */
 #toneSelect option,
 #lengthSelect option {
@@ -290,7 +299,6 @@ textarea {
   resize: none;
   outline: none;
   margin-bottom: 2px;
-  padding: 10px;
   border-radius: 12px;
   transition: all 0.2s ease;
 }

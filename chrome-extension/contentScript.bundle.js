@@ -5,7 +5,8 @@ const ICONS = {
   check: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>',
   timesCircle: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/></svg>',
   exclamationCircle: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zM224 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z"/></svg>',
-  copy: '<svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 32 32"><path fill="#1da1f2" d="M8.5 5.25A3.25 3.25 0 0 1 11.75 2h12A3.25 3.25 0 0 1 27 5.25v18a3.25 3.25 0 0 1-3.25 3.25h-12a3.25 3.25 0 0 1-3.25-3.25zM5 8.75c0-1.352.826-2.511 2-3.001v17.75a4.5 4.5 0 0 0 4.5 4.5h11.751a3.25 3.25 0 0 1-3.001 2H11.5A6.5 6.5 0 0 1 5 23.5z"/></svg>' // Using 'file' icon as copy, or standard copy
+  copy: '<svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 32 32"><path fill="#1da1f2" d="M8.5 5.25A3.25 3.25 0 0 1 11.75 2h12A3.25 3.25 0 0 1 27 5.25v18a3.25 3.25 0 0 1-3.25 3.25h-12a3.25 3.25 0 0 1-3.25-3.25zM5 8.75c0-1.352.826-2.511 2-3.001v17.75a4.5 4.5 0 0 0 4.5 4.5h11.751a3.25 3.25 0 0 1-3.001 2H11.5A6.5 6.5 0 0 1 5 23.5z"/></svg>', // Using 'file' icon as copy, or standard copy
+  generate: ' <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fff"><path d="M18 3C20.2091 3 22 4.79086 22 7V17C22 19.2091 20.2091 21 18 21H6C3.79086 21 2 19.2091 2 17V7C2 4.79086 3.79086 3 6 3H18ZM6 5C4.89543 5 4 5.89543 4 7V17C4 18.1046 4.89543 19 6 19H18C19.1046 19 20 18.1046 20 17V7C20 5.89543 19.1046 5 18 5H6ZM11.4121 7.39941C11.6327 6.86708 12.3673 6.86706 12.5879 7.39941L12.9043 8.16309C13.4442 9.46657 14.4522 10.5081 15.7188 11.0713L16.6152 11.4697C17.1284 11.6982 17.1285 12.4455 16.6152 12.6738L15.665 13.0957C14.4305 13.6448 13.4409 14.6486 12.8916 15.9092L12.584 16.6162C12.3584 17.1338 11.6416 17.1338 11.416 16.6162L11.1084 15.9092C10.5591 14.6486 9.56954 13.6448 8.33496 13.0957L7.38477 12.6738C6.87153 12.4455 6.87165 11.6982 7.38477 11.4697L8.28125 11.0713C9.54772 10.5081 10.5548 9.46657 11.0947 8.16309L11.4121 7.39941Z"></path></svg>'
 };
 
 // Utility: Debounce function
@@ -1026,23 +1027,29 @@ async function appendToneSelector(toolbar) {
   const lengthDrop = createDropdown("lengthSelect", config.lengths, "Length");
 
   container.innerHTML = `
-    <textarea id="customPrompt" placeholder="What's on your mind? (Optional custom prompt)"></textarea>
-    <div class="dropdowns-row"></div>
-    <div class="actions-row">
+    <textarea id="customPrompt" style="padding: 10px;" placeholder="What's on your mind? (Optional custom prompt)"></textarea>
+    <div class="controls-row">
       <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">
-        <i class="fas fa-magic"></i> Generate
+        ${ICONS.generate} Generate
       </button>
     </div>
   `;
+
+  const row = container.querySelector(".controls-row");
+  row.prepend(toneDrop);
+  row.prepend(lengthDrop);
 
   const micButtonEl = document.createElement("button");
   micButtonEl.className = "mic-btn";
   micButtonEl.title = "Voice Input";
   micButtonEl.innerHTML = ICONS.microphone;
 
-  container.querySelector(".dropdowns-row").appendChild(lengthDrop);
-  container.querySelector(".dropdowns-row").appendChild(toneDrop);
-  container.querySelector(".dropdowns-row").appendChild(micButtonEl);
+  const controlsRow = container.querySelector(".controls-row");
+  const generateBtn = container.querySelector(".generate-reply-btn");
+
+  controlsRow.insertBefore(micButtonEl, generateBtn);
+  controlsRow.insertBefore(toneDrop, micButtonEl);
+  controlsRow.insertBefore(lengthDrop, toneDrop);
   toolbar.appendChild(container);
 
   // Close dropdowns on outside click
