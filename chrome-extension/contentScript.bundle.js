@@ -978,7 +978,7 @@ async function appendToneSelector(toolbar) {
       const item = document.createElement("div");
       item.className = "premium-dropdown-item";
       item.dataset.value = opt.id;
-      item.innerHTML = `<i class="${opt.icon}"></i> ${opt.label}`;
+      item.innerHTML = `${opt.label}`;
       item.addEventListener("click", (e) => {
         e.stopPropagation();
         selectItem(opt);
@@ -989,7 +989,7 @@ async function appendToneSelector(toolbar) {
     });
 
     const selectItem = (opt) => {
-      current.innerHTML = `<i class="${opt.icon}"></i> <span class="label">${opt.label}</span> <i class="fas fa-chevron-down"></i>`;
+      current.innerHTML = `<span class="label">${opt.label}</span> <i class="fas fa-chevron-down"></i>`;
       wrapper.dataset.value = opt.id;
       // Trigger change event for storage save
       const event = new CustomEvent("change", { detail: opt.id });
@@ -1029,15 +1029,20 @@ async function appendToneSelector(toolbar) {
     <textarea id="customPrompt" placeholder="What's on your mind? (Optional custom prompt)"></textarea>
     <div class="dropdowns-row"></div>
     <div class="actions-row">
-      <button class="mic-btn" title="Voice Input">${ICONS.microphone}</button>
       <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">
         <i class="fas fa-magic"></i> Generate
       </button>
     </div>
   `;
 
+  const micButtonEl = document.createElement("button");
+  micButtonEl.className = "mic-btn";
+  micButtonEl.title = "Voice Input";
+  micButtonEl.innerHTML = ICONS.microphone;
+
   container.querySelector(".dropdowns-row").appendChild(lengthDrop);
   container.querySelector(".dropdowns-row").appendChild(toneDrop);
+  container.querySelector(".dropdowns-row").appendChild(micButtonEl);
   toolbar.appendChild(container);
 
   // Close dropdowns on outside click

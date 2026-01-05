@@ -106,26 +106,23 @@
 }
 
 .premium-dropdown-current {
-  background: linear-gradient(135deg, var(--model-color), #0d8bd9);
-  color: white;
-  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #eff3f4;
+  padding: 8px 12px;
   border-radius: 12px;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 4px 12px rgba(29, 161, 242, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.2s ease;
 }
 
 .premium-dropdown-wrapper.open .premium-dropdown-current {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--model-color);
 }
 
 .premium-dropdown-current i:last-child {
@@ -242,12 +239,12 @@
 
 /* Mic Button */
 .mic-btn {
-  background: #1DA1F2;
-  border: none;
-  color: #fff;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #eff3f4;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -318,4 +315,9 @@ textarea:focus {
 
 .copy-tweet-btn:hover {
   background-color: rgba(29, 161, 242, 0.1);
+}
+
+/* Visibility Utility */
+.hidden {
+  display: none !important;
 }
