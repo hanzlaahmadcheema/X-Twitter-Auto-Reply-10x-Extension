@@ -102,15 +102,15 @@
 /* Premium Custom Dropdown */
 .premium-dropdown-wrapper {
   position: relative;
-  min-width: 120px;
+  min-width: 130px;
   user-select: none;
 }
 
 .premium-dropdown-current {
   background: #1da1f2;
   color: #eff3f4;
-  padding: 6px 16px;
-  border-radius: 9999px;
+  padding: 6px 28px;
+  border-radius: 999px;
   font-family: inherit;
   font-size: 11px;
   font-weight: 700;
@@ -133,6 +133,7 @@
 
 .premium-dropdown-current i:last-child {
   font-size: 10px;
+  margin-left: 2px;
 }
 
 .premium-dropdown-list {
@@ -216,7 +217,7 @@
   color: white;
   border: none;
   border-radius: 999px;
-  padding: 6px 20px;
+  padding: 6px 28px;
   font-family: inherit;
   font-size: 11px;
   font-weight: 700;
@@ -228,7 +229,6 @@
   gap: 8px;
   margin-left: auto;
   box-shadow: 0 4px 12px rgba(29, 161, 242, 0.25);
-  text-transform: uppercase;
   letter-spacing: 0.5px;
   height: 32px;
   box-sizing: border-box;
