@@ -102,16 +102,16 @@
 /* Premium Custom Dropdown */
 .premium-dropdown-wrapper {
   position: relative;
-  min-width: 140px;
+  min-width: 120px;
   user-select: none;
 }
 
 .premium-dropdown-current {
   background: #1da1f2;
   color: #eff3f4;
-  padding: 8px 12px;
-  border-radius: 12px;
-  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -119,6 +119,8 @@
   gap: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.2s ease;
+  height: 32px;
+  box-sizing: border-box;
 }
 
 .premium-dropdown-wrapper.open .premium-dropdown-current {
@@ -139,8 +141,8 @@
   background: #16181c;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-top: none;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
   z-index: 10000;
   max-height: 250px;
   overflow-y: auto;
@@ -211,25 +213,27 @@
   background: var(--model-color);
   color: white;
   border: none;
-  border-radius: 12px;
-  padding: 8px 18px;
-  font-size: 13px;
-  font-weight: 800;
+  border-radius: 20px;
+  padding: 6px 18px;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   gap: 8px;
   margin-left: auto;
-  box-shadow: 0 4px 14px 0 rgba(29, 161, 242, 0.39);
+  box-shadow: 0 2px 8px 0 rgba(29, 161, 242, 0.3);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  height: 32px;
+  box-sizing: border-box;
 }
 
 .generate-reply-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(29, 161, 242, 0.45);
-  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(29, 161, 242, 0.35);
+  filter: brightness(1.05);
 }
 
 .generate-reply-btn:active {
@@ -251,20 +255,21 @@
   background: #1da1f2;
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #eff3f4;
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .mic-btn:hover {
   background-color: var(--model-color);
   color: white;
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .mic-recording {
@@ -299,7 +304,7 @@ textarea {
   resize: none;
   outline: none;
   margin-bottom: 2px;
-  border-radius: 12px;
+  border-radius: 16px;
   transition: all 0.2s ease;
 }
 

@@ -1167,12 +1167,13 @@ async function appendToneSelector(toolbar) {
         showErrorInButton(response.error);
         port.disconnect();
       } else if (response.chunk) {
-        // Word-by-word injection logic
-        insertStreamingChunk(response.chunk, response.fullReply);
+        // We no longer insert chunks to avoid doubling issues on Twitter's complex editor.
+        // The final text will be inserted in the 'done' block.
       } else if (response.done) {
         isGenerating = false;
         generateButton.disabled = false;
-        generateButton.innerHTML = `<i class="fas fa-magic"></i> Generate`;
+        generateButton.innerHTML = `${ICONS.generate} Generate`;
+        insertStreamingChunk("", response.fullReply); // Insertion happens here
         const defaultColor = storageCache.get("selectedColor", "#1da1f2");
         generateButton.style.backgroundColor = defaultColor;
         port.disconnect();

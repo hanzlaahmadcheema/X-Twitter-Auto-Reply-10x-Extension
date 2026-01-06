@@ -144,88 +144,94 @@ chrome.runtime.onConnect.addListener((port) => {
 
   port.onMessage.addListener(async (message) => {
     if (message.action === "generateReply") {
-      const systemPrompt = getSystemPrompt(message, customPersona);
+      chrome.storage.sync.get(
+        ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "ollamaModel", "ollamaUrl", "customPersona"],
+        async (data) => {
+          const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, ollamaModel, ollamaUrl, customPersona } = data;
+          const systemPrompt = getSystemPrompt(message, customPersona);
 
-      try {
-        if (selectedModel === "gemini") {
-          const model = geminiModel || CONFIG.DEFAULT_MODEL;
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${selectedApiKey}`;
+          try {
+            if (selectedModel === "gemini") {
+              const model = geminiModel || CONFIG.DEFAULT_MODEL;
+              const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${selectedApiKey}`;
 
-          const response = await fetch(apiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: `${systemPrompt}\n\nPrompt: ${message.text}` }] }]
-            })
-          });
+              const response = await fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: `${systemPrompt}\n\nPrompt: ${message.text}` }] }]
+                })
+              });
 
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder();
-          let fullReply = "";
+              const reader = response.body.getReader();
+              const decoder = new TextDecoder();
+              let fullReply = "";
 
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n");
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split("\n");
 
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                try {
-                  const jsonData = JSON.parse(line.substring(6));
-                  const text = jsonData?.candidates?.[0]?.content?.parts?.[0]?.text;
-                  if (text) {
-                    fullReply += text;
-                    port.postMessage({ chunk: text, fullReply });
+                for (const line of lines) {
+                  if (line.startsWith("data: ")) {
+                    try {
+                      const jsonData = JSON.parse(line.substring(6));
+                      const text = jsonData?.candidates?.[0]?.content?.parts?.[0]?.text;
+                      if (text) {
+                        fullReply += text;
+                        port.postMessage({ chunk: text, fullReply });
+                      }
+                    } catch (e) { /* partial chunk */ }
                   }
-                } catch (e) { /* partial chunk */ }
+                }
               }
+              port.postMessage({ done: true, fullReply });
+
+            } else if (selectedModel === "ollama") {
+              const model = ollamaModel || "gemma2:9b";
+              const baseUrl = ollamaUrl || "http://127.0.0.1:11434";
+              const response = await fetch(`${baseUrl}/api/generate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  model: model,
+                  system: systemPrompt,
+                  prompt: message.text,
+                  stream: true
+                })
+              });
+
+              const reader = response.body.getReader();
+              const decoder = new TextDecoder();
+              let fullReply = "";
+
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                try {
+                  const jsonData = JSON.parse(chunk);
+                  if (jsonData.response) {
+                    fullReply += jsonData.response;
+                    port.postMessage({ chunk: jsonData.response, fullReply });
+                  }
+                  if (jsonData.done) break;
+                } catch (e) { /* partial json */ }
+              }
+              port.postMessage({ done: true, fullReply });
+
+            } else {
+              // Fallback for other models or error
+              port.postMessage({ error: "Streaming is currently optimized for Gemini and Ollama. Please use those for best results." });
             }
+          } catch (error) {
+            port.postMessage({ error: error.message });
           }
-          port.postMessage({ done: true, fullReply });
-
-        } else if (selectedModel === "ollama") {
-          const model = ollamaModel || "gemma2:9b";
-          const baseUrl = ollamaUrl || "http://127.0.0.1:11434";
-          const response = await fetch(`${baseUrl}/api/generate`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              model: model,
-              system: systemPrompt,
-              prompt: prompt,
-              stream: true
-            })
-          });
-
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder();
-          let fullReply = "";
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            try {
-              const jsonData = JSON.parse(chunk);
-              if (jsonData.response) {
-                fullReply += jsonData.response;
-                port.postMessage({ chunk: jsonData.response, fullReply });
-              }
-              if (jsonData.done) break;
-            } catch (e) { /* partial json */ }
-          }
-          port.postMessage({ done: true, fullReply });
-
-        } else {
-          // Fallback for other models or error
-          port.postMessage({ error: "Streaming is currently optimized for Gemini and Ollama. Please use those for best results." });
         }
-      } catch (error) {
-        port.postMessage({ error: error.message });
-      }
+      );
     }
   });
 });
