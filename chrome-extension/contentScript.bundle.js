@@ -1235,7 +1235,7 @@ function insertCopyTweetButton() {
         padding: 6px;
         color: white;
         border: none;
-        border-radius: 5px;
+        border-radius: 30px;
         cursor: pointer;
         margin-left: 8px;
         font-size: 14px;

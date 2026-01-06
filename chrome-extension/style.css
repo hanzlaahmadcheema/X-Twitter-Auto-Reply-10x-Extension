@@ -57,8 +57,8 @@
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   /* border: 1px solid rgba(255, 255, 255, 0.08); */
-  border-radius: 16px;
-  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+  border-radius: 28px;
+  box-shadow: none;
   z-index: 1000;
 }
 
@@ -109,19 +109,21 @@
 .premium-dropdown-current {
   background: #1da1f2;
   color: #eff3f4;
-  padding: 6px 14px;
-  border-radius: 20px;
+  padding: 6px 16px;
+  border-radius: 9999px;
   font-family: inherit;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.2s ease;
   height: 32px;
   box-sizing: border-box;
+  text-align: center;
 }
 
 .premium-dropdown-wrapper.open .premium-dropdown-current {
@@ -130,7 +132,6 @@
 }
 
 .premium-dropdown-current i:last-child {
-  margin-left: auto;
   font-size: 10px;
 }
 
@@ -142,8 +143,8 @@
   background: #16181c;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-top: none;
-  border-bottom-left-radius: 16px;
-  border-bottom-right-radius: 16px;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
   z-index: 10000;
   max-height: 250px;
   overflow-y: auto;
@@ -214,8 +215,8 @@
   background: var(--model-color);
   color: white;
   border: none;
-  border-radius: 20px;
-  padding: 6px 18px;
+  border-radius: 999px;
+  padding: 6px 20px;
   font-family: inherit;
   font-size: 11px;
   font-weight: 700;
@@ -223,9 +224,10 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   margin-left: auto;
-  box-shadow: 0 2px 8px 0 rgba(29, 161, 242, 0.3);
+  box-shadow: 0 4px 12px rgba(29, 161, 242, 0.25);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   height: 32px;
@@ -234,7 +236,7 @@
 
 .generate-reply-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(29, 161, 242, 0.35);
+  box-shadow: 0 6px 16px rgba(29, 161, 242, 0.35);
   filter: brightness(1.05);
 }
 
@@ -259,7 +261,7 @@
   color: #eff3f4;
   width: 32px;
   height: 32px;
-  border-radius: 16px;
+  border-radius: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -296,21 +298,32 @@
 /* Output Textarea */
 /* Note: The textarea might be the one in the twitter compose box or a custom one. 
    Assuming it is a custom one injected by extension based on original CSS. */
-textarea {
+.tone-selector-container textarea {
   width: 100%;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13px;
+  height: 42px;
+  padding: 11px 20px;
+  line-height: 20px;
   resize: none;
   outline: none;
-  margin-bottom: 2px;
-  border-radius: 16px;
+  margin-bottom: 12px;
+  border-radius: 999px;
   transition: all 0.2s ease;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-align: center;
 }
 
-textarea:focus {
+.tone-selector-container textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+}
+
+.tone-selector-container textarea:focus {
   border-color: var(--model-color);
   background: rgba(255, 255, 255, 0.05);
 }
@@ -324,8 +337,8 @@ textarea:focus {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 30px;
 }
 
 .copy-tweet-btn:hover {
