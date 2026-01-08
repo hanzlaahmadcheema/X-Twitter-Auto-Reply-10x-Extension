@@ -399,7 +399,7 @@ function getTweetContextFromShareButton(shareButton) {
 
   let tweetText = extractTextWithEmojis(mainTweetElement);
 
-  tweetText = tweetText.replace(/#\S+/g, "").trim();
+  tweetText = tweetText.replace(/#\S+/g, "").replace(/@\S+/g, "").trim();
 
   log(tweetText);
   return tweetText;
