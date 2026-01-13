@@ -67,7 +67,7 @@ const tonePrompts = {
 
   blunt: "Respond aggressively and without restraint. Confront the tweet directly, dismantle its claims, and call out stupidity, hypocrisy, or intellectual laziness plainly. Do not be polite. Do not soften language. Use sharp, confrontational phrasing that leaves no ambiguity about your disagreement. Prioritize impact, clarity, and dominance in argument—while staying logically sound.",
 
-  AgreeCritic: "Respond to the tweet by clearly aligning with the author’s critical stance. Support and strengthen their argument by reinforcing the same criticism with sharper framing, added clarity, or logical emphasis—without paraphrasing or repeating their words. Maintain a confident, assertive tone that validates the author’s viewpoint and exposes the flaws, hypocrisy, or failures being criticized. Keep the response concise, impactful, and rhetorically strong.",
+  AgreeCritic: "Agree with the tweet in a natural, human way. Back up the author’s criticism by adding clarity, perspective, or emphasis—without copying their wording. Sound confident and straightforward, like someone who genuinely understands the issue. Reinforce why the criticism makes sense and point out the flaws, hypocrisy, or failures being called out. Keep it short, sharp, and authentic.",
 
   straightforward: "Respond to tweet with a direct and to-the-point answer. No small talk, no extra fluff—just a clear and effective response. Keep it neutral yet firm.",
 
