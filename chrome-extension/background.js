@@ -67,13 +67,13 @@ const tonePrompts = {
 
   blunt: "Respond aggressively and without restraint. Confront the tweet directly, dismantle its claims, and call out stupidity, hypocrisy, or intellectual laziness plainly. Do not be polite. Do not soften language. Use sharp, confrontational phrasing that leaves no ambiguity about your disagreement. Prioritize impact, clarity, and dominance in argument—while staying logically sound.",
 
-  AgreeCritic: "Respond to tweet by agreeing with the author, especially when they are criticizing someone or something. Reinforce their viewpoint by echoing the same criticism, adding weight or clarity without repeating their words. Keep the tone confident and aligned with the author’s stance.",
+  AgreeCritic: "Respond to the tweet by siding fully with the author and doubling down on their criticism. Be blunt, unsparing, and unapologetic. Expose the flaws, call out the incompetence or hypocrisy, and amplify the core critique with sharper language and stronger conviction—without parroting their phrasing. The tone should be confident, cutting, and leave zero room for doubt.",
 
   straightforward: "Respond to tweet with a direct and to-the-point answer. No small talk, no extra fluff—just a clear and effective response. Keep it neutral yet firm.",
 
   professional: "Craft a professional response to tweet with clarity and respect. Keep it formal yet accessible, avoiding repetition or filler. Add value with insights instead of just agreeing.",
 
-  DisagreeCritic: "Respond to the tweet by clearly disagreeing with the author’s position. Critique their argument by identifying logical flaws, inconsistencies, misinformation, or missing context. Present a counter-perspective with confidence and clarity, without personal attacks or emotional exaggeration. Maintain a firm, composed tone that challenges the author’s claims and undermines their conclusion using reasoning, facts, or principled critique. Keep the response concise, sharp, and persuasive.",
+  DisagreeCritic: "Respond by forcefully rejecting the author’s position. Dismantle their argument piece by piece, calling out weak logic, factual gaps, contradictions, and selective framing. Expose what they’re ignoring or getting wrong and make it obvious why their conclusion doesn’t hold up. The tone should be cold, cutting, and authoritative—confident enough that the flaws speak for themselves. No rambling, no softness. Keep it tight, sharp, and intellectually brutal.",
 
   supportive: "Respond to tweet with kindness and understanding. Offer encouragement or a thoughtful perspective rather than just agreeing. Keep it genuine and uplifting.",
 
@@ -435,6 +435,74 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     );
     return true;
+  }
+
+  // --- Offscreen Speech Recognition Handling ---
+  if (message.action === "start-recording") {
+    handleOffscreenRecording("start-recording", message.lang, sender.tab.id);
+    return true;
+  }
+
+  if (message.action === "stop-recording") {
+    handleOffscreenRecording("stop-recording", null, sender.tab.id);
+    return true;
+  }
+});
+
+let creatingOffscreenParams = null; // Prevent double creation
+
+async function handleOffscreenRecording(type, lang, tabId) {
+  // Ensure offscreen document exists
+  const OFFSCREEN_DOCUMENT_PATH = 'chrome-extension/offscreen.html';
+
+  // Check if offscreen exists
+  const existingContexts = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT'],
+    documentUrls: [chrome.runtime.getURL('offscreen.html')]
+  });
+
+  if (existingContexts.length === 0) {
+    // Create it
+    if (creatingOffscreenParams) {
+      await creatingOffscreenParams;
+    } else {
+      creatingOffscreenParams = chrome.offscreen.createDocument({
+        url: 'offscreen.html',
+        reasons: ['AUDIO_PLAYBACK'], // 'USER_MEDIA' is the correct reason but sometimes AUDIO_PLAYBACK is safer fallback in older manifest v3 implementations, but AUDIO_PLAYBACK is not for mic.
+        // Actually for mic capture we need 'USER_MEDIA' reason from Chrome 116+.
+        // Let's use generic or correct one.
+        reasons: ['USER_MEDIA'],
+        justification: 'Recording user voice for text input'
+      });
+      await creatingOffscreenParams;
+      creatingOffscreenParams = null;
+    }
+  }
+
+  // Send message to offscreen
+  chrome.runtime.sendMessage({
+    type: type,
+    lang: lang
+  });
+
+  // We need to know which tab initiated this to send results back
+  // Store acting tab ID loosely or pass it around (simplified here: assume active user flow)
+  // Ideally, we'd map offscreen messages back to this tabId.
+  // For now, the offscreen script sends messages via runtime.sendMessage, which we can catch here and forward to the tab.
+}
+
+// Forward messages from Offscreen -> Content Script
+chrome.runtime.onMessage.addListener((message, sender) => {
+  if (sender.url.includes('offscreen.html')) {
+    // Determine target tab (active tab usually)
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: 'speech-data',
+          data: message
+        });
+      }
+    });
   }
 });
 
