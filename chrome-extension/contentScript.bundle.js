@@ -6,7 +6,9 @@ const ICONS = {
   timesCircle: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/></svg>',
   exclamationCircle: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zM224 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z"/></svg>',
   copy: '<svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 32 32"><path fill="#1da1f2" d="M8.5 5.25A3.25 3.25 0 0 1 11.75 2h12A3.25 3.25 0 0 1 27 5.25v18a3.25 3.25 0 0 1-3.25 3.25h-12a3.25 3.25 0 0 1-3.25-3.25zM5 8.75c0-1.352.826-2.511 2-3.001v17.75a4.5 4.5 0 0 0 4.5 4.5h11.751a3.25 3.25 0 0 1-3.001 2H11.5A6.5 6.5 0 0 1 5 23.5z"/></svg>', // Using 'file' icon as copy, or standard copy
-  generate: ' <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fff"><path d="M18 3C20.2091 3 22 4.79086 22 7V17C22 19.2091 20.2091 21 18 21H6C3.79086 21 2 19.2091 2 17V7C2 4.79086 3.79086 3 6 3H18ZM6 5C4.89543 5 4 5.89543 4 7V17C4 18.1046 4.89543 19 6 19H18C19.1046 19 20 18.1046 20 17V7C20 5.89543 19.1046 5 18 5H6ZM11.4121 7.39941C11.6327 6.86708 12.3673 6.86706 12.5879 7.39941L12.9043 8.16309C13.4442 9.46657 14.4522 10.5081 15.7188 11.0713L16.6152 11.4697C17.1284 11.6982 17.1285 12.4455 16.6152 12.6738L15.665 13.0957C14.4305 13.6448 13.4409 14.6486 12.8916 15.9092L12.584 16.6162C12.3584 17.1338 11.6416 17.1338 11.416 16.6162L11.1084 15.9092C10.5591 14.6486 9.56954 13.6448 8.33496 13.0957L7.38477 12.6738C6.87153 12.4455 6.87165 11.6982 7.38477 11.4697L8.28125 11.0713C9.54772 10.5081 10.5548 9.46657 11.0947 8.16309L11.4121 7.39941Z"></path></svg>'
+  generate: ' <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fff"><path d="M18 3C20.2091 3 22 4.79086 22 7V17C22 19.2091 20.2091 21 18 21H6C3.79086 21 2 19.2091 2 17V7C2 4.79086 3.79086 3 6 3H18ZM6 5C4.89543 5 4 5.89543 4 7V17C4 18.1046 4.89543 19 6 19H18C19.1046 19 20 18.1046 20 17V7C20 5.89543 19.1046 5 18 5H6ZM11.4121 7.39941C11.6327 6.86708 12.3673 6.86706 12.5879 7.39941L12.9043 8.16309C13.4442 9.46657 14.4522 10.5081 15.7188 11.0713L16.6152 11.4697C17.1284 11.6982 17.1285 12.4455 16.6152 12.6738L15.665 13.0957C14.4305 13.6448 13.4409 14.6486 12.8916 15.9092L12.584 16.6162C12.3584 17.1338 11.6416 17.1338 11.416 16.6162L11.1084 15.9092C10.5591 14.6486 9.56954 13.6448 8.33496 13.0957L7.38477 12.6738C6.87153 12.4455 6.87165 11.6982 7.38477 11.4697L8.28125 11.0713C9.54772 10.5081 10.5548 9.46657 11.0947 8.16309L11.4121 7.39941Z"></path></svg>',
+  tone: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18px" height="18px"><path d="M9 11.25a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5Zm-6.75 0a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5Zm13.5 0a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5Z" /><path fill-rule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v.758l.794-.216a8.213 8.213 0 0 1 5.087.68l.495.244a.75.75 0 0 1 .326 1.006l-.587 1.258a.75.75 0 0 1-1.127.242l-.57-.403a5.234 5.234 0 0 0-3.328-.865l-1.09.08V11.25c1.474.322 2.709 1.375 3.25 2.802.164.43.55.748 1.008.748h1.5a.75.75 0 0 1 0 1.5h-1.5a2.58 2.58 0 0 1-2.42-1.796 3.743 3.743 0 0 0-3.08-2.61v8.356h.75a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1 0-1.5h.75v-8.356a3.744 3.744 0 0 0-3.08 2.61 2.58 2.58 0 0 1-2.42 1.796h-1.5a.75.75 0 0 1 0-1.5h1.5c.458 0 .844-.317 1.008-.748.541-1.427 1.776-2.48 3.25-2.802V5.59l-1.09-.08a5.235 5.235 0 0 0-3.328.865l-.57.403a.75.75 0 0 1-1.127-.242l-.587-1.258a.75.75 0 0 1 .326-1.006l.495-.244a8.213 8.213 0 0 1 5.087-.68l.794.216V3a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd" /></svg>',
+  length: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18px" height="18px"><path fill-rule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd" /></svg>'
 };
 
 // Utility: Debounce function
@@ -965,21 +967,28 @@ async function appendToneSelector(toolbar) {
 
   const createDropdown = (id, options, type) => {
     const wrapper = document.createElement("div");
-    wrapper.className = "premium-dropdown-wrapper";
+    wrapper.className = "popup-wrapper";
     wrapper.id = `${id}Wrapper`;
 
-    const current = document.createElement("div");
-    current.className = "premium-dropdown-current";
-    current.innerHTML = `<span class="label">Select ${type}</span>`;
+    const iconKey = type.toLowerCase() === 'tone' ? 'tone' : 'length';
 
+    // Create button trigger
+    const trigger = document.createElement("button");
+    trigger.className = "popup-trigger-btn";
+    trigger.innerHTML = ICONS[iconKey] || type[0];
+    trigger.title = `Select ${type}`;
+
+    // Create popup list
     const list = document.createElement("div");
-    list.className = "premium-dropdown-list hidden";
+    list.className = "popup-list hidden";
 
     options.forEach(opt => {
-      const item = document.createElement("div");
-      item.className = "premium-dropdown-item";
+      const item = document.createElement("button");
+      item.className = "popup-item";
       item.dataset.value = opt.id;
-      item.innerHTML = `${opt.label}`;
+      item.innerHTML = `<span>${opt.label}</span>`;
+
+      // Highlight selection logic if needed, but for now just click
       item.addEventListener("click", (e) => {
         e.stopPropagation();
         selectItem(opt);
@@ -989,26 +998,44 @@ async function appendToneSelector(toolbar) {
       list.appendChild(item);
     });
 
+    // Helper to update trigger content
+    const updateTrigger = (label) => {
+      trigger.innerHTML = `${ICONS[iconKey] || type[0]} <span class="popup-trigger-text">${label}</span>`;
+    };
+
+    // Initial State (Default to first option or placeholder)
+    if (options.length > 0) {
+      updateTrigger(options[options.length - 1].label); // Default to last (often 'Optimal' or similar) logic handled later by restore, but set initial visuals here
+    }
+
     const selectItem = (opt) => {
-      current.innerHTML = `<span class="label">${opt.label}</span>`;
+      // Update wrapper value
       wrapper.dataset.value = opt.id;
+
+      // Update Visuals
+      updateTrigger(opt.label);
+
       // Trigger change event for storage save
       const event = new CustomEvent("change", { detail: opt.id });
       wrapper.dispatchEvent(event);
     };
 
-    current.addEventListener("click", (e) => {
+    trigger.addEventListener("click", (e) => {
       e.stopPropagation();
       const isOpen = !list.classList.contains("hidden");
-      document.querySelectorAll(".premium-dropdown-list").forEach(l => l.classList.add("hidden"));
-      document.querySelectorAll(".premium-dropdown-wrapper").forEach(w => w.classList.remove("open"));
+
+      // Close all other popups
+      document.querySelectorAll(".popup-list").forEach(l => l.classList.add("hidden"));
+      document.querySelectorAll(".popup-wrapper").forEach(w => w.classList.remove("open"));
+      document.querySelectorAll(".premium-dropdown-list").forEach(l => l.classList.add("hidden")); // Legacy support cleanup
+
       if (!isOpen) {
         list.classList.remove("hidden");
         wrapper.classList.add("open");
       }
     });
 
-    wrapper.appendChild(current);
+    wrapper.appendChild(trigger);
     wrapper.appendChild(list);
 
     // Add a hidden value getter to mimic select
@@ -1054,8 +1081,8 @@ async function appendToneSelector(toolbar) {
 
   // Close dropdowns on outside click
   document.addEventListener("click", () => {
-    document.querySelectorAll(".premium-dropdown-list").forEach(l => l.classList.add("hidden"));
-    document.querySelectorAll(".premium-dropdown-wrapper").forEach(w => w.classList.remove("open"));
+    document.querySelectorAll(".popup-list").forEach(l => l.classList.add("hidden"));
+    document.querySelectorAll(".popup-wrapper").forEach(w => w.classList.remove("open"));
   });
 
   //#region Mic Setting
