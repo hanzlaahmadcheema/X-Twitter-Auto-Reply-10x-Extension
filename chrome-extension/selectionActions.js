@@ -22,53 +22,55 @@
       position: absolute;
       z-index: 2147483647;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    .selection-btn {
-      background: #1da1f2;
-      color: white;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .selection-btn:hover { transform: scale(1.1); }
-    
-    .action-menu {
-      position: absolute;
-      top: 40px;
-      right: 0;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-      border: 1px solid #e1e8ed;
       display: none;
-      flex-direction: column;
-      overflow: hidden;
-      min-width: 180px;
+      background: white;
+      border-radius: 9999px;
+      padding: 4px 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      border: 1px solid #e1e8ed;
+      align-items: center;
+      gap: 4px;
+      flex-direction: row;
     }
-    [data-theme="dark"] .action-menu {
+    [data-theme="dark"] #selection-action-container {
       background: #000000;
       border-color: #333639;
       color: #eff3f4;
     }
+    
     .action-item {
-      padding: 12px 16px;
+      padding: 8px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: center;
       cursor: pointer;
-      font-size: 15px;
-      font-weight: 500;
-      transition: background 0.2s;
+      border-radius: 50%;
+      transition: all 0.2s;
+      position: relative;
     }
-    .action-item:hover { background: #f7f9f9; }
-    [data-theme="dark"] .action-item:hover { background: #16181c; }
-    .action-item svg { flex-shrink: 0; color: #1da1f2; }
+    .action-item:hover { background: rgba(29, 161, 242, 0.1); }
+    .action-item svg { color: #1da1f2; stroke-width: 2.5; }
+    
+    /* Tooltip */
+    .action-item::after {
+      content: attr(data-label);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      background: #333;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      margin-bottom: 4px;
+    }
+    .action-item:hover::after { opacity: 1; }
+    [data-theme="dark"] .action-item::after { background: #eff3f4; color: #000; }
 
     .result-popup {
       position: fixed;
@@ -164,21 +166,11 @@
   }
 
   function createUI() {
-    // Action Container & Main Button
     const container = document.createElement('div');
     container.id = 'selection-action-container';
-    container.style.display = 'none';
-
-    actionButton = document.createElement('div');
-    actionButton.className = 'selection-btn';
-    actionButton.innerHTML = ICONS.main;
-
-    // Action Menu
-    actionMenu = document.createElement('div');
-    actionMenu.className = 'action-menu';
 
     const actions = [
-      { id: 'copy', label: 'Copy Text', icon: ICONS.copy },
+      { id: 'copy', label: 'Copy', icon: ICONS.copy },
       { id: 'improve', label: 'Improve Writing', icon: ICONS.improve },
       { id: 'translate', label: 'Translate to Urdu', icon: ICONS.translate }
     ];
@@ -186,20 +178,16 @@
     actions.forEach(act => {
       const item = document.createElement('div');
       item.className = 'action-item';
-      item.innerHTML = `${act.icon} <span>${act.label}</span>`;
-      item.onclick = () => handleAction(act.id);
-      actionMenu.appendChild(item);
+      item.setAttribute('data-label', act.label);
+      item.innerHTML = act.icon;
+      item.onclick = (e) => {
+        e.stopPropagation();
+        handleAction(act.id);
+      };
+      container.appendChild(item);
     });
 
-    container.appendChild(actionButton);
-    container.appendChild(actionMenu);
     document.body.appendChild(container);
-
-    // Toggle menu
-    actionButton.onclick = (e) => {
-      e.stopPropagation();
-      actionMenu.style.display = actionMenu.style.display === 'flex' ? 'none' : 'flex';
-    };
 
     // Result Popup
     resultPopup = document.createElement('div');
@@ -208,7 +196,7 @@
   }
 
   async function handleAction(actionId) {
-    actionMenu.style.display = 'none';
+    hideAll();
 
     if (actionId === 'copy') {
       copyToClipboard(currentSelection);
@@ -316,7 +304,7 @@
     const text = selection.toString().trim();
 
     if (!text || text.length < 2) {
-      if (actionMenu.style.display !== 'flex') hideAll();
+      hideAll();
       return;
     }
 
@@ -338,21 +326,31 @@
     const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
     const scrollY = window.pageYOffset || document.documentElement.scrollTop;
 
-    // Position bottom-right of selection
-    container.style.left = `${rect.right + scrollX - 10}px`;
-    container.style.top = `${rect.bottom + scrollY + 5}px`;
+    // Position above selection or below if no space
+    container.style.display = 'flex';
+    container.style.left = `${rect.left + scrollX + (rect.width / 2)}px`;
+    container.style.top = `${rect.top + scrollY - 45}px`;
+    container.style.transform = 'translateX(-50%)';
 
-    // Ensure on screen
+    // Adjust if above screen
+    if (rect.top < 50) {
+      container.style.top = `${rect.bottom + scrollY + 10}px`;
+    }
+
+    // Ensure on screen horizontally
     const contRect = container.getBoundingClientRect();
-    if (contRect.right > window.innerWidth) {
-      container.style.left = `${window.innerWidth - contRect.width - 20 + scrollX}px`;
+    if (contRect.left < 10) {
+      container.style.left = `${scrollX + (contRect.width / 2) + 10}px`;
+    } else if (contRect.right > window.innerWidth - 10) {
+      container.style.left = `${window.innerWidth - (contRect.width / 2) - 10 + scrollX}px`;
     }
   }
 
   function hideAll() {
     const container = document.getElementById('selection-action-container');
-    if (container) container.style.display = 'none';
-    if (actionMenu) actionMenu.style.display = 'none';
+    if (container) {
+      container.style.display = 'none';
+    }
   }
 
   // Detect dark mode from existing page
