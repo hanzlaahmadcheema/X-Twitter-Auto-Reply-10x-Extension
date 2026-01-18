@@ -120,8 +120,31 @@ const tonePrompts = {
   negative: "Respond to tweet with a clear and reasoned critique. Stay firm but respectful—no emotional language or personal attacks. Ensure the stance is well-articulated and professional.",
 };
 
+const ACTION_PROMPTS = {
+  improve: `
+    You are an expert editor. Rewrite the provided text to be clearer, more fluent, and more natural/human-like.
+    - Preserve the original meaning exactly.
+    - Preserve the language of the selected text.
+    - Keep the original tone as much as possible.
+    - DO NOT add emojis, hashtags, or unnecessary embellishments.
+    - Output ONLY the improved text.
+  `,
+  translate_urdu: `
+    You are a professional translator. Translate the provided text into natural, conversational Urdu.
+    - Use human-like phrasing, avoid robotic or literal translations.
+    - Respect cultural and linguistic nuances.
+    - Keep the meaning intact without being mechanical.
+    - DO NOT add emojis, hashtags, or commentary.
+    - Output ONLY the translated Urdu text.
+  `
+};
+
 // Helper to generate prompt
 function getSystemPrompt(message, customPersona) {
+  if (message.selectionAction && ACTION_PROMPTS[message.selectionAction]) {
+    return ACTION_PROMPTS[message.selectionAction];
+  }
+
   const toneDesc = tonePrompts[message.tone] || tonePrompts.optimal;
   const lengthObj = CONFIG.LENGTHS.find(l => l.id === message.length) || CONFIG.LENGTHS[1];
   const langReq = message.lang || "The response language should match the tweet";

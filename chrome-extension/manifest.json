@@ -33,7 +33,7 @@
       ],
       "js": [
         "contentScript.bundle.js",
-        "selectionCopy.js"
+        "selectionActions.js"
       ],
       "css": [
         "style.css"
