@@ -975,7 +975,7 @@ async function appendToneSelector(toolbar) {
     // Create button trigger
     const trigger = document.createElement("button");
     trigger.className = "popup-trigger-btn";
-    trigger.innerHTML = ICONS[iconKey] || type[0];
+    trigger.innerHTML = `<span class="popup-trigger-text">${type[0]}</span>`; // Initial placeholder, strictly text
     trigger.title = `Select ${type}`;
 
     // Create popup list
@@ -1000,7 +1000,7 @@ async function appendToneSelector(toolbar) {
 
     // Helper to update trigger content
     const updateTrigger = (label) => {
-      trigger.innerHTML = `${ICONS[iconKey] || type[0]} <span class="popup-trigger-text">${label}</span>`;
+      trigger.innerHTML = `<span class="popup-trigger-text">${label}</span>`;
     };
 
     // Initial State (Default to first option or placeholder)
@@ -1057,7 +1057,7 @@ async function appendToneSelector(toolbar) {
     <textarea id="customPrompt" style="padding: 10px;" placeholder="What's on your mind? (Optional custom prompt)"></textarea>
     <div class="controls-row">
       <button class="generate-reply-btn animate-click" datatestid="generateReplyButton">
-        ${ICONS.generate} Generate
+        Generate
       </button>
     </div>
   `;
@@ -1199,7 +1199,7 @@ async function appendToneSelector(toolbar) {
       } else if (response.done) {
         isGenerating = false;
         generateButton.disabled = false;
-        generateButton.innerHTML = `${ICONS.generate} Generate`;
+        generateButton.innerHTML = `Generate`;
         insertStreamingChunk("", response.fullReply); // Insertion happens here
         const defaultColor = storageCache.get("selectedColor", "#1da1f2");
         generateButton.style.backgroundColor = defaultColor;

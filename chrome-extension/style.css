@@ -112,9 +112,9 @@
 
 /* Popup Trigger Button (Icon + Text) */
 .popup-trigger-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #eff3f4;
+  background: var(--model-color);
+  border: none;
+  color: white;
   height: 32px;
   min-width: 32px;
   border-radius: 999px;
@@ -122,29 +122,45 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-sizing: border-box;
-  padding: 0 12px 0 8px;
-  /* Slightly more padding on right for text balance */
-  gap: 6px;
+  width: 110px;
+  /* Fixed width for uniformity */
+  padding: 6px 0;
+  /* Center text in fixed width */
+  gap: 8px;
+  /* Match generate button gap if it had icon, keeps text centered comfortably */
   overflow: hidden;
+  box-shadow: 0 4px 12px rgba(29, 161, 242, 0.25);
+  /* Match generate shadow */
+  letter-spacing: 0.5px;
 }
 
 .popup-trigger-btn:hover {
-  background-color: rgba(29, 161, 242, 0.1);
-  border-color: var(--model-color);
-  color: var(--model-color);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(29, 161, 242, 0.35);
+  filter: brightness(1.05);
+  /* Reset previous hover styles which were transparent-based */
+  background-color: var(--model-color);
+  border-color: transparent;
+  color: white;
+}
+
+.popup-trigger-btn:active {
+  transform: translateY(0);
 }
 
 .popup-trigger-btn svg {
-  flex-shrink: 0;
-  pointer-events: none;
+  display: none;
+  /* Ensure no icons show up even if JS missed something (though JS updates removed them) */
 }
 
 .popup-trigger-text {
   font-family: inherit;
   font-size: 11px;
+  /* Match generate button font size */
   font-weight: 700;
+  /* Match generate button weight */
   white-space: nowrap;
   pointer-events: none;
 }
@@ -237,7 +253,10 @@
   color: white;
   border: none;
   border-radius: 999px;
-  padding: 6px 28px;
+  width: 110px;
+  /* Fixed width for uniformity */
+  padding: 6px 0;
+  /* Center text in fixed width */
   font-family: inherit;
   font-size: 11px;
   font-weight: 700;
