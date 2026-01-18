@@ -32,7 +32,8 @@
         "*://web.whatsapp.com/*"
       ],
       "js": [
-        "contentScript.bundle.js"
+        "contentScript.bundle.js",
+        "selectionCopy.js"
       ],
       "css": [
         "style.css"
