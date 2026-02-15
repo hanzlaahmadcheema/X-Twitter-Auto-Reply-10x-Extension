@@ -38,11 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
     apiKeys: [],
     customPersona: "",
     speechLang: "en-US",
+    reviveDim: true,
   };
 
   // Restore saved settings
   chrome.storage.sync.get(
-    ["selectedModel", "selectedApiKey", "geminiModel", "openaiModel", "grokModel", "ollamaModel", "ollamaUrl", "apiKeys", "selectedColor", "customPersona", "speechLang"],
+    ["selectedModel", "selectedApiKey", "geminiModel", "openaiModel", "grokModel", "ollamaModel", "ollamaUrl", "apiKeys", "selectedColor", "customPersona", "speechLang", "reviveDim"],
     (data) => {
       state = { ...state, ...data };
 
@@ -80,6 +81,9 @@ document.addEventListener("DOMContentLoaded", () => {
       // Restore persona and language
       if (state.customPersona) customPersonaInput.value = state.customPersona;
       if (state.speechLang) speechLangSelect.value = state.speechLang;
+
+      const reviveDimValue = state.reviveDim !== undefined ? state.reviveDim : true;
+      document.getElementById("reviveDimToggle").checked = reviveDimValue;
     }
   );
 
@@ -134,8 +138,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const customPersona = customPersonaInput.value.trim();
     const speechLang = speechLangSelect.value;
 
+    const reviveDim = document.getElementById("reviveDimToggle").checked;
+    state.reviveDim = reviveDim;
+
     chrome.storage.sync.set(
-      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, openaiModel, grokModel, ollamaModel, ollamaUrl, selectedColor, customPersona, speechLang },
+      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, openaiModel, grokModel, ollamaModel, ollamaUrl, selectedColor, customPersona, speechLang, reviveDim },
       () => {
         updateColor(selectedColor);
         status.textContent = "Settings saved!";

@@ -28,6 +28,19 @@
     {
       "matches": [
         "*://x.com/*",
+        "*://twitter.com/*"
+      ],
+      "js": [
+        "themeManager.js"
+      ],
+      "css": [
+        "dim-theme.css"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "*://x.com/*",
         "*://twitter.com/*",
         "*://web.whatsapp.com/*"
       ],
