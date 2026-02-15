@@ -826,7 +826,7 @@ function initializeWhatsAppMicButton() {
         const rect = whatsappInput.getBoundingClientRect();
         micButton.style.position = 'fixed';
         micButton.style.right = '20px';
-        micButton.style.bottom = type === 'media' ? '120px' : '20px';
+        micButton.style.bottom = type === 'media' ? '70px' : '20px';
         micButton.style.zIndex = '99999';
         document.body.appendChild(micButton);
       }
