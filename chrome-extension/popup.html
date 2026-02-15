@@ -64,11 +64,33 @@
     input:checked+.revive-dim-slider:before {
       transform: translateX(20px);
     }
+
+    .premium-select,
+    input[type="text"],
+    textarea {
+      background-color: rgba(255, 255, 255, 0.05) !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: #e7e9ea !important;
+    }
+
+    .premium-select option {
+      background-color: rgb(21, 32, 43) !important;
+      color: white !important;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.03) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
   </style>
 </head>
 
 <body
-  class="bg-[#000000] text-twitter-text font-chirp w-[450px] p-6 flex flex-col gap-8 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-[#1d9bf022] via-black to-black">
+  class="bg-[#0b141d]/95 text-twitter-text font-chirp w-[450px] p-6 flex flex-col gap-8 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-[#1d9bf011] to-transparent">
 
   <header class="text-center pb-4 mb-2 animate-in fade-in slide-in-from-top duration-700 relative">
     <div class="absolute right-0 top-0">
