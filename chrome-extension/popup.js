@@ -39,11 +39,12 @@ document.addEventListener("DOMContentLoaded", () => {
     customPersona: "",
     speechLang: "en-US",
     reviveDim: true,
+    reviveDimWA: true,
   };
 
   // Restore saved settings
   chrome.storage.sync.get(
-    ["selectedModel", "selectedApiKey", "geminiModel", "openaiModel", "grokModel", "ollamaModel", "ollamaUrl", "apiKeys", "selectedColor", "customPersona", "speechLang", "reviveDim"],
+    ["selectedModel", "selectedApiKey", "geminiModel", "openaiModel", "grokModel", "ollamaModel", "ollamaUrl", "apiKeys", "selectedColor", "customPersona", "speechLang", "reviveDim", "reviveDimWA"],
     (data) => {
       state = { ...state, ...data };
 
@@ -84,6 +85,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const reviveDimValue = state.reviveDim !== undefined ? state.reviveDim : true;
       document.getElementById("reviveDimToggle").checked = reviveDimValue;
+
+      const reviveDimWAValue = state.reviveDimWA !== undefined ? state.reviveDimWA : true;
+      document.getElementById("reviveDimWAToggle").checked = reviveDimWAValue;
     }
   );
 
@@ -139,10 +143,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const speechLang = speechLangSelect.value;
 
     const reviveDim = document.getElementById("reviveDimToggle").checked;
+    const reviveDimWA = document.getElementById("reviveDimWAToggle").checked;
     state.reviveDim = reviveDim;
+    state.reviveDimWA = reviveDimWA;
 
     chrome.storage.sync.set(
-      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, openaiModel, grokModel, ollamaModel, ollamaUrl, selectedColor, customPersona, speechLang, reviveDim },
+      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, openaiModel, grokModel, ollamaModel, ollamaUrl, selectedColor, customPersona, speechLang, reviveDim, reviveDimWA },
       () => {
         updateColor(selectedColor);
         status.textContent = "Settings saved!";

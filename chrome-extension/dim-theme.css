@@ -4,7 +4,7 @@
     --background-color-secondary: rgb(21, 32, 43) !important;
     --background-color-tertiary: rgb(37, 51, 65) !important;
     --border-color: rgb(56, 68, 77) !important;
-    --color-primary: rgb(29, 155, 240) !important;
+    --color-primary: var(--accent-color, rgb(29, 155, 240)) !important;
     --color-secondary: rgb(136, 153, 166) !important;
     --white-color: rgb(255, 255, 255) !important;
     --black-color: rgb(0, 0, 0) !important;
@@ -31,7 +31,6 @@
 }
 
 /* User-provided layout class specific handling */
-/* Targeting the specific complex layout class provided by user */
 .x-dim-active .r-14lw9ot.r-jxzhtn.r-1867qdf,
 .x-dim-active .r-136ojw6.r-1hycxz.r-1h3ijdo,
 .x-dim-active .r-136ojw6.r-1hycxz.r-14lw9ot {
@@ -41,7 +40,6 @@
     overflow: hidden !important;
 }
 
-/* Remove borders from ALL child elements inside these specific containers */
 .x-dim-active .r-14lw9ot.r-jxzhtn.r-1867qdf *,
 .x-dim-active .r-136ojw6.r-1hycxz.r-1h3ijdo *,
 .x-dim-active .r-136ojw6.r-1hycxz.r-14lw9ot * {
@@ -50,7 +48,7 @@
     border-width: 0px !important;
 }
 
-/* Universal Background cleanup for cryptic classes */
+/* Universal Background cleanup */
 .x-dim-active .r-14lw9ot,
 .x-dim-active .r-kempsi,
 .x-dim-active .r-1h3ijdo,
@@ -63,7 +61,7 @@
     background-color: var(--background-color-primary) !important;
 }
 
-/* Sidebar Sections (Today News / What's Happening) */
+/* Sidebar Sections */
 .x-dim-active div[data-testid="sidebarColumn"] section,
 .x-dim-active div[data-testid="sidebarColumn"] aside,
 .x-dim-active [aria-label="Timeline: Trending now"],
@@ -91,24 +89,12 @@
     -webkit-backdrop-filter: blur(12px) !important;
 }
 
-/* Post Creation & Reply Sections */
-.x-dim-active [data-testid="inlineComposer"],
-.x-dim-active [data-testid="replyComposer"],
-.x-dim-active [data-testid="postEditor"],
-.x-dim-active [data-testid="tweetTextarea_0"],
-.x-dim-active [data-testid="tweetTextarea_0RichTextInputContainer"],
-.x-dim-active div[role="progressbar"]+div,
-.x-dim-active [data-testid="toolBar"] {
-    background-color: transparent !important;
-}
-
-/* Default Border Resets - cleaning up unnecessary borders */
+/* Borders and Dividers Cleanup */
 .x-dim-active *:not(.r-14lw9ot):not(.r-136ojw6):not(.r-1hycxz):not(article):not([data-testid="tweet"]):not(hr):not(nav):not([data-testid="sidebarColumn"]):not([data-testid="primaryColumn"]):not([role="button"]):not([data-testid$="Button"]) {
     border-color: transparent !important;
     border-width: 0px !important;
 }
 
-/* Specific Border Overrides for main separators */
 .x-dim-active [data-testid="primaryColumn"],
 .x-dim-active [data-testid="sidebarColumn"],
 .x-dim-active article,
@@ -130,7 +116,7 @@
     border-bottom-width: 1px !important;
 }
 
-/* Search Bar (Left & Sidebar) */
+/* Search Bar */
 .x-dim-active [data-testid="SearchBox_Search_Input_Container"] {
     border-radius: 9999px !important;
     border: 1px solid var(--border-color) !important;
@@ -142,10 +128,6 @@
     background-color: transparent !important;
     border-color: var(--color-primary) !important;
     box-shadow: 0 0 0 1px var(--color-primary) !important;
-}
-
-.x-dim-active [data-testid="SearchBox_Search_Input"] {
-    color: white !important;
 }
 
 /* Modals and Popups */
@@ -161,12 +143,7 @@
     border-radius: var(--border-radius-large) !important;
 }
 
-.x-dim-active [role="menu"],
-.x-dim-active [data-testid="Dropdown"] {
-    border-radius: var(--border-radius-small) !important;
-}
-
-/* Header blur and transparency */
+/* Header */
 .x-dim-active div[data-testid="primaryColumn"]>div>div:first-child,
 .x-dim-active [data-testid="TopTimelineDecoration"],
 .x-dim-active [data-testid="headerStaticBackground"],
@@ -176,7 +153,7 @@
     border-bottom: 1px solid var(--border-color) !important;
 }
 
-/* Navigation Icons / Action Icons (Like, RT, Reply) */
+/* Icons and Engagement bar */
 .x-dim-active [data-testid="reply"],
 .x-dim-active [data-testid="retweet"],
 .x-dim-active [data-testid="like"],
@@ -185,45 +162,35 @@
     color: var(--color-secondary) !important;
 }
 
-/* Button & Action Overrides: Outline only, no hover */
-/* .x-dim-active [role="button"], */
-/* .x-dim-active [data-testid$="Button"],*/
+/* User-defined Accent Colors for buttons and highlights */
+.x-dim-active [role="button"],
+.x-dim-active [data-testid$="Button"],
 .x-dim-active [data-testid="tweetButton"],
-/* .x-dim-active [data-testid="tweetButtonInline"], */
-.x-dim-active [data-testid="postButton"],
-.x-dim-active [data-testid$="-follow"],
-.x-dim-active [data-testid$="-unfollow"] {
+.x-dim-active [data-testid="tweetButtonInline"],
+.x-dim-active [data-testid="postButton"] {
     background-color: transparent !important;
     border: 1px solid var(--color-primary) !important;
     color: var(--color-primary) !important;
     border-radius: 9999px !important;
-    transition: none !important;
-    box-shadow: none !important;
 }
 
-/* Special Case for White Style Buttons */
+/* Icon Hovers should still show specific brand colors or accent */
+.x-dim-active [data-testid="reply"]:hover {
+    color: var(--color-primary) !important;
+}
+
+.x-dim-active [data-testid="retweet"]:hover {
+    color: rgb(0, 186, 124) !important;
+}
+
+.x-dim-active [data-testid="like"]:hover {
+    color: rgb(249, 24, 128) !important;
+}
+
+/* Follow / Unfollow - Special Style */
 .x-dim-active [data-testid$="-follow"],
-.x-dim-active [data-testid$="-unfollow"],
-.x-dim-active [style*="background-color: rgb(255, 255, 255)"],
-.x-dim-active [style*="background-color: rgb(239, 243, 244)"] {
+.x-dim-active [data-testid$="-unfollow"] {
     border-color: rgb(239, 243, 244) !important;
     color: rgb(239, 243, 244) !important;
     background-color: transparent !important;
-}
-
-/* Disable Hover Effects Global */
-.x-dim-active [role="button"]:hover,
-.x-dim-active [data-testid$="Button"]:hover,
-.x-dim-active nav[role="navigation"] a:hover,
-.x-dim-active [data-testid="SideNav_AccountSwitcher_Button"]:hover,
-.x-dim-active [role="link"]:hover {
-    background-color: transparent !important;
-    opacity: 1 !important;
-    transform: none !important;
-    text-decoration: none !important;
-}
-
-.x-dim-active [role="button"] span {
-    font-weight: 700 !important;
-    color: inherit !important;
 }

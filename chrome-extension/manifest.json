@@ -28,13 +28,15 @@
     {
       "matches": [
         "*://x.com/*",
-        "*://twitter.com/*"
+        "*://twitter.com/*",
+        "*://web.whatsapp.com/*"
       ],
       "js": [
         "themeManager.js"
       ],
       "css": [
-        "dim-theme.css"
+        "dim-theme.css",
+        "whatsapp-dim-theme.css"
       ],
       "run_at": "document_start"
     },
