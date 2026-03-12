@@ -648,6 +648,7 @@ function initializeWhatsAppMicButton() {
     return;
   }
 
+  /*
   // Add confirmation dialog when reloading/navigating away from WhatsApp Web
   window.addEventListener('beforeunload', (e) => {
     // Modern browsers require returnValue to be set for the dialog to show
@@ -655,6 +656,7 @@ function initializeWhatsAppMicButton() {
     e.returnValue = ''; // Chrome requires returnValue to be set
     return ''; // Some browsers also require a return value
   });
+  */
 
   let whatsappObserver = null;
   let mainButtonAdded = false;
