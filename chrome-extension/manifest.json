@@ -5,7 +5,7 @@
   "description": "Premium AI-powered engagement assistant for X (Twitter). Context-aware, multilingual, and voice-enabled.",
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self';",
-    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval'; child-src 'self';"
+    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline'; child-src 'self';"
   },
   "permissions": [
     "storage",
@@ -64,7 +64,9 @@
         "libs/html2canvas.min.js"
       ],
       "matches": [
-        "<all_urls>"
+        "*://x.com/*",
+        "*://twitter.com/*",
+        "*://web.whatsapp.com/*"
       ]
     }
   ],

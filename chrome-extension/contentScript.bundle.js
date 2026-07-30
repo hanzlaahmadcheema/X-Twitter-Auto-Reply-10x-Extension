@@ -819,7 +819,7 @@ function initializeWhatsAppMicButton() {
             }
           }
         } catch (e) {
-          console.log('Error inserting button into container:', e);
+          log('Error inserting button into container:', e);
         }
       }
 
@@ -915,7 +915,7 @@ function initializeWhatsAppMicButton() {
                 target.dispatchEvent(new InputEvent('input', { bubbles: true }));
                 target.dispatchEvent(new Event('keyup', { bubbles: true }));
 
-                console.log('Speech text inserted in WhatsApp input:', text);
+                log('Speech text inserted in WhatsApp input:', text);
               } catch (err) {
                 console.error('Error inserting text for WhatsApp:', err);
               }
@@ -926,7 +926,7 @@ function initializeWhatsAppMicButton() {
         }
       });
 
-      console.log(`WhatsApp ${type} mic button added`);
+      log(`WhatsApp ${type} mic button added`);
     }
   }
 

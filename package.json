@@ -13,7 +13,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/hanzlaahmadcheema/X-Twitter-Auto-Reply-10x-Extension/issues"
@@ -23,8 +23,5 @@
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.1"
-  },
-  "dependencies": {
-    "jsdom": "^27.4.0"
   }
 }

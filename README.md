@@ -50,20 +50,19 @@ Generate replies directly from Twitter or use the alarm feature to stay active.
 ```plaintext
 ├── manifest.json          # Metadata and configuration for the Chrome extension
 ├── background.js          # Service worker for alarms and notifications
-├── contentScript.js       # Injected script for interacting with Twitter
+├── contentScript.bundle.js# Injected script for interacting with Twitter
+├── selectionActions.js    # Script for text selection actions
+├── themeManager.js        # Script for managing theme toggling
 ├── popup.html             # HTML for the popup interface
 ├── popup.js               # JavaScript for popup functionality
-├── styles/
-│   ├── popup.css          # Stylesheet for popup UI
+├── style.css              # Main stylesheet for injected UI
+├── popup.css              # Stylesheet for popup UI
+├── dim-theme.css          # Theme styles for Twitter dim mode
+├── whatsapp-dim-theme.css # Theme styles for WhatsApp dim mode
+├── input.css              # Tailwind input stylesheet
 ├── icons/                 # Extension icons
-│   ├── icon-16.png        # 16x16 icon
-│   ├── icon-48.png        # 48x48 icon
-│   ├── icon-128.png       # 128x128 icon
-├── sounds/
-│   ├── alarm.mp3          # Alarm sound file
-├── images/
-│   ├── x-notification-banner.png  # Notification banner image
-
+├── images/                # Images like notification banners
+├── libs/                  # External libraries (e.g., html2canvas)
 ```
 
 📝 Configuration

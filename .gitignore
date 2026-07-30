@@ -1,1 +1,7 @@
 node_modules
+.DS_Store
+*.zip
+.env
+.idea/
+.vscode/
+npm-debug.log

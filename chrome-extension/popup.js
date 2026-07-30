@@ -12,11 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const ollamaOptions = document.getElementById("ollamaOptions");
   const ollamaModelSelect = document.getElementById("ollamaModelSelect");
   const ollamaUrlInput = document.getElementById("ollamaUrlInput");
-  // const continuousNotificationCheckbox = document.querySelector('input[value="interval"]');
-  // const alarmTimeInput = document.getElementById("alarmTime");
-  // const startAlarmButton = document.getElementById("startAlarm");
-  // const stopAlarmButton = document.getElementById("stopAlarm");
-  // const apiKeyInput = document.getElementById("tweetpikApiKey");
+
   const colorSelect = document.getElementById("colorSelect");
   const customPersonaInput = document.getElementById("customPersona");
   const speechLangSelect = document.getElementById("speechLang");
@@ -124,11 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
     newApiKeyInput.value = "";
   });
 
-  // chrome.storage.sync.get(["tweetpikApiKey"], (data) => {
-  //   if (data.tweetpikApiKey) {
-  //     apiKeyInput.value = data.tweetpikApiKey;
-  //   }
-  // });
+
 
   // Save settings
   saveSettingsBtn.addEventListener("click", () => {
@@ -380,72 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // let alarmSettings = {
-  //   alarmTime: 5, // Default time in minutes
-  //   continuousNotification: false, // Default to notifications disabled
-  // };
 
-  // // Restore saved settings
-  // chrome.storage.sync.get(["alarmTime", "continuousNotification"], (data) => {
-  //   alarmSettings = { ...alarmSettings, ...data };
-
-  //   // Restore alarm time
-  //   alarmTimeInput.value = alarmSettings.alarmTime;
-
-  //   // Restore checkbox state
-  //   continuousNotificationCheckbox.checked = alarmSettings.continuousNotification;
-  //   console.log("Restored alarm settings:", alarmSettings);
-  // });
-
-  // // Save and start alarm on clicking "Start Alarm"
-  // startAlarmButton.addEventListener("click", () => {
-  //   const alarmTime = parseInt(alarmTimeInput.value, 10);
-  //   const continuousNotification = continuousNotificationCheckbox.checked;
-
-  //   // Save settings
-  //   chrome.storage.sync.set(
-  //     {
-  //       alarmTime: alarmTime,
-  //       continuousNotification: continuousNotification,
-  //     },
-  //     () => {
-  //       console.log("Alarm settings saved:", {
-  //         alarmTime,
-  //         continuousNotification,
-  //       });
-
-  //       if (continuousNotification) {
-  //         const timeInMs = alarmTime * 60000; // Convert minutes to milliseconds
-  //         chrome.runtime.sendMessage(
-  //           {
-  //             action: "startAlarm",
-  //             time: timeInMs,
-  //             type: "interval",
-  //           },
-  //           () => {
-  //             console.log("Continuous alarm started.");
-  //           }
-  //         );
-  //       }
-  //     }
-  //   );
-  // });
-
-  // // Stop alarm on clicking "Stop Alarm"
-  // stopAlarmButton.addEventListener("click", () => {
-  //   chrome.runtime.sendMessage({ action: "stopAlarm" }, () => {
-  //     console.log("All alarms stopped.");
-  //   });
-  // });
-
-  // // Event listeners for debugging
-  // alarmTimeInput.addEventListener("input", () => {
-  //   console.log("Alarm time updated to (minutes):", alarmTimeInput.value);
-  // });
-
-  // continuousNotificationCheckbox.addEventListener("change", () => {
-  //   console.log("Continuous notification enabled:", continuousNotificationCheckbox.checked);
-  // });
 
   // Update color dynamically
   function updateColor(color) {
