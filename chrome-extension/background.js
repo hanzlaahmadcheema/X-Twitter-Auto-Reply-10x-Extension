@@ -772,5 +772,10 @@ function sendNotification() {
 }
 
 if (chrome.sidePanel && chrome.sidePanel.setPanelBehavior) {
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => {
+    // Suppress the harmless "Error: No SW" that Chrome throws during dev mode reloads
+    if (!error.message.includes("No SW")) {
+      console.error(error);
+    }
+  });
 }
