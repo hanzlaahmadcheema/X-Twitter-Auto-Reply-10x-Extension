@@ -81,6 +81,24 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   });
 
+  // Setup WhatsApp Support Link dynamically
+  const setupWhatsAppLink = () => {
+    chrome.identity.getProfileUserInfo({ accountStatus: "ANY" }, (userInfo) => {
+      const email = userInfo?.email || "[Write your email]";
+      const name = "[Write your name]"; 
+      const msg = `Hey Hanzla!\n\nContacting you regarding the X-Reply Agent extension. I would appreciate your help setting it up!\n\nMy Name: ${name}\nMy Email: ${email}\nAnyDesk Address: [Optional: write your address]`;
+      const encodedMsg = encodeURIComponent(msg);
+      const url = `https://wa.me/923266900001?text=${encodedMsg}`;
+      
+      const waLink = document.getElementById("whatsappLink");
+      const waQr = document.getElementById("whatsappQrCode");
+      
+      if (waLink) waLink.href = url;
+      if (waQr) waQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+    });
+  };
+  setupWhatsAppLink();
+
   // Restore saved settings
   chrome.storage.sync.get(
     ["selectedModel", "selectedApiKey", "geminiModel", "openaiModel", "edenaiModel", "grokModel", "ollamaModel", "ollamaUrl", "groqModel", "apiKeys", "customPersona", "speechLang"],
