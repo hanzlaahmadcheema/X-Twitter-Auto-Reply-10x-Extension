@@ -1,116 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Help & FAQ | X-Reply Agent</title>
+    <title>Setup Guide | X-Reply Agent</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
             width: 400px;
-            min-height: 500px;
+            min-height: 550px;
             margin: 0;
             background-color: #000;
             color: #fff;
             font-family: 'Chirp', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-
-        .help-container {
-            padding: 1.5rem;
-        }
-
-        .faq-item {
-            margin-bottom: 1rem;
-        }
-
-        .faq-question {
+        /* additional styling for nice step-by-step */
+        .step-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: var(--twitter-blue, #1da1f2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
             font-weight: bold;
-            color: var(--twitter-blue, #1da1f2);
-            margin-bottom: 0.25rem;
-            font-size: 0.9rem;
+            flex-shrink: 0;
         }
-
-        .faq-answer {
-            font-size: 0.8rem;
-            color: #71767b;
-            line-height: 1.4;
+        .provider-card {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .step-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .step-text {
+            font-size: 13px;
+            color: #e7e9ea;
+            line-height: 1.5;
+        }
+        .step-text a {
+            color: var(--twitter-blue, #1da1f2);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .step-text a:hover {
+            text-decoration: underline;
         }
     </style>
   <link rel="stylesheet" crossorigin href="/assets/popup--_Zgf-DW.css">
 </head>
-
 <body class="bg-black text-white">
     <header class="sticky top-0 z-50 glass border-b border-white/10 p-4 flex items-center gap-3">
         <a href="popup.html" class="p-2 hover:bg-white/10 rounded-full transition-all">
             <i class="fas fa-arrow-left"></i>
         </a>
-        <h1 class="text-lg font-black tracking-tight">Help Center</h1>
+        <h1 class="text-lg font-black tracking-tight">API Setup Guide</h1>
     </header>
 
-    <main class="help-container flex flex-col gap-6 overflow-y-auto">
-        <!-- API Key Guides -->
-        <section class="glass rounded-2xl p-5 flex flex-col gap-4">
-            <h2
-                class="text-sm font-black text-twitter-text flex items-center gap-2 border-b border-white/10 pb-2 m-0 uppercase tracking-widest">
-                <i class="fas fa-key text-twitter-blue"></i> Getting API Keys
+    <main class="p-4 flex flex-col gap-6 overflow-y-auto pb-8">
+        
+        <p class="text-sm text-twitter-text-secondary leading-relaxed">
+            Welcome! To make the AI work, you need a secret "API Key" from one of our supported AI providers. It's completely free to get started. Choose your preferred AI below:
+        </p>
+
+        <!-- Gemini -->
+        <div class="provider-card" id="gemini">
+            <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 mb-4">
+                <i class="fas fa-sparkles text-twitter-blue"></i> Google Gemini <span class="bg-twitter-blue/20 text-twitter-blue px-2 py-0.5 rounded text-[10px] uppercase tracking-wider ml-auto">Recommended</span>
             </h2>
-
-            <div class="space-y-4">
-                <div>
-                    <h3 class="font-bold text-sm">Google Gemini (Recommended)</h3>
-                    <p class="text-xs text-twitter-text-secondary mb-2">Free and fast. Most reliable for this extension.
-                    </p>
-                    <a href="https://aistudio.google.com/app/apikey" target="_blank"
-                        class="text-xs text-twitter-blue hover:underline">Get Gemini Key →</a>
-                </div>
-
-                <div>
-                    <h3 class="font-bold text-sm">X.ai (Grok)</h3>
-                    <p class="text-xs text-twitter-text-secondary mb-2">Native experience for X users.</p>
-                    <a href="https://console.x.ai/" target="_blank"
-                        class="text-xs text-twitter-blue hover:underline">Get Grok Key →</a>
-                </div>
-
-                <div>
-                    <h3 class="font-bold text-sm">OpenAI (GPT-4o)</h3>
-                    <p class="text-xs text-twitter-text-secondary mb-2">Premium quality replies.</p>
-                    <a href="https://platform.openai.com/api-keys" target="_blank"
-                        class="text-xs text-twitter-blue hover:underline">Get OpenAI Key →</a>
-                </div>
+            <div class="step-row">
+                <div class="step-circle">1</div>
+                <div class="step-text">Go to the <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a> and sign in with your Google account.</div>
             </div>
-        </section>
+            <div class="step-row">
+                <div class="step-circle">2</div>
+                <div class="step-text">Click the blue <strong>"Create API key"</strong> button.</div>
+            </div>
+            <div class="step-row">
+                <div class="step-circle">3</div>
+                <div class="step-text">Copy the generated long text string. Go back to the extension, select "Gemini", and paste it into the <strong>Authentication</strong> box!</div>
+            </div>
+        </div>
 
-        <!-- FAQ Section -->
-        <section class="glass rounded-2xl p-5 flex flex-col gap-4">
-            <h2
-                class="text-sm font-black text-twitter-text flex items-center gap-2 border-b border-white/10 pb-2 m-0 uppercase tracking-widest">
-                <i class="fas fa-question-circle text-twitter-blue"></i> FAQ
+        <!-- Groq -->
+        <div class="provider-card" id="groq">
+            <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 mb-4">
+                <i class="fas fa-rocket text-twitter-blue"></i> Groq (Llama / Mixtral)
             </h2>
-
-            <div class="faq-item">
-                <div class="faq-question">Is it free?</div>
-                <div class="faq-answer">The extension is free. You only pay for the AI usage (many models like Gemini
-                    have free tiers).</div>
+            <div class="step-row">
+                <div class="step-circle">1</div>
+                <div class="step-text">Go to the <a href="https://console.groq.com/keys" target="_blank">Groq Console</a> and log in.</div>
             </div>
-
-            <div class="faq-item">
-                <div class="faq-question">How to use voice input?</div>
-                <div class="faq-answer">Click the microphone icon in the reply box, or press [Space] twice quickly to
-                    start recording.</div>
+            <div class="step-row">
+                <div class="step-circle">2</div>
+                <div class="step-text">Click <strong>"Create API Key"</strong>.</div>
             </div>
-
-            <div class="faq-item">
-                <div class="faq-question">What is "Thread History"?</div>
-                <div class="faq-answer">The AI reads the previous posts in the conversation to ensure the reply makes
-                    sense in context.</div>
+            <div class="step-row">
+                <div class="step-circle">3</div>
+                <div class="step-text">Copy the key, return to the extension, select "Groq", and paste it in!</div>
             </div>
-        </section>
+        </div>
 
-        <footer class="text-center py-4">
-            <p class="text-[10px] text-twitter-text-secondary">X-Reply Agent v2.5.0 • Powered by AI</p>
-        </footer>
+        <!-- Grok -->
+        <div class="provider-card" id="grok">
+            <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 mb-4">
+                <i class="fas fa-brain text-twitter-blue"></i> X.ai (Grok)
+            </h2>
+            <div class="step-row">
+                <div class="step-circle">1</div>
+                <div class="step-text">Visit the <a href="https://console.x.ai/" target="_blank">X.ai Console</a>.</div>
+            </div>
+            <div class="step-row">
+                <div class="step-circle">2</div>
+                <div class="step-text">Log in with your X (Twitter) account.</div>
+            </div>
+            <div class="step-row">
+                <div class="step-circle">3</div>
+                <div class="step-text">Navigate to the API Keys section, generate a key, and paste it into the extension.</div>
+            </div>
+        </div>
+
+        <!-- OpenAI -->
+        <div class="provider-card" id="openai">
+            <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 mb-4">
+                <i class="fas fa-comment-dots text-twitter-blue"></i> OpenAI (ChatGPT)
+            </h2>
+            <div class="step-row">
+                <div class="step-circle">1</div>
+                <div class="step-text">Go to the <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI API Keys</a> page.</div>
+            </div>
+            <div class="step-row">
+                <div class="step-circle">2</div>
+                <div class="step-text">Click <strong>"Create new secret key"</strong>.</div>
+            </div>
+            <div class="step-row">
+                <div class="step-circle">3</div>
+                <div class="step-text">Copy the key immediately (you won't be able to see it again) and paste it into the extension.</div>
+            </div>
+        </div>
+
+        <!-- Eden AI -->
+        <div class="provider-card" id="edenai">
+            <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 mb-4">
+                <i class="fas fa-layer-group text-twitter-blue"></i> Eden AI
+            </h2>
+            <div class="step-row">
+                <div class="step-circle">1</div>
+                <div class="step-text">Sign up at <a href="https://app.edenai.run/user/register" target="_blank">Eden AI</a>.</div>
+            </div>
+            <div class="step-row">
+                <div class="step-circle">2</div>
+                <div class="step-text">Find your API Key on the main Dashboard or Settings page.</div>
+            </div>
+            <div class="step-row">
+                <div class="step-circle">3</div>
+                <div class="step-text">Copy and paste it into the extension.</div>
+            </div>
+        </div>
+
+        <!-- Ollama -->
+        <div class="provider-card" id="ollama">
+            <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 mb-4">
+                <i class="fas fa-terminal text-twitter-blue"></i> Ollama (Local AI)
+            </h2>
+            <div class="step-row">
+                <div class="step-circle">1</div>
+                <div class="step-text">Download and install <a href="https://ollama.com/" target="_blank">Ollama</a> on your computer.</div>
+            </div>
+            <div class="step-row">
+                <div class="step-circle">2</div>
+                <div class="step-text">Open your terminal/command prompt and run <code>ollama run llama3</code> to download a model.</div>
+            </div>
+            <div class="step-row">
+                <div class="step-circle">3</div>
+                <div class="step-text">Ollama runs locally at <code>http://127.0.0.1:11434</code>. Just select Ollama in the extension and you're good to go! No API key needed.</div>
+            </div>
+        </div>
+
     </main>
 </body>
-
 </html>

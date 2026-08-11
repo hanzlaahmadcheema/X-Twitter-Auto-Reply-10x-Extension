@@ -276,10 +276,15 @@
     </section>
 
     <!-- API Keys Card -->
-    <section class="glass rounded-2xl p-4 flex flex-col gap-4 micro-bounce">
-      <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 border-b border-white/10 pb-3 m-0">
-        <i class="fas fa-key text-twitter-blue text-sm"></i> Authentication
-      </h2>
+    <section class="glass rounded-2xl p-4 flex flex-col gap-4 micro-bounce relative">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 m-0">
+          <i class="fas fa-key text-twitter-blue text-sm"></i> Authentication
+        </h2>
+        <a href="help.html" class="text-[10px] text-twitter-blue hover:underline flex items-center gap-1 font-medium bg-twitter-blue/10 px-2 py-1 rounded-md uppercase tracking-wider text-nowrap">
+          <i class="fas fa-info-circle"></i> How to get key?
+        </a>
+      </div>
       <div class="flex gap-2">
         <input type="text" id="newApiKey" placeholder="Paste your API key here"
           class="flex-1 py-2 px-3 bg-black/40 border border-white/10 rounded-xl text-sm text-twitter-text outline-none focus:border-twitter-blue transition-all">
