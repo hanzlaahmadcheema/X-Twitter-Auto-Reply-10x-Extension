@@ -52,11 +52,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   activateBtn.addEventListener("click", () => {
+    const originalContent = activateBtn.innerHTML;
+    activateBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin text-lg"></i> Activating...';
+    activateBtn.disabled = true;
+    activateBtn.classList.add("opacity-70", "cursor-not-allowed");
+
     // Replace with your actual deployed netlify URL
     const authUrl = "https://x-reply-auth-backend.netlify.app/.netlify/functions/auth?prompt=select_account&redirect_uri=" + encodeURIComponent(chrome.identity.getRedirectURL());
     chrome.identity.launchWebAuthFlow(
       { url: authUrl, interactive: true },
       (redirectUrl) => {
+        activateBtn.innerHTML = originalContent;
+        activateBtn.disabled = false;
+        activateBtn.classList.remove("opacity-70", "cursor-not-allowed");
+
         if (chrome.runtime.lastError || !redirectUrl) {
           activationStatus.textContent = "Activation failed. Try again.";
           activationStatus.style.color = "#e0245e";
