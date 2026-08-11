@@ -81,20 +81,59 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   });
 
+  // Logout logic
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      chrome.storage.local.remove(["activationToken"], () => {
+        activationOverlay.classList.remove("hidden");
+        activationStatus.textContent = "";
+      });
+    });
+  }
+
   // Setup WhatsApp Support Link dynamically
+  const parseJwt = (token) => {
+    try {
+      return JSON.parse(atob(token.split('.')[1]));
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const setWaLink = (name, email) => {
+    const msg = `Hey Hanzla!\n\nContacting you regarding the X-Reply Agent extension. I would appreciate your help setting it up!\n\nMy Name: ${name}\nMy Email: ${email}\nAnyDesk Address: [Optional: write your address]`;
+    const encodedMsg = encodeURIComponent(msg);
+    const url = `https://wa.me/923266900001?text=${encodedMsg}`;
+    
+    const waLink = document.getElementById("whatsappLink");
+    const waQr = document.getElementById("whatsappQrCode");
+    
+    if (waLink) waLink.href = url;
+    if (waQr) waQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+  };
+
   const setupWhatsAppLink = () => {
-    chrome.identity.getProfileUserInfo({ accountStatus: "ANY" }, (userInfo) => {
-      const email = userInfo?.email || "[Write your email]";
-      const name = "[Write your name]"; 
-      const msg = `Hey Hanzla!\n\nContacting you regarding the X-Reply Agent extension. I would appreciate your help setting it up!\n\nMy Name: ${name}\nMy Email: ${email}\nAnyDesk Address: [Optional: write your address]`;
-      const encodedMsg = encodeURIComponent(msg);
-      const url = `https://wa.me/923266900001?text=${encodedMsg}`;
+    chrome.storage.local.get(["activationToken"], (data) => {
+      let email = "[Write your email]";
+      let name = "[Write your name]"; 
       
-      const waLink = document.getElementById("whatsappLink");
-      const waQr = document.getElementById("whatsappQrCode");
-      
-      if (waLink) waLink.href = url;
-      if (waQr) waQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+      if (data.activationToken) {
+        const payload = parseJwt(data.activationToken);
+        if (payload) {
+          if (payload.email) email = payload.email;
+          if (payload.name) name = payload.name;
+        }
+      }
+
+      if (email === "[Write your email]") {
+        chrome.identity.getProfileUserInfo({ accountStatus: "ANY" }, (userInfo) => {
+          if (userInfo && userInfo.email) email = userInfo.email;
+          setWaLink(name, email);
+        });
+      } else {
+        setWaLink(name, email);
+      }
     });
   };
   setupWhatsAppLink();
