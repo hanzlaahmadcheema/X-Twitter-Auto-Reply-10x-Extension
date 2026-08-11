@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   activateBtn.addEventListener("click", () => {
     // Replace with your actual deployed netlify URL
-    const authUrl = "https://x-reply-auth-backend.netlify.app/.netlify/functions/auth?redirect_uri=" + encodeURIComponent(chrome.identity.getRedirectURL());
+    const authUrl = "https://x-reply-auth-backend.netlify.app/.netlify/functions/auth?prompt=select_account&redirect_uri=" + encodeURIComponent(chrome.identity.getRedirectURL());
     chrome.identity.launchWebAuthFlow(
       { url: authUrl, interactive: true },
       (redirectUrl) => {
