@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "skills": {
+    "netlify-access-control": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-access-control/SKILL.md",
+      "computedHash": "8eebe7fb80d82c48ef7901d8794555459614bdf64ebcbad7972844882e505ef7"
+    },
+    "netlify-agent-runner": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-agent-runner/SKILL.md",
+      "computedHash": "d93520d2900d894f16733ebc5b9600bac561f9ed6a5c937ac78b84dfe941a9c7"
+    },
+    "netlify-ai-gateway": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-ai-gateway/SKILL.md",
+      "computedHash": "92bf40453395a34fe408154dba7be857ef2a342617cef56d3ba4ea4f8bcfdfe3"
+    },
+    "netlify-blobs": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-blobs/SKILL.md",
+      "computedHash": "23f970bd609bbc8c89cfcb668ec8485f3cfffe0890fc39e0ee5d927b957b8e8e"
+    },
+    "netlify-caching": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-caching/SKILL.md",
+      "computedHash": "43cf169ecf9b13c892606410a516a30b8bece24e420b8d36d7f40c74407ec0e2"
+    },
+    "netlify-config": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-config/SKILL.md",
+      "computedHash": "fb65a814b7bb2fa3ede3d8985d7dbe22e7c47dbda5f1b3d55422f5ee9c9bd0f7"
+    },
+    "netlify-database": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-database/SKILL.md",
+      "computedHash": "093a4896f7fe02d9019076e4027d5311cbc68bd6ca8d460e51d3567d3a1d72ef"
+    },
+    "netlify-deploy": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-deploy/SKILL.md",
+      "computedHash": "246157ea76b04f083b038080869bcff9c4b3ecb3ef78e38f1da7c787e9e6fe44"
+    },
+    "netlify-edge-functions": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-edge-functions/SKILL.md",
+      "computedHash": "2578f1adc0e1e2753a09427f44fb84792bf69550c2ed88e3168d25ebdc6438e6"
+    },
+    "netlify-forms": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-forms/SKILL.md",
+      "computedHash": "f3c3e8dfd952cdb1b4f86a3d30e71028167a274d97e45a4db389becd4142ffa1"
+    },
+    "netlify-frameworks": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-frameworks/SKILL.md",
+      "computedHash": "e30c83706cf0d448339a799f338616c81e59b99967ddcb1226ce66d16cb64c95"
+    },
+    "netlify-functions": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-functions/SKILL.md",
+      "computedHash": "0741181c958ca802ea4383050dea63ff48f383d3b8b0e45e15c48b53d0f8a95c"
+    },
+    "netlify-identity": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-identity/SKILL.md",
+      "computedHash": "0f84aa68c4819d2ea6ddb5156ce918a4e0f11b1d60b1e72b7bbf093260cb6078"
+    },
+    "netlify-image-cdn": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-image-cdn/SKILL.md",
+      "computedHash": "ad294412fcc0b475a3ce9dbe6e06b0322c5457da28c4dc1d0add595e3e981b5d"
+    },
+    "netlify-mcp-servers": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": "skills/netlify-mcp-servers/SKILL.md",
+      "computedHash": "bdc499ac79d871eb13209157f4be08a7cdeda2c0f0d690422bb07d311abc4832"
+    },
+    "skill-creator": {
+      "source": "netlify/context-and-tools",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/skill-creator/SKILL.md",
+      "computedHash": "5ea13a6d9f0d4bb694405d79acd00cadec0d21bb138c4dd10fcf3c500cb835c2"
+    }
+  }
+}

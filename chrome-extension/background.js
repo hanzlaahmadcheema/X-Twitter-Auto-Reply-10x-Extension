@@ -7,7 +7,11 @@ function log(...args) {
 }
 
 const CONFIG = {
-  DEFAULT_MODEL: "gemini-2.5-flash",
+  DEFAULT_MODEL: "gemini-3.6-flash",
+  GEMINI_BASE_URL: "https://generativelanguage.googleapis.com/v1beta/models/",
+  GROK_BASE_URL: "https://api.x.ai/v1/chat/completions",
+  EDENAI_BASE_URL: "https://api.edenai.run/v2/text/chat/",
+  OPENAI_BASE_URL: "https://api.openai.com/v1/chat/completions",
   OLLAMA_BASE_URL: "http://127.0.0.1:11434",
   API_TIMEOUT: 30000,
   SYSTEM_PROMPT_TEMPLATE: (persona, tone, accountName, lang, length, customPrompt) => `
@@ -160,6 +164,46 @@ function getSystemPrompt(message, customPersona) {
   );
 }
 
+// JWT Verification
+async function verifyJWT(token) {
+  try {
+    const PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs1jfwO+1U6khaDV+se3j
+YvRQZ2RMkN1A8wLROiqdBUlR+qvrpzP5kBMUrEZE6Qhwi1/JCY4Oh1HTCUGHdduB
+kSbhGOYBbQPo/8Fex9oX6LwrcNonydoA6B2o6eXfobsK8ufBzQ9lph+SsXGdmJAT
+u9I2ElEzBNCA8LynxRHOZIALiczWEcn7XxOzZO12eRFcdMZyHf7LgwQV+yvoMeH5
+95jyH6MS4apTjSPsbjdDDwarGVCJN4dG2qEnydPmmPwcZGY92BeWMMNoIjZLxea8
+bBCc2NeWQwPPCf6dQwgeBdLj9Nr9QOIAeUHGSJrqb3b3QLlbplVg6/4G9agNPNzd
+HQIDAQAB
+-----END PUBLIC KEY-----`;
+
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+
+    const header = JSON.parse(atob(parts[0]));
+    const payload = JSON.parse(atob(parts[1]));
+    if (header.alg !== 'RS256') return false;
+
+    const signature = Uint8Array.from(atob(parts[2].replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+    const data = new TextEncoder().encode(parts[0] + '.' + parts[1]);
+
+    const pemContents = PUBLIC_KEY.replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "").replace(/\s/g, "");
+    const binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+
+    const key = await crypto.subtle.importKey(
+      "spki",
+      binaryDer,
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+
+    const isValid = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, signature, data);
+    return isValid && payload.isActivated === true;
+  } catch (e) {
+    return false;
+  }
+}
 
 // Streaming Support via Ports
 chrome.runtime.onConnect.addListener((port) => {
@@ -167,50 +211,78 @@ chrome.runtime.onConnect.addListener((port) => {
 
   port.onMessage.addListener(async (message) => {
     if (message.action === "generateReply") {
-      chrome.storage.sync.get(
-        ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "ollamaModel", "ollamaUrl", "customPersona"],
-        async (data) => {
-          const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, ollamaModel, ollamaUrl, customPersona } = data;
-          const systemPrompt = getSystemPrompt(message, customPersona);
+      chrome.storage.local.get(["activationToken"], async (localData) => {
+        if (!localData.activationToken || !(await verifyJWT(localData.activationToken))) {
+          port.postMessage({ chunk: "\n\n[License Not Activated. Please activate via the extension popup.]", fullReply: "", done: true });
+          return;
+        }
+        chrome.storage.sync.get(
+          ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "edenaiModel", "ollamaModel", "ollamaUrl", "groqModel", "customPersona"],
+          async (data) => {
+            const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, edenaiModel, ollamaModel, ollamaUrl, groqModel, customPersona } = data;
+            const systemPrompt = getSystemPrompt(message, customPersona);
 
           try {
             if (selectedModel === "gemini") {
               const model = geminiModel || CONFIG.DEFAULT_MODEL;
-              const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${selectedApiKey}`;
+              const apiUrl = `https://generativelanguage.googleapis.com/v1beta/interactions`;
 
               const response = await fetch(apiUrl, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                  "Content-Type": "application/json",
+                  "x-goog-api-key": selectedApiKey
+                },
                 body: JSON.stringify({
-                  contents: [{ parts: [{ text: `${systemPrompt}\n\nPrompt: ${message.text}` }] }]
+                  model: model,
+                  input: `${systemPrompt}\n\nPrompt: ${message.text}`,
+                  stream: true
                 })
               });
+
+              if (!response.ok) {
+                const errText = await response.text();
+                console.error("[generateReply Stream] API Error:", errText);
+                port.postMessage({ error: `API Error: ${response.status} - ${errText}` });
+                return;
+              }
 
               const reader = response.body.getReader();
               const decoder = new TextDecoder();
               let fullReply = "";
+              let streamBuffer = "";
 
               while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
 
                 const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split("\n");
+                streamBuffer += chunk;
+                const lines = streamBuffer.split("\n");
+                streamBuffer = lines.pop(); // Keep the last incomplete line in the buffer
 
                 for (const line of lines) {
                   if (line.startsWith("data: ")) {
                     try {
-                      const jsonData = JSON.parse(line.substring(6));
-                      const text = jsonData?.candidates?.[0]?.content?.parts?.[0]?.text;
-                      if (text) {
+                      const dataStr = line.substring(6).trim();
+                      if (dataStr === "[DONE]") continue;
+                      const jsonData = JSON.parse(dataStr);
+                      if (jsonData.event_type === "step.delta" && jsonData.delta?.type === "text" && jsonData.delta.text) {
+                        const text = jsonData.delta.text;
                         fullReply += text;
                         port.postMessage({ chunk: text, fullReply });
                       }
-                    } catch (e) { /* partial chunk */ }
+                    } catch (e) {
+                      console.error("[generateReply Stream] JSON Parse Error on chunk line:", line, e);
+                    }
+                  } else if (line.trim() !== "" && !line.startsWith("event:")) {
+                    console.log("[generateReply Stream] Non-data line:", line);
                   }
                 }
               }
+              console.log("[generateReply Stream] Finished. Full Reply:", fullReply);
               port.postMessage({ done: true, fullReply });
+
 
             } else if (selectedModel === "ollama") {
               const model = ollamaModel || "gemma2:9b";
@@ -225,6 +297,13 @@ chrome.runtime.onConnect.addListener((port) => {
                   stream: true
                 })
               });
+
+              if (!response.ok) {
+                const errText = await response.text();
+                console.error("[generateReply Stream] Ollama Error:", errText);
+                port.postMessage({ error: `Ollama Error: ${response.status} - ${errText}` });
+                return;
+              }
 
               const reader = response.body.getReader();
               const decoder = new TextDecoder();
@@ -246,15 +325,84 @@ chrome.runtime.onConnect.addListener((port) => {
               }
               port.postMessage({ done: true, fullReply });
 
+            } else if (["groq", "openai", "grok"].includes(selectedModel)) {
+              let apiUrl, model;
+              if (selectedModel === "groq") {
+                model = groqModel || "llama-3.3-70b-versatile";
+                apiUrl = "https://api.groq.com/openai/v1/chat/completions";
+              } else if (selectedModel === "openai") {
+                model = openaiModel || "gpt-4o";
+                apiUrl = CONFIG.OPENAI_BASE_URL;
+              } else if (selectedModel === "grok") {
+                model = grokModel || "grok-beta";
+                apiUrl = CONFIG.GROK_BASE_URL;
+              }
+
+              const response = await fetch(apiUrl, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${selectedApiKey}`,
+                },
+                body: JSON.stringify({
+                  model: model,
+                  messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: message.text },
+                  ],
+                  stream: true
+                })
+              });
+
+              if (!response.ok) {
+                const errText = await response.text();
+                console.error(`[generateReply Stream] ${selectedModel} Error:`, errText);
+                port.postMessage({ error: `${selectedModel} Error: ${response.status} - ${errText}` });
+                return;
+              }
+
+              const reader = response.body.getReader();
+              const decoder = new TextDecoder();
+              let fullReply = "";
+              let streamBuffer = "";
+
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                streamBuffer += chunk;
+                const lines = streamBuffer.split("\n");
+                streamBuffer = lines.pop(); // Keep incomplete line
+
+                for (const line of lines) {
+                  if (line.startsWith("data: ")) {
+                    const dataStr = line.substring(6).trim();
+                    if (dataStr === "[DONE]") continue;
+                    try {
+                      const jsonData = JSON.parse(dataStr);
+                      const textChunk = jsonData.choices?.[0]?.delta?.content;
+                      if (textChunk) {
+                        fullReply += textChunk;
+                        port.postMessage({ chunk: textChunk, fullReply });
+                      }
+                    } catch (e) {
+                      console.error(`[generateReply Stream] ${selectedModel} JSON Parse Error:`, line, e);
+                    }
+                  }
+                }
+              }
+              port.postMessage({ done: true, fullReply });
+
             } else {
               // Fallback for other models or error
-              port.postMessage({ error: "Streaming is currently optimized for Gemini and Ollama. Please use those for best results." });
+              port.postMessage({ error: "Streaming is currently not supported for this model." });
             }
           } catch (error) {
             port.postMessage({ error: error.message });
           }
-        }
-      );
+        });
+      });
     }
   });
 });
@@ -269,10 +417,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       try {
         if (message.model === "gemini") {
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${message.key}`, {
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/interactions`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: [{ parts: [{ text: "hi" }] }] })
+            headers: { 
+              "Content-Type": "application/json",
+              "x-goog-api-key": message.key
+            },
+            body: JSON.stringify({ model: "gemini-3.6-flash", input: "hi" })
           });
           const data = await response.json();
           if (data.error) throw new Error(data.error.message);
@@ -281,6 +432,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           const response = await fetch(`${message.url}/api/tags`);
           if (response.ok) sendResponse({ success: true });
           else throw new Error("Ollama not responding");
+        } else if (message.model === "groq") {
+          const response = await fetch("https://api.groq.com/openai/v1/models", {
+            headers: { Authorization: `Bearer ${message.key}` }
+          });
+          const data = await response.json();
+          if (data.error) throw new Error(data.error.message);
+          sendResponse({ success: true });
         }
       } catch (e) {
         sendResponse({ success: false, error: e.message });
@@ -290,10 +448,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === "generateReply") {
-    chrome.storage.sync.get(
-      ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "ollamaModel", "ollamaUrl", "customPersona"],
-      async (data) => {
-        const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, ollamaModel, ollamaUrl, customPersona } = data;
+    chrome.storage.local.get(["activationToken"], async (localData) => {
+      if (!localData.activationToken || !(await verifyJWT(localData.activationToken))) {
+        sendResponse({ error: "License Not Activated. Please activate via the extension popup." });
+        return;
+      }
+      chrome.storage.sync.get(
+        ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "edenaiModel", "ollamaModel", "ollamaUrl", "groqModel", "customPersona"],
+        async (data) => {
+          const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, edenaiModel, ollamaModel, ollamaUrl, groqModel, customPersona } = data;
 
         if (!selectedApiKey && selectedModel !== "ollama") {
           sendResponse({ error: "API key not set. Please select an API key." });
@@ -307,13 +470,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         if (selectedModel === "gemini") {
           const model = geminiModel || CONFIG.DEFAULT_MODEL;
-          apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${selectedApiKey}`;
+          apiUrl = `https://generativelanguage.googleapis.com/v1beta/interactions`;
           payload = {
-            contents: [{
-              parts: [{ text: `${systemPrompt}\n\nPrompt: ${prompt}` }]
-            }]
+            model: model,
+            input: `${systemPrompt}\n\nPrompt: ${prompt}`
           };
-          headers = { "Content-Type": "application/json" };
+          headers = { 
+            "Content-Type": "application/json",
+            "x-goog-api-key": selectedApiKey
+          };
         } else if (selectedModel === "grok") {
           const model = grokModel || "grok-beta";
           apiUrl = "https://api.x.ai/v1/chat/completions";
@@ -330,7 +495,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             Authorization: `Bearer ${selectedApiKey}`,
           };
         } else if (selectedModel === "openai") {
-          const model = openaiModel || "openai/gpt-4o";
+          const model = openaiModel || "gpt-4o";
+          apiUrl = CONFIG.OPENAI_BASE_URL;
+          payload = {
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: prompt },
+            ],
+            model: model,
+            temperature: 0,
+          };
+          headers = {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${selectedApiKey}`,
+          };
+        } else if (selectedModel === "edenai") {
+          const model = edenaiModel || "openai/gpt-4o";
           apiUrl = 'https://api.edenai.run/v2/text/chat/';
           payload = {
             response_as_dict: true,
@@ -373,32 +553,83 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             stream: false
           };
           headers = { "Content-Type": "application/json" };
+        } else if (selectedModel === "groq") {
+          const model = groqModel || "llama-3.3-70b-versatile";
+          apiUrl = "https://api.groq.com/openai/v1/chat/completions";
+          payload = {
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: prompt },
+            ],
+            model: model,
+            temperature: 0,
+          };
+          headers = {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${selectedApiKey}`,
+          };
         } else {
           sendResponse({ error: "Invalid model selected." });
           return;
         }
 
         try {
+          console.log(`[generateReply] Calling API for ${selectedModel}`);
+          console.log(`[generateReply] API URL: ${apiUrl}`);
+          console.log(`[generateReply] Headers:`, headers);
+          console.log(`[generateReply] Payload:`, payload);
+
           const response = await fetch(apiUrl, {
             method: "POST",
             headers: headers,
             body: JSON.stringify(payload),
           });
 
-          const data = await response.json();
+          console.log(`[generateReply] API HTTP Status: ${response.status}`);
+          
+          const text = await response.text();
+          console.log(`[generateReply] Raw Response:`, text);
+
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            console.error(`[generateReply] JSON Parse Error:`, e);
+            sendResponse({ error: `Failed to parse response: ${e.message}` });
+            return;
+          }
+
+          if (!response.ok) {
+            console.error(`[generateReply] API Error:`, data);
+            sendResponse({ error: data.error?.message || data.error || `HTTP ${response.status}` });
+            return;
+          }
+
           let reply;
-          if (selectedModel === "gemini") reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-          else if (selectedModel === "ollama") reply = data?.response;
+          if (selectedModel === "gemini") {
+            if (data?.steps) {
+              const outputStep = data.steps.find(s => s.type === "model_output");
+              if (outputStep?.content) {
+                reply = outputStep.content.map(c => c.text || "").join("");
+              }
+            }
+            if (!reply) {
+              reply = data?.interaction?.output_text || data?.interaction?.outputText || data?.output_text || data?.outputText || (data?.candidates && data?.candidates?.[0]?.content?.parts?.[0]?.text);
+            }
+          } else if (selectedModel === "ollama") reply = data?.response;
           else reply = data?.choices?.[0]?.message?.content;
 
+          console.log(`[generateReply] Extracted Reply:`, reply);
+
           if (reply) sendResponse({ reply: reply });
-          else sendResponse({ error: `${selectedModel} returned an empty response.` });
+          else sendResponse({ error: `${selectedModel} returned an empty response. Data: ${JSON.stringify(data)}` });
         } catch (error) {
+          console.error(`[generateReply] Caught Exception:`, error);
           sendResponse({ error: error.message });
         }
-      }
-    );
-    return true;
+      });
+    });
+    return true; // keep channel open
   }
 
   if (message.action === "startAlarm") {
@@ -538,4 +769,8 @@ function sendNotification() {
     message: "It's time to generate another reply!",
     priority: 2
   });
+}
+
+if (chrome.sidePanel && chrome.sidePanel.setPanelBehavior) {
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
 }

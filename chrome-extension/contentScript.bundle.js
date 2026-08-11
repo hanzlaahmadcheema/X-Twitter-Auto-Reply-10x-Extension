@@ -1214,7 +1214,7 @@ async function appendToneSelector(toolbar) {
       text: threadContext,
       customPrompt: customPrompt,
       tone: tone,
-      lang: "The response language should match the language of the tweet",
+      lang: "The response language should strictly match the language of the tweet",
       length: length,
       accountName: accountName,
       accountUserName: accountUserName,
@@ -1351,7 +1351,7 @@ function copyWithFallback(tweetText, button) {
 
 // Observers and Initialization
 const debouncedAppendToneSelector = debounce(() => {
-  const toolbars = document.querySelectorAll('[class="css-175oi2r r-1iusvr4 r-16y2uox r-1777fci r-1h8ys4a r-1bylmt5 r-13tjlyg r-7qyjyx r-1ftll1t"]');
+  const toolbars = document.querySelectorAll('[data-testid="toolBar"], [class="css-175oi2r r-1iusvr4 r-16y2uox r-1777fci r-1h8ys4a r-1bylmt5 r-13tjlyg r-7qyjyx r-1ftll1t"]');
   toolbars.forEach(toolbar => {
     if (!toolbar.querySelector(".tone-selector-container") && !toolbar.querySelector(".mic-btn")) {
       appendToneSelector(toolbar);

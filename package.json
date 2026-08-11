@@ -1,6 +1,6 @@
 {
   "name": "x-twitter-auto-reply-10x-extension",
-  "version": "1.0.0",
+  "version": "4.0.0",
   "description": "This Chrome extension helps users efficiently engage on Twitter with customizable features like auto-reply generation, alarm notifications, and more. Stay active, organized, and productive with ease!",
   "main": "index.js",
   "scripts": {

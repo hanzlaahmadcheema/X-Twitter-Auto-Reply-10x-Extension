@@ -5,3 +5,5 @@ node_modules
 .idea/
 .vscode/
 npm-debug.log
+# Local Netlify folder
+.netlify

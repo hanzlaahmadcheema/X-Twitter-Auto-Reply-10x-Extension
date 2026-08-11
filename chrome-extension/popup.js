@@ -8,12 +8,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveSettingsBtn = document.getElementById("saveSettingsBtn");
   const geminiOptions = document.getElementById("geminiOptions");
   const openaiOptions = document.getElementById("openaiOptions");
+  const edenaiOptions = document.getElementById("edenaiOptions");
+  const edenaiModelSelect = document.getElementById("edenaiModelSelect");
   const grokOptions = document.getElementById("grokOptions");
   const ollamaOptions = document.getElementById("ollamaOptions");
   const ollamaModelSelect = document.getElementById("ollamaModelSelect");
   const ollamaUrlInput = document.getElementById("ollamaUrlInput");
-
-  const colorSelect = document.getElementById("colorSelect");
+  const groqOptions = document.getElementById("groqOptions");
+  const groqModelSelect = document.getElementById("groqModelSelect");
+  const activateBtn = document.getElementById("activateBtn");
+  const activationOverlay = document.getElementById("activationOverlay");
+  const activationStatus = document.getElementById("activationStatus");
   const customPersonaInput = document.getElementById("customPersona");
   const speechLangSelect = document.getElementById("speechLang");
   const testKeyBtn = document.getElementById("testKeyBtn");
@@ -28,19 +33,57 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedApiKey: "",
     geminiModel: "",
     openaiModel: "",
+    edenaiModel: "",
     grokModel: "",
     ollamaModel: "gemma2:9b",
     ollamaUrl: "http://127.0.0.1:11434",
+    groqModel: "llama-3.3-70b-versatile",
     apiKeys: [],
     customPersona: "",
     speechLang: "en-US",
-    reviveDim: true,
-    reviveDimWA: true,
   };
+
+  chrome.storage.local.get(["activationToken"], (data) => {
+    if (!data.activationToken) {
+      activationOverlay.classList.remove("hidden");
+    } else {
+      activationOverlay.classList.add("hidden");
+    }
+  });
+
+  activateBtn.addEventListener("click", () => {
+    // Replace with your actual deployed netlify URL
+    const authUrl = "https://x-reply-auth-backend.netlify.app/.netlify/functions/auth?redirect_uri=" + encodeURIComponent(chrome.identity.getRedirectURL());
+    chrome.identity.launchWebAuthFlow(
+      { url: authUrl, interactive: true },
+      (redirectUrl) => {
+        if (chrome.runtime.lastError || !redirectUrl) {
+          activationStatus.textContent = "Activation failed. Try again.";
+          activationStatus.style.color = "#e0245e";
+          return;
+        }
+        
+        const url = new URL(redirectUrl);
+        const token = url.searchParams.get("token");
+        const error = url.searchParams.get("error");
+        
+        if (error) {
+          activationStatus.textContent = "Unauthorized email.";
+          activationStatus.style.color = "#e0245e";
+        } else if (token) {
+          chrome.storage.local.set({ activationToken: token }, () => {
+            activationStatus.textContent = "Activated successfully!";
+            activationStatus.style.color = "#17bf63";
+            setTimeout(() => activationOverlay.classList.add("hidden"), 1500);
+          });
+        }
+      }
+    );
+  });
 
   // Restore saved settings
   chrome.storage.sync.get(
-    ["selectedModel", "selectedApiKey", "geminiModel", "openaiModel", "grokModel", "ollamaModel", "ollamaUrl", "apiKeys", "selectedColor", "customPersona", "speechLang", "reviveDim", "reviveDimWA"],
+    ["selectedModel", "selectedApiKey", "geminiModel", "openaiModel", "edenaiModel", "grokModel", "ollamaModel", "ollamaUrl", "groqModel", "apiKeys", "customPersona", "speechLang"],
     (data) => {
       state = { ...state, ...data };
 
@@ -60,6 +103,10 @@ document.addEventListener("DOMContentLoaded", () => {
         openaiModelSelect.value = state.openaiModel;
       }
 
+      if (state.selectedModel === "edenai" && state.edenaiModel) {
+        edenaiModelSelect.value = state.edenaiModel;
+      }
+
       if (state.selectedModel === "grok" && state.grokModel) {
         grokModelSelect.value = state.grokModel;
       }
@@ -69,21 +116,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (state.ollamaUrl) ollamaUrlInput.value = state.ollamaUrl;
       }
 
-      // Restore selected color
-      if (state.selectedColor) {
-        colorSelect.value = state.selectedColor;
-        updateColor(state.selectedColor);
+      if (state.selectedModel === "groq" && state.groqModel) {
+        groqModelSelect.value = state.groqModel;
       }
 
       // Restore persona and language
       if (state.customPersona) customPersonaInput.value = state.customPersona;
       if (state.speechLang) speechLangSelect.value = state.speechLang;
-
-      const reviveDimValue = state.reviveDim !== undefined ? state.reviveDim : true;
-      document.getElementById("reviveDimToggle").checked = reviveDimValue;
-
-      const reviveDimWAValue = state.reviveDimWA !== undefined ? state.reviveDimWA : true;
-      document.getElementById("reviveDimWAToggle").checked = reviveDimWAValue;
     }
   );
 
@@ -92,8 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const newApiKey = newApiKeyInput.value.trim();
 
     if (newApiKey) {
-      const model = prompt("Which model is this API key for? (gemini/grok/openai)").toLowerCase();
-      if (model !== "gemini" && model !== "grok" && model !== "openai") {
+      const model = prompt("Which model is this API key for? (gemini/grok/openai/groq/edenai)").toLowerCase();
+      if (!["gemini", "grok", "openai", "groq", "edenai"].includes(model)) {
         status.textContent = "Invalid model selected.";
         return;
       }
@@ -127,22 +166,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedApiKey = document.querySelector('input[name="apiKey"]:checked')?.value;
     const geminiModel = geminiModelSelect.value;
     const openaiModel = openaiModelSelect.value;
+    const edenaiModel = edenaiModelSelect.value;
     const grokModel = grokModelSelect.value;
     const ollamaModel = ollamaModelSelect.value;
     const ollamaUrl = ollamaUrlInput.value.trim() || "http://localhost:11434";
-    const selectedColor = colorSelect.value;
+    const groqModel = groqModelSelect.value;
     const customPersona = customPersonaInput.value.trim();
     const speechLang = speechLangSelect.value;
 
-    const reviveDim = document.getElementById("reviveDimToggle").checked;
-    const reviveDimWA = document.getElementById("reviveDimWAToggle").checked;
-    state.reviveDim = reviveDim;
-    state.reviveDimWA = reviveDimWA;
-
     chrome.storage.sync.set(
-      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, openaiModel, grokModel, ollamaModel, ollamaUrl, selectedColor, customPersona, speechLang, reviveDim, reviveDimWA },
+      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, openaiModel, edenaiModel, grokModel, ollamaModel, ollamaUrl, groqModel, customPersona, speechLang },
       () => {
-        updateColor(selectedColor);
         status.textContent = "Settings saved!";
         setTimeout(() => (status.textContent = ""), 2000);
       }
@@ -249,6 +283,11 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.storage.sync.set({ openaiModel: state.openaiModel });
   });
 
+  edenaiModelSelect.addEventListener("change", () => {
+    state.edenaiModel = edenaiModelSelect.value;
+    chrome.storage.sync.set({ edenaiModel: state.edenaiModel });
+  });
+
   grokModelSelect.addEventListener("change", () => {
     state.grokModel = grokModelSelect.value;
     chrome.storage.sync.set({ grokModel: state.grokModel });
@@ -262,6 +301,11 @@ document.addEventListener("DOMContentLoaded", () => {
   ollamaUrlInput.addEventListener("input", () => {
     state.ollamaUrl = ollamaUrlInput.value.trim();
     chrome.storage.sync.set({ ollamaUrl: state.ollamaUrl });
+  });
+
+  groqModelSelect.addEventListener("change", () => {
+    state.groqModel = groqModelSelect.value;
+    chrome.storage.sync.set({ groqModel: state.groqModel });
   });
 
   // Render API keys for selected model
@@ -351,31 +395,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Toggle options based on selected model
   function toggleModelSpecificOptions(model) {
-    if (model === "gemini") {
-      geminiOptions.style.display = "block";
-      grokOptions.style.display = "none";
-      openaiOptions.style.display = "none";
-    } else if (model === "grok") {
-      geminiOptions.style.display = "none";
-      grokOptions.style.display = "block";
-      openaiOptions.style.display = "none";
-    } else if (model === "openai") {
-      geminiOptions.style.display = "none";
-      grokOptions.style.display = "none";
-      openaiOptions.style.display = "block";
-      ollamaOptions.style.display = "none";
-    } else if (model === "ollama") {
-      geminiOptions.style.display = "none";
-      grokOptions.style.display = "none";
-      openaiOptions.style.display = "none";
-      ollamaOptions.style.display = "block";
-    }
+    geminiOptions.style.display = model === "gemini" ? "block" : "none";
+    grokOptions.style.display = model === "grok" ? "block" : "none";
+    openaiOptions.style.display = model === "openai" ? "block" : "none";
+    edenaiOptions.style.display = model === "edenai" ? "block" : "none";
+    ollamaOptions.style.display = model === "ollama" ? "block" : "none";
+    groqOptions.style.display = model === "groq" ? "block" : "none";
   }
 
 
 
-  // Update color dynamically
-  function updateColor(color) {
-    document.documentElement.style.setProperty("--model-color", color);
-  }
 });
