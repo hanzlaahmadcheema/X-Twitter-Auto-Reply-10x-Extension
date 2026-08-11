@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "build:css": "tailwindcss -i ./chrome-extension/input.css -o ./chrome-extension/popup.css --minify",
-    "watch:css": "tailwindcss -i ./chrome-extension/input.css -o ./chrome-extension/popup.css --watch"
+    "watch:css": "tailwindcss -i ./chrome-extension/input.css -o ./chrome-extension/popup.css --watch",
+    "build": "vite build",
+    "build:clean": "rm -rf dist && vite build"
   },
   "repository": {
     "type": "git",
@@ -20,8 +22,10 @@
   },
   "homepage": "https://github.com/hanzlaahmadcheema/X-Twitter-Auto-Reply-10x-Extension#readme",
   "devDependencies": {
+    "@crxjs/vite-plugin": "^2.7.1",
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.1"
+    "tailwindcss": "^3.4.1",
+    "vite": "^8.2.1"
   }
 }

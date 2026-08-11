@@ -1,0 +1,82 @@
+{
+  "manifest_version": 3,
+  "name": "Auto Reply 10x: AI Engagement Agent",
+  "version": "4.0.0",
+  "description": "Premium AI-powered engagement assistant for X (Twitter). Context-aware, multilingual, and voice-enabled.",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';",
+    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self'  'unsafe-inline'; 'unsafe-eval' child-src 'self';"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "notifications",
+    "downloads",
+    "identity",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "*://x.com/*",
+    "*://twitter.com/*",
+    "*://whatsapp.com/*",
+    "http://localhost:11434/*",
+    "http://127.0.0.1:11434/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.x.ai/*",
+    "https://api.edenai.run/*",
+    "https://api.groq.com/*"
+  ],
+  "background": {
+    "service_worker": "service-worker-loader.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "js": [
+        "assets/contentScript.bundle.js-loader-DlUKUx4S.js",
+        "assets/selectionActions.js-loader-vzlhPDfX.js"
+      ],
+      "matches": [
+        "*://x.com/*",
+        "*://twitter.com/*",
+        "*://web.whatsapp.com/*"
+      ],
+      "css": [
+        "style.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "matches": [
+        "*://twitter.com/*",
+        "*://web.whatsapp.com/*",
+        "*://x.com/*"
+      ],
+      "resources": [
+        "style.css",
+        "popup.css",
+        "libs/html2canvas.min.js",
+        "fonts/*",
+        "assets/rolldown-runtime-D9-fqq9M.js",
+        "assets/contentScript.bundle.js-0m6CZ308.js",
+        "assets/selectionActions.js-Bkj78Q_Y.js"
+      ],
+      "use_dynamic_url": false
+    }
+  ],
+  "action": {
+    "default_title": "Open Settings Sidebar",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  }
+}

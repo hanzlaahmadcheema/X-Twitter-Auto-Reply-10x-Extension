@@ -1,0 +1,390 @@
+/* Shared Variables (re-declared here since we are removing popup.css injection) */
+:root {
+  --model-color: #1da1f2;
+}
+
+@font-face {
+  font-family: 'Chirp';
+  src: url('chrome-extension://__MSG_@@extension_id__/fonts/Chirp-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Base icon styles replacing Font Awesome */
+.fas,
+.fa {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  vertical-align: -0.125em;
+}
+
+/* Copy Icon */
+.fa-copy {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M384 336H192c-8.8 0-16-7.2-16-16V64c0-8.8 7.2-16 16-16l140.1 0L400 115.9V320c0 8.8-7.2 16-16 16zM192 384H384c35.3 0 64-28.7 64-64V115.9c0-12.7-5.1-24.9-14.1-33.9L366.1 14.1c-9-9-21.2-14.1-33.9-14.1H192c-35.3 0-64 28.7-64 64V320c0 35.3 28.7 64 64 64zM64 128c-35.3 0-64 28.7-64 64V448c0 35.3 28.7 64 64 64H256c35.3 0 64-28.7 64-64V416H272v32c0 8.8-7.2 16-16 16H64c-8.8 0-16-7.2-16-16V192c0-8.8 7.2-16 16-16H96V128H64z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M384 336H192c-8.8 0-16-7.2-16-16V64c0-8.8 7.2-16 16-16l140.1 0L400 115.9V320c0 8.8-7.2 16-16 16zM192 384H384c35.3 0 64-28.7 64-64V115.9c0-12.7-5.1-24.9-14.1-33.9L366.1 14.1c-9-9-21.2-14.1-33.9-14.1H192c-35.3 0-64 28.7-64 64V320c0 35.3 28.7 64 64 64zM64 128c-35.3 0-64 28.7-64 64V448c0 35.3 28.7 64 64 64H256c35.3 0 64-28.7 64-64V416H272v32c0 8.8-7.2 16-16 16H64c-8.8 0-16-7.2-16-16V192c0-8.8 7.2-16 16-16H96V128H64z'/%3E%3C/svg%3E");
+}
+
+/* Camera Icon (Screenshot) */
+.fa-camera {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M149.1 64.8L138.7 96H64C28.7 96 0 124.7 0 160V416c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H437.3L426.9 64.8C418.8 40.5 395.9 24 370.4 24H205.6C180.1 24 157.2 40.5 149.1 64.8zM256 160a96 96 0 1 1 0 192 96 96 0 1 1 0-192z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M149.1 64.8L138.7 96H64C28.7 96 0 124.7 0 160V416c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H437.3L426.9 64.8C418.8 40.5 395.9 24 370.4 24H205.6C180.1 24 157.2 40.5 149.1 64.8zM256 160a96 96 0 1 1 0 192 96 96 0 1 1 0-192z'/%3E%3C/svg%3E");
+}
+
+/* Check Icon */
+.fa-check {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z'/%3E%3C/svg%3E");
+}
+
+/* Container */
+.tone-selector-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  flex-wrap: wrap;
+  font-family: 'Chirp', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: transparent;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  /* border: 1px solid rgba(255, 255, 255, 0.08); */
+  border-radius: 28px;
+  box-shadow: none;
+  position: relative;
+  z-index: 2147483646 !important;
+}
+
+/* Base Select/Dropdown Styles */
+#toneSelect,
+#lengthSelect {
+  appearance: none;
+  background: var(--model-color);
+  background: linear-gradient(135deg, var(--model-color), #0d8bd9);
+  border: none;
+  color: white;
+  padding: 8px 32px 8px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  box-shadow: 0 4px 12px rgba(29, 161, 242, 0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 10px;
+}
+
+#toneSelect:hover,
+#lengthSelect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(29, 161, 242, 0.4);
+  filter: brightness(1.1);
+}
+
+#toneSelect:focus,
+#lengthSelect:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.3);
+}
+
+/* Popup Wrapper */
+.popup-wrapper {
+  position: relative;
+  /* z-index managed by open state */
+}
+
+.popup-wrapper.open {
+  z-index: 2147483647 !important;
+}
+
+/* Popup Trigger Button (Icon + Text) */
+.popup-trigger-btn {
+  background: var(--model-color);
+  border: none;
+  color: white;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+  width: 110px;
+  /* Fixed width for uniformity */
+  padding: 6px 0;
+  /* Center text in fixed width */
+  gap: 8px;
+  /* Match generate button gap if it had icon, keeps text centered comfortably */
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(29, 161, 242, 0.25);
+  /* Match generate shadow */
+  letter-spacing: 0.5px;
+}
+
+.popup-trigger-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(29, 161, 242, 0.35);
+  filter: brightness(1.05);
+  /* Reset previous hover styles which were transparent-based */
+  background-color: var(--model-color);
+  border-color: transparent;
+  color: white;
+}
+
+.popup-trigger-btn:active {
+  transform: translateY(0);
+}
+
+.popup-trigger-btn svg {
+  display: none;
+  /* Ensure no icons show up even if JS missed something (though JS updates removed them) */
+}
+
+.popup-trigger-text {
+  font-family: inherit;
+  font-size: 11px;
+  /* Match generate button font size */
+  font-weight: 700;
+  /* Match generate button weight */
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Popup List (Menu) */
+.popup-list {
+  position: absolute;
+  bottom: 130%;
+  /* Opens UP */
+  left: 50%;
+  transform: translateX(-50%);
+  background: #16181c;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  z-index: 2147483647 !important;
+  min-width: 140px;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Popup Item */
+.popup-item {
+  background: transparent;
+  border: none;
+  color: #eff3f4;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  text-align: left;
+  transition: background 0.2s ease;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.popup-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--model-color);
+}
+
+.popup-item span {
+  pointer-events: none;
+}
+
+.dropdowns-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* Options within select - note that styling options is limited in browsers */
+#toneSelect option,
+#lengthSelect option {
+  background-color: #16181c;
+  color: white;
+  padding: 10px;
+  font-weight: normal;
+  text-transform: none;
+  /* Reset uppercase for options */
+}
+
+/* Generate Button */
+.generate-reply-btn {
+  background: var(--model-color);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  width: 110px;
+  /* Fixed width for uniformity */
+  padding: 6px 0;
+  /* Center text in fixed width */
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-left: auto;
+  box-shadow: 0 4px 12px rgba(29, 161, 242, 0.25);
+  letter-spacing: 0.5px;
+  height: 32px;
+  box-sizing: border-box;
+}
+
+.generate-reply-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(29, 161, 242, 0.35);
+  filter: brightness(1.05);
+}
+
+.generate-reply-btn:active {
+  transform: translateY(0);
+}
+
+.generate-reply-btn i {
+  font-size: 14px;
+}
+
+.generate-reply-btn.error {
+  background: #f4212e;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Mic Button */
+.mic-btn {
+  background: #1da1f2;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #eff3f4;
+  width: 32px;
+  height: 32px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.mic-btn:hover {
+  background-color: var(--model-color);
+  color: white;
+  transform: scale(1.05);
+}
+
+.mic-recording {
+  animation: pulse-red 1.5s infinite;
+  background-color: #f4212e !important;
+}
+
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 33, 46, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(244, 33, 46, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 33, 46, 0);
+  }
+}
+
+/* Output Textarea */
+/* Note: The textarea might be the one in the twitter compose box or a custom one. 
+   Assuming it is a custom one injected by extension based on original CSS. */
+.tone-selector-container textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  font-family: inherit;
+  font-size: 13px;
+  height: 42px;
+  padding: 11px 20px;
+  line-height: 20px;
+  resize: none;
+  outline: none;
+  margin-bottom: 12px;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-align: center;
+}
+
+.tone-selector-container textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+}
+
+.tone-selector-container textarea:focus {
+  border-color: var(--model-color);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Copy Tweet Button */
+.copy-tweet-btn {
+  margin-top: 5px;
+  color: var(--model-color);
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 30px;
+}
+
+.copy-tweet-btn:hover {
+  background-color: rgba(29, 161, 242, 0.1);
+}
+
+/* Visibility Utility */
+.hidden {
+  display: none !important;
+}
