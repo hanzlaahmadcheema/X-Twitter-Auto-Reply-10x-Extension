@@ -74,10 +74,9 @@ document.addEventListener("DOMContentLoaded", () => {
         
         const url = new URL(redirectUrl);
         const token = url.searchParams.get("token");
-        const error = url.searchParams.get("error");
-        
-        if (error) {
-          activationStatus.textContent = "Unauthorized email.";
+
+        if (url.searchParams.get("error")) {
+          activationStatus.textContent = "Unauthorized email. Please complete your payment via the WhatsApp link or QR code below.";
           activationStatus.style.color = "#e0245e";
         } else if (token) {
           chrome.storage.local.set({ activationToken: token }, () => {
