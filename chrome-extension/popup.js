@@ -201,7 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (chrome.runtime.lastError || !redirectUrl) {
         const errMsg = chrome.runtime.lastError ? chrome.runtime.lastError.message : "No redirect URL received";
-        console.error("[Auth Flow] LaunchWebAuthFlow Error:", chrome.runtime.lastError, "redirectUrl:", redirectUrl);
+        console.error("[Auth Flow] LaunchWebAuthFlow Error Message:", errMsg, "Details:", chrome.runtime.lastError, "redirectUrl:", redirectUrl);
         activationStatus.textContent = `Activation failed: ${errMsg}`;
         activationStatus.style.color = "#e0245e";
         return;
