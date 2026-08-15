@@ -1,53 +1,158 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const newApiKeyInput = document.getElementById("newApiKey");
-  const addApiKeyBtn = document.getElementById("addApiKeyBtn");
-  const apiKeysContainer = document.getElementById("apiKeysContainer");
-  const geminiModelSelect = document.getElementById("geminiModelSelect");
-  const openaiModelSelect = document.getElementById("openaiModelSelect");
-  const grokModelSelect = document.getElementById("grokModelSelect");
-  const saveSettingsBtn = document.getElementById("saveSettingsBtn");
-  const geminiOptions = document.getElementById("geminiOptions");
-  const openaiOptions = document.getElementById("openaiOptions");
-  const edenaiOptions = document.getElementById("edenaiOptions");
-  const edenaiModelSelect = document.getElementById("edenaiModelSelect");
-  const grokOptions = document.getElementById("grokOptions");
-  const ollamaOptions = document.getElementById("ollamaOptions");
-  const ollamaModelSelect = document.getElementById("ollamaModelSelect");
-  const ollamaUrlInput = document.getElementById("ollamaUrlInput");
-  const groqOptions = document.getElementById("groqOptions");
-  const groqModelSelect = document.getElementById("groqModelSelect");
+  // ── Global: open all external links in a new browser tab, not inside the side panel ──
+  document.addEventListener("click", e => {
+    const link = e.target.closest("a[href]");
+    if (!link) return;
+    const href = link.getAttribute("href");
+    if (!href || href === "#") return;
+    // Open external URLs and extension pages (help.html) in a real tab
+    if (link.target === "_blank" || link.hasAttribute("data-ext-link") || href.startsWith("http")) {
+      e.preventDefault();
+      // For extension-relative pages (help.html), build full extension URL
+      const url = href.startsWith("http") ? href : chrome.runtime.getURL(href);
+      chrome.tabs.create({ url });
+    }
+  });
+
+  // Elements
+  const views = {
+    auth: document.getElementById("view-auth"),
+    wizWelcome: document.getElementById("view-wizard-welcome"),
+    wizKeys: document.getElementById("view-wizard-keys"),
+    wizProvider: document.getElementById("view-wizard-provider"),
+    wizKey: document.getElementById("view-wizard-key"),
+    main: document.getElementById("view-main")
+  };
+  const mainHeader = document.getElementById("mainHeader");
+
+  // Auth View
   const activateBtn = document.getElementById("activateBtn");
-  const activationOverlay = document.getElementById("activationOverlay");
   const activationStatus = document.getElementById("activationStatus");
+  const authWhatsappLink = document.getElementById("authWhatsappLink");
+  
+  // Wizard Welcome
+  const wizStartBtn = document.getElementById("wizStartBtn");
+  
+  // Wizard Provider
+  const wizProviderNextBtn = document.getElementById("wizProviderNextBtn");
+  
+  // Wizard Key
+  const wizKeyBackBtn = document.getElementById("wizKeyBackBtn");
+  const wizKeyTitle = document.getElementById("wizKeyTitle");
+  const wizKeySubtitle = document.getElementById("wizKeySubtitle");
+  const wizKeyInputSection = document.getElementById("wizKeyInputSection");
+  const wizApiKeyInput = document.getElementById("wizApiKeyInput");
+  const wizTestBtn = document.getElementById("wizTestBtn");
+  const wizTestStatus = document.getElementById("wizTestStatus");
+  const wizOllamaSection = document.getElementById("wizOllamaSection");
+  const wizOllamaUrlInput = document.getElementById("wizOllamaUrlInput");
+  const wizOllamaTestBtn = document.getElementById("wizOllamaTestBtn");
+  const wizOllamaTestStatus = document.getElementById("wizOllamaTestStatus");
+  const wizKeyNextBtn = document.getElementById("wizKeyNextBtn");
+  
+  // Main Settings
+  const logoutBtn = document.getElementById("logoutBtn");
+  const mainAccountEmail = document.getElementById("mainAccountEmail");
+  const mainChangeAiBtn = document.getElementById("mainChangeAiBtn");
+  const mainSummaryProvider = document.getElementById("mainSummaryProvider");
+  const mainSummaryModel = document.getElementById("mainSummaryModel");
+  const mainSummaryKey = document.getElementById("mainSummaryKey");
+  const mainSummaryKeyLabel = document.getElementById("mainSummaryKeyLabel");
   const customPersonaInput = document.getElementById("customPersona");
   const speechLangSelect = document.getElementById("speechLang");
-  const testKeyBtn = document.getElementById("testKeyBtn");
-  const testOllamaBtn = document.getElementById("testOllamaBtn");
+  const advToggleBtn = document.getElementById("advToggleBtn");
+  const advToggleIcon = document.getElementById("advToggleIcon");
+  const advContent = document.getElementById("advContent");
+  const advModelSelect = document.getElementById("advModelSelect");
   const exportSettingsBtn = document.getElementById("exportSettingsBtn");
   const importSettingsBtn = document.getElementById("importSettingsBtn");
   const importFileInput = document.getElementById("importFileInput");
-  const status = document.getElementById("status");
+  const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+  const mainStatus = document.getElementById("mainStatus");
 
   let state = {
-    selectedModel: "gemini", // Default model
+    selectedModel: "gemini",
     selectedApiKey: "",
-    geminiModel: "",
-    openaiModel: "",
-    edenaiModel: "",
-    grokModel: "",
+    geminiModel: "gemini-2.5-flash",
+    openaiModel: "gpt-4o",
+    edenaiModel: "openai/gpt-4o",
+    grokModel: "grok-2-1212",
     ollamaModel: "gemma2:9b",
     ollamaUrl: "http://127.0.0.1:11434",
     groqModel: "llama-3.3-70b-versatile",
+    // apiKeys: array of { key, label, model, isPrimary, isFallback }
     apiKeys: [],
     customPersona: "",
+    personalityProfile: "",
+    personalityLastUpdated: "",
     speechLang: "en-US",
+    setupComplete: false
   };
 
+  const MODELS = {
+    gemini: { name: "Google Gemini", tier: "FREE", keyRequired: true, models: ["gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro-preview", "gemini-2.5-flash"] },
+    groq: { name: "Groq", tier: "FREE", keyRequired: true, models: ["llama-3.3-70b-versatile", "mixtral-8x7b-32768", "gemma2-9b-it"] },
+    ollama: { name: "Ollama", tier: "FREE", keyRequired: false, models: ["gemma2:9b", "llama3", "mistral"] },
+    openai: { name: "OpenAI", tier: "PAID", keyRequired: true, models: ["gpt-4o", "gpt-4o-mini", "o1", "o1-mini"] },
+    grok: { name: "Grok", tier: "PAID", keyRequired: true, models: ["grok-2-vision-1212", "grok-2-1212", "grok-vision-beta", "grok-beta"] },
+    edenai: { name: "Eden AI", tier: "PAID", keyRequired: true, models: ["openai/gpt-4o", "openai/gpt-4o-mini", "xai/grok-2"] }
+  };
+
+  function showView(viewId) {
+    Object.values(views).forEach(v => v.classList.add("hidden"));
+    if (viewId === "view-main") {
+      mainHeader.classList.remove("hidden");
+    } else {
+      mainHeader.classList.add("hidden");
+    }
+    document.getElementById(viewId).classList.remove("hidden");
+  }
+
+  // Auth Flow & Real-time Verification Check
+  setupWhatsAppLink();
   chrome.storage.local.get(["activationToken"], (data) => {
     if (!data.activationToken) {
-      activationOverlay.classList.remove("hidden");
+      showView("view-auth");
     } else {
-      activationOverlay.classList.add("hidden");
+      // Check real-time verification status from PostgreSQL database
+      fetch("https://x-reply-auth-backend.netlify.app/.netlify/functions/status", {
+        headers: { "Authorization": `Bearer ${data.activationToken}` }
+      })
+        .then(res => res.json())
+        .then(statusData => {
+          if (statusData.verified === false) {
+            activationStatus.textContent = "Your account is registered, but access hasn't been activated yet. Contact support to activate.";
+            activationStatus.style.color = "#f45d22";
+            showView("view-auth");
+          } else {
+            chrome.storage.sync.get(["setupComplete"], (syncData) => {
+              if (syncData.setupComplete) {
+                initMainView();
+                showView("view-main");
+              } else {
+                showView("view-wizard-welcome");
+              }
+            });
+          }
+        })
+        .catch(() => {
+          // Offline / fallback: check local token payload
+          const payload = parseJwt(data.activationToken);
+          if (payload && (payload.verified === false || payload.isActivated === false)) {
+            activationStatus.textContent = "Your account is registered, but access hasn't been activated yet. Contact support to activate.";
+            activationStatus.style.color = "#f45d22";
+            showView("view-auth");
+          } else {
+            chrome.storage.sync.get(["setupComplete"], (syncData) => {
+              if (syncData.setupComplete) {
+                initMainView();
+                showView("view-main");
+              } else {
+                showView("view-wizard-welcome");
+              }
+            });
+          }
+        });
     }
   });
 
@@ -57,417 +162,526 @@ document.addEventListener("DOMContentLoaded", () => {
     activateBtn.disabled = true;
     activateBtn.classList.add("opacity-70", "cursor-not-allowed");
 
-    // Replace with your actual deployed netlify URL
     const authUrl = "https://x-reply-auth-backend.netlify.app/.netlify/functions/auth?prompt=select_account&redirect_uri=" + encodeURIComponent(chrome.identity.getRedirectURL());
-    chrome.identity.launchWebAuthFlow(
-      { url: authUrl, interactive: true },
-      (redirectUrl) => {
-        activateBtn.innerHTML = originalContent;
-        activateBtn.disabled = false;
-        activateBtn.classList.remove("opacity-70", "cursor-not-allowed");
+    chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true }, (redirectUrl) => {
+      activateBtn.innerHTML = originalContent;
+      activateBtn.disabled = false;
+      activateBtn.classList.remove("opacity-70", "cursor-not-allowed");
 
-        if (chrome.runtime.lastError || !redirectUrl) {
-          activationStatus.textContent = "Activation failed. Try again.";
-          activationStatus.style.color = "#e0245e";
-          return;
-        }
-        
-        const url = new URL(redirectUrl);
-        const token = url.searchParams.get("token");
-
-        if (url.searchParams.get("error")) {
-          activationStatus.textContent = "Unauthorized email. Please complete your payment via the WhatsApp link or QR code below.";
-          activationStatus.style.color = "#e0245e";
-        } else if (token) {
-          chrome.storage.local.set({ activationToken: token }, () => {
-            activationStatus.textContent = "Activated successfully!";
-            activationStatus.style.color = "#17bf63";
-            setTimeout(() => activationOverlay.classList.add("hidden"), 1500);
-          });
-        }
-      }
-    );
-  });
-
-  // Logout logic
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      chrome.storage.local.remove(["activationToken"], () => {
-        activationOverlay.classList.remove("hidden");
-        activationStatus.textContent = "";
-      });
-    });
-  }
-
-  // Setup WhatsApp Support Link dynamically
-  const parseJwt = (token) => {
-    try {
-      return JSON.parse(atob(token.split('.')[1]));
-    } catch (e) {
-      return null;
-    }
-  };
-
-  const setWaLink = (name, email) => {
-    const msg = `Hey Hanzla!\n\nContacting you regarding the X-Reply Agent extension. I would appreciate your help setting it up!\n\nMy Name: ${name}\nMy Email: ${email}\nAnyDesk Address: [Optional: write your address]`;
-    const encodedMsg = encodeURIComponent(msg);
-    const url = `https://wa.me/923266900001?text=${encodedMsg}`;
-    
-    const waLink = document.getElementById("whatsappLink");
-    const waQr = document.getElementById("whatsappQrCode");
-    
-    if (waLink) waLink.href = url;
-    if (waQr) waQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
-  };
-
-  const setupWhatsAppLink = () => {
-    chrome.storage.local.get(["activationToken"], (data) => {
-      let email = "[Write your email]";
-      let name = "[Write your name]"; 
-      
-      if (data.activationToken) {
-        const payload = parseJwt(data.activationToken);
-        if (payload) {
-          if (payload.email) email = payload.email;
-          if (payload.name) name = payload.name;
-        }
-      }
-
-      if (email === "[Write your email]") {
-        chrome.identity.getProfileUserInfo({ accountStatus: "ANY" }, (userInfo) => {
-          if (userInfo && userInfo.email) email = userInfo.email;
-          setWaLink(name, email);
-        });
-      } else {
-        setWaLink(name, email);
-      }
-    });
-  };
-  setupWhatsAppLink();
-
-  // Restore saved settings
-  chrome.storage.sync.get(
-    ["selectedModel", "selectedApiKey", "geminiModel", "openaiModel", "edenaiModel", "grokModel", "ollamaModel", "ollamaUrl", "groqModel", "apiKeys", "customPersona", "speechLang"],
-    (data) => {
-      state = { ...state, ...data };
-
-      // Restore selected model
-      document.querySelector(`input[name="model"][value="${state.selectedModel}"]`).checked = true;
-      toggleModelSpecificOptions(state.selectedModel);
-
-      // Render API keys for selected model
-      renderApiKeys(state.apiKeys, state.selectedApiKey, state.selectedModel);
-
-      // Restore model-specific selections
-      if (state.selectedModel === "gemini" && state.geminiModel) {
-        geminiModelSelect.value = state.geminiModel;
-      }
-
-      if (state.selectedModel === "openai" && state.openaiModel) {
-        openaiModelSelect.value = state.openaiModel;
-      }
-
-      if (state.selectedModel === "edenai" && state.edenaiModel) {
-        edenaiModelSelect.value = state.edenaiModel;
-      }
-
-      if (state.selectedModel === "grok" && state.grokModel) {
-        grokModelSelect.value = state.grokModel;
-      }
-
-      if (state.selectedModel === "ollama") {
-        if (state.ollamaModel) ollamaModelSelect.value = state.ollamaModel;
-        if (state.ollamaUrl) ollamaUrlInput.value = state.ollamaUrl;
-      }
-
-      if (state.selectedModel === "groq" && state.groqModel) {
-        groqModelSelect.value = state.groqModel;
-      }
-
-      // Restore persona and language
-      if (state.customPersona) customPersonaInput.value = state.customPersona;
-      if (state.speechLang) speechLangSelect.value = state.speechLang;
-    }
-  );
-
-  // Add new API key
-  addApiKeyBtn.addEventListener("click", () => {
-    const newApiKey = newApiKeyInput.value.trim();
-
-    if (newApiKey) {
-      const model = prompt("Which model is this API key for? (gemini/grok/openai/groq/edenai)").toLowerCase();
-      if (!["gemini", "grok", "openai", "groq", "edenai"].includes(model)) {
-        status.textContent = "Invalid model selected.";
+      if (chrome.runtime.lastError || !redirectUrl) {
+        activationStatus.textContent = "Activation failed. Try again.";
+        activationStatus.style.color = "#e0245e";
         return;
       }
+      
+      const url = new URL(redirectUrl);
+      const token = url.searchParams.get("token");
+      const isVerifiedParam = url.searchParams.get("verified");
+      const paramEmail = url.searchParams.get("email");
+      const paramName = url.searchParams.get("name");
 
-      chrome.storage.sync.get("apiKeys", (data) => {
-        const apiKeys = data.apiKeys || [];
-        if (apiKeys.some((key) => key.key === newApiKey && key.model === model)) {
-          status.textContent = "API key already exists for this model.";
-          return;
-        }
+      if (token) {
+        const payload = parseJwt(token);
+        const userEmail = paramEmail || (payload && payload.email) || "";
+        const userName = paramName || (payload && (payload.name || payload.given_name)) || "";
+        const isVerified = isVerifiedParam === "true" || (payload && (payload.verified === true || payload.isActivated === true));
 
-        const apiKeyName = prompt("Enter a name for this API key:", "My API Key");
-        if (!apiKeyName) return;
-
-        apiKeys.push({ key: newApiKey, name: apiKeyName, model: model });
-        chrome.storage.sync.set({ apiKeys }, () => {
-          renderApiKeys(apiKeys, newApiKey, model);
-          status.textContent = "API key added!";
-          setTimeout(() => (status.textContent = ""), 2000);
+        chrome.storage.local.set({ activationToken: token, userEmail, userName }, () => {
+          setupWhatsAppLink();
+          if (!isVerified) {
+            activationStatus.textContent = "Your account is registered! Access hasn't been activated yet. Contact support and we'll activate your account.";
+            activationStatus.style.color = "#f45d22";
+            showView("view-auth");
+          } else {
+            activationStatus.textContent = "Activated successfully!";
+            activationStatus.style.color = "#17bf63";
+            setTimeout(() => showView("view-wizard-welcome"), 1000);
+          }
         });
-      });
-    }
-
-    newApiKeyInput.value = "";
-  });
-
-
-
-  // Save settings
-  saveSettingsBtn.addEventListener("click", () => {
-    const selectedApiKey = document.querySelector('input[name="apiKey"]:checked')?.value;
-    const geminiModel = geminiModelSelect.value;
-    const openaiModel = openaiModelSelect.value;
-    const edenaiModel = edenaiModelSelect.value;
-    const grokModel = grokModelSelect.value;
-    const ollamaModel = ollamaModelSelect.value;
-    const ollamaUrl = ollamaUrlInput.value.trim() || "http://localhost:11434";
-    const groqModel = groqModelSelect.value;
-    const customPersona = customPersonaInput.value.trim();
-    const speechLang = speechLangSelect.value;
-
-    chrome.storage.sync.set(
-      { selectedApiKey, selectedModel: state.selectedModel, geminiModel, openaiModel, edenaiModel, grokModel, ollamaModel, ollamaUrl, groqModel, customPersona, speechLang },
-      () => {
-        status.textContent = "Settings saved!";
-        setTimeout(() => (status.textContent = ""), 2000);
+      } else if (url.searchParams.get("error")) {
+        activationStatus.textContent = "Sign in error. Contact support for assistance.";
+        activationStatus.style.color = "#e0245e";
       }
-    );
-    if (window.location.href === "https://x.com" || window.location.href === "https://twitter.com") {
-      window.location.reload();
-    }
-  });
-
-  testKeyBtn.addEventListener("click", () => {
-    const selectedApiKey = document.querySelector('input[name="apiKey"]:checked')?.value;
-    if (!selectedApiKey) {
-      showStatus("Please select an API key first", "#f45d22");
-      return;
-    }
-    showStatus("Testing key...", "#1da1f2");
-    chrome.runtime.sendMessage({
-      action: "testConnection",
-      model: state.selectedModel,
-      key: selectedApiKey
-    }, (response) => {
-      if (response?.success) showStatus("✅ Key is valid!", "#17bf63");
-      else showStatus("❌ Error: " + (response?.error || "Unknown"), "#e0245e");
     });
   });
 
-  testOllamaBtn.addEventListener("click", () => {
-    const url = ollamaUrlInput.value.trim() || "http://127.0.0.1:11434";
-    showStatus("Testing Ollama...", "#1da1f2");
-    chrome.runtime.sendMessage({
-      action: "testConnection",
-      model: "ollama",
-      url: url
-    }, (response) => {
-      if (response?.success) showStatus("✅ Ollama is online!", "#17bf63");
-      else showStatus("❌ Error: " + (response?.error || "Connection failed"), "#e0245e");
+  logoutBtn.addEventListener("click", () => {
+    chrome.storage.local.remove(["activationToken", "userEmail", "userName"], () => {
+      activationStatus.textContent = "";
+      showView("view-auth");
     });
   });
 
-  function showStatus(text, color) {
-    status.textContent = text;
-    status.style.color = color;
-    setTimeout(() => {
-      status.textContent = "";
-    }, 4000);
+  function parseJwt(token) {
+    try { return JSON.parse(atob(token.split('.')[1])); } catch (e) { return null; }
   }
 
-  // Backup & Restore Logic
+  function setupWhatsAppLink() {
+    chrome.storage.local.get(["activationToken", "userEmail", "userName"], (data) => {
+      let email = data.userEmail || "[Write your email]";
+      let name = data.userName || "[Write your name]";
+
+      if (data.activationToken) {
+        const p = parseJwt(data.activationToken);
+        if (p) {
+          if (p.email) email = p.email;
+          if (p.name) name = p.name;
+          else if (p.given_name) name = p.given_name + (p.family_name ? " " + p.family_name : "");
+        }
+      }
+
+      const buildUrl = (e, n) => {
+        const msg = `Hey Hanzla Ahmad!\n\nContacting you regarding the X-Reply Agent extension. I would appreciate your help setting it up!\n\nMy Name: ${n}\nMy Email: ${e}\nAnyDesk Address: [Optional: write your address]`;
+        const url = `https://wa.me/923266900001?text=${encodeURIComponent(msg)}`;
+        if (authWhatsappLink) authWhatsappLink.href = url;
+        if (mainAccountEmail) mainAccountEmail.textContent = e;
+
+        const waQr = document.getElementById("whatsappQrCode");
+        if (waQr) waQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`;
+      };
+
+      if ((email === "[Write your email]" || name === "[Write your name]") && chrome.identity && chrome.identity.getProfileUserInfo) {
+        try {
+          chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' }, (info) => {
+            if (info && info.email) {
+              if (email === "[Write your email]") email = info.email;
+              if (name === "[Write your name]" && info.email.includes("@")) {
+                name = info.email.split("@")[0];
+              }
+            }
+            buildUrl(email, name);
+          });
+        } catch (err) {
+          buildUrl(email, name);
+        }
+      } else {
+        buildUrl(email, name);
+      }
+    });
+  }
+
+  // ── Wizard: unified multi-provider key screen ──────────────────
+  wizStartBtn.addEventListener("click", () => {
+    showView("view-wizard-keys");
+    renderKeysList();
+    updateFinishBtn();
+  });
+
+  // Back buttons
+  const wizWelcomeBackBtn = document.getElementById("wizWelcomeBackBtn");
+  const wizKeysBackBtn    = document.getElementById("wizKeysBackBtn");
+  if (wizWelcomeBackBtn) wizWelcomeBackBtn.addEventListener("click", () => showView("view-auth"));
+  if (wizKeysBackBtn)    wizKeysBackBtn.addEventListener("click",    () => showView("view-wizard-welcome"));
+
+  // refs
+  const providerPills     = document.getElementById("providerPills");
+  const wizCloudInputRow  = document.getElementById("wizCloudInputRow");
+  const wizOllamaInputRow = document.getElementById("wizOllamaInputRow");
+  const wizApiHelpLink    = document.getElementById("wizApiHelpLink");
+  const keysListHeader    = document.getElementById("keysListHeader");
+  const wizKeysList       = document.getElementById("wizKeysList");
+
+  const HELP_URLS = {
+    gemini: "https://aistudio.google.com/apikey",
+    groq:   "https://console.groq.com/keys",
+    openai: "https://platform.openai.com/api-keys",
+    grok:   "https://console.x.ai/",
+    edenai: "https://app.edenai.run/",
+    ollama: "https://ollama.com"
+  };
+
+  let activeProvider = "gemini";
+
+  // pill switching
+  if (providerPills) {
+    providerPills.addEventListener("click", e => {
+      const pill = e.target.closest("[data-provider]");
+      if (!pill) return;
+      activeProvider = pill.dataset.provider;
+      providerPills.querySelectorAll(".provider-pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+
+      const isOllama = activeProvider === "ollama";
+      if (wizCloudInputRow)  wizCloudInputRow.style.display  = isOllama ? "none" : "flex";
+      if (wizOllamaInputRow) wizOllamaInputRow.style.display = isOllama ? "flex" : "none";
+      if (wizApiHelpLink) {
+        wizApiHelpLink.href        = isOllama ? "https://ollama.com/download" : `help.html#${activeProvider}`;
+        wizApiHelpLink.textContent = isOllama ? "Install Ollama →" : "Where do I get an API key?";
+      }
+      wizTestStatus.textContent = "";
+    });
+  }
+
+  // ── render all keys (cross-provider) ────────────────────────────
+  function renderKeysList() {
+    if (!wizKeysList) return;
+    wizKeysList.innerHTML = "";
+    if (keysListHeader) keysListHeader.style.display = state.apiKeys.length > 0 ? "block" : "none";
+
+    state.apiKeys.forEach((entry, idx) => {
+      const masked = (entry.key && entry.key.length > 10)
+        ? entry.key.substring(0, 6) + "…" + entry.key.slice(-4)
+        : (entry.url || entry.key || "local");
+      const providerInfo = MODELS[entry.model];
+      const providerName = providerInfo?.name || entry.model;
+      const tier = providerInfo?.tier || "FREE";
+      const tierBadgeStyle = tier === "FREE" 
+        ? "background:rgba(23,191,99,0.15);color:#17bf63;border:1px solid rgba(23,191,99,0.3)" 
+        : "background:rgba(244,93,34,0.15);color:#f45d22;border:1px solid rgba(244,93,34,0.3)";
+
+      const row = document.createElement("div");
+      row.className = "key-row" + (entry.isPrimary ? " is-primary" : "");
+      row.innerHTML = `
+        <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">
+          <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.07);color:#71767b;white-space:nowrap;text-transform:uppercase;letter-spacing:0.04em">${providerName}</span>
+          <span style="font-size:8px;font-weight:900;padding:1px 5px;border-radius:3px;${tierBadgeStyle};white-space:nowrap;text-transform:uppercase">${tier}</span>
+          <span class="key-row-label">${masked}</span>
+        </div>
+        <div class="key-row-badges">
+          ${entry.isPrimary ? '<span class="badge-primary">Primary</span>' : ''}
+          ${(entry.isFallback && !entry.isPrimary) ? '<span class="badge-fallback">Fallback</span>' : ''}
+        </div>
+        <div class="key-row-actions">
+          ${!entry.isPrimary ? `<button class="key-action-btn" title="Set as primary" data-action="primary" data-idx="${idx}">&#9733;</button>` : ''}
+          <button class="key-action-btn" title="Toggle fallback" data-action="fallback" data-idx="${idx}" style="${(entry.isFallback && !entry.isPrimary) ? 'color:#17bf63' : ''}">&#8635;</button>
+          <button class="key-action-btn del" title="Remove" data-action="delete" data-idx="${idx}">&times;</button>
+        </div>
+      `;
+      wizKeysList.appendChild(row);
+    });
+
+    wizKeysList.querySelectorAll("[data-action]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const i   = parseInt(btn.dataset.idx);
+        const act = btn.dataset.action;
+        if (act === "primary") {
+          state.apiKeys.forEach(k => k.isPrimary = false);
+          state.apiKeys[i].isPrimary    = true;
+          state.selectedModel    = state.apiKeys[i].model;
+          state.selectedApiKey   = state.apiKeys[i].key || "";
+        } else if (act === "fallback") {
+          if (!state.apiKeys[i].isPrimary) state.apiKeys[i].isFallback = !state.apiKeys[i].isFallback;
+        } else if (act === "delete") {
+          const wasPrimary = state.apiKeys[i].isPrimary;
+          state.apiKeys.splice(i, 1);
+          if (wasPrimary && state.apiKeys.length > 0) {
+            state.apiKeys[0].isPrimary   = true;
+            state.selectedModel   = state.apiKeys[0].model;
+            state.selectedApiKey  = state.apiKeys[0].key || "";
+          }
+        }
+        renderKeysList();
+        updateFinishBtn();
+      });
+    });
+  }
+
+  function updateFinishBtn() {
+    if (wizKeyNextBtn) wizKeyNextBtn.disabled = state.apiKeys.length === 0;
+  }
+
+  // ── add cloud key ────────────────────────────────────────────────
+  if (wizTestBtn) {
+    wizTestBtn.addEventListener("click", () => {
+      const key = wizApiKeyInput ? wizApiKeyInput.value.trim() : "";
+      if (!key) {
+        wizTestStatus.textContent = "Paste an API key first";
+        wizTestStatus.style.color = "#f45d22";
+        return;
+      }
+      if (state.apiKeys.some(k => k.key === key && k.model === activeProvider)) {
+        wizTestStatus.textContent = "This key is already added";
+        wizTestStatus.style.color = "#f45d22";
+        return;
+      }
+      wizTestBtn.innerHTML  = '<i class="fas fa-circle-notch fa-spin"></i>';
+      wizTestBtn.disabled   = true;
+      wizTestStatus.textContent = "Validating…";
+      wizTestStatus.style.color = "#1da1f2";
+
+      chrome.runtime.sendMessage({ action: "testConnection", model: activeProvider, key }, res => {
+        wizTestBtn.innerHTML = '<i class="fas fa-plus"></i> Add';
+        wizTestBtn.disabled  = false;
+        if (res?.success) {
+          const isFirst = state.apiKeys.length === 0;
+          state.apiKeys.push({ key, model: activeProvider, isPrimary: isFirst, isFallback: !isFirst });
+          if (isFirst) { state.selectedModel = activeProvider; state.selectedApiKey = key; }
+          wizTestStatus.textContent = "✓ Key added";
+          wizTestStatus.style.color = "#17bf63";
+          if (wizApiKeyInput) wizApiKeyInput.value = "";
+          renderKeysList();
+          updateFinishBtn();
+        } else {
+          wizTestStatus.textContent = "❌ Invalid key: " + (res?.error || "Unknown");
+          wizTestStatus.style.color = "#e0245e";
+        }
+      });
+    });
+  }
+
+  // ── add ollama ───────────────────────────────────────────────────
+  if (wizOllamaTestBtn) {
+    wizOllamaTestBtn.addEventListener("click", () => {
+      const url = wizOllamaUrlInput ? wizOllamaUrlInput.value.trim() : "http://127.0.0.1:11434";
+      wizTestStatus.textContent = "Testing Ollama…";
+      wizTestStatus.style.color = "#1da1f2";
+      chrome.runtime.sendMessage({ action: "testConnection", model: "ollama", url }, res => {
+        if (res?.success) {
+          const existIdx = state.apiKeys.findIndex(k => k.model === "ollama");
+          if (existIdx >= 0) state.apiKeys.splice(existIdx, 1);
+          const isFirst = state.apiKeys.length === 0;
+          state.apiKeys.push({ key: "", url, model: "ollama", isPrimary: isFirst, isFallback: !isFirst });
+          state.ollamaUrl = url;
+          if (isFirst) state.selectedModel = "ollama";
+          wizTestStatus.textContent = "✓ Ollama connected";
+          wizTestStatus.style.color = "#17bf63";
+          renderKeysList();
+          updateFinishBtn();
+        } else {
+          wizTestStatus.textContent = "❌ Could not connect to Ollama";
+          wizTestStatus.style.color = "#e0245e";
+        }
+      });
+    });
+  }
+
+  // ── finish ───────────────────────────────────────────────────────
+  wizKeyNextBtn.addEventListener("click", () => {
+    state.setupComplete = true;
+    chrome.storage.sync.set(state, () => {
+      initMainView();
+      showView("view-main");
+    });
+  });
+
+  // stubs for old refs (dummy elements in HTML)
+  wizKeyBackBtn.addEventListener("click", () => showView("view-wizard-keys"));
+  wizProviderNextBtn.addEventListener("click", () => {});
+
+
+
+  // Main View Logic
+  function initMainView() {
+    chrome.storage.sync.get(null, (data) => {
+      state = { ...state, ...data };
+      
+      const pData = MODELS[state.selectedModel];
+      mainSummaryProvider.textContent = pData.name;
+      
+      // Determine active model version
+      const activeModelKey = state.selectedModel + "Model";
+      const activeModelVal = state[activeModelKey];
+      mainSummaryModel.textContent = activeModelVal;
+      
+      if (pData.keyRequired) {
+        mainSummaryKeyLabel.textContent = "API Key";
+        if(state.selectedApiKey) {
+          mainSummaryKey.textContent = state.selectedApiKey.length > 10 ? 
+            state.selectedApiKey.substring(0, 6) + "..." + state.selectedApiKey.substring(state.selectedApiKey.length - 4) : 
+            "********";
+        } else {
+          mainSummaryKey.textContent = "Not set";
+        }
+      } else {
+        mainSummaryKeyLabel.textContent = "Ollama URL";
+        mainSummaryKey.textContent = state.ollamaUrl;
+      }
+      
+      customPersonaInput.value = state.customPersona || "";
+      speechLangSelect.value = state.speechLang || "en-US";
+      
+      const personalityProfileInput = document.getElementById("personalityProfile");
+      const personalityLastUpdatedEl = document.getElementById("personalityLastUpdated");
+      const xUsernameInput = document.getElementById("xUsernameInput");
+
+      if (personalityProfileInput) personalityProfileInput.value = state.personalityProfile || "";
+      if (personalityLastUpdatedEl) {
+        personalityLastUpdatedEl.textContent = state.personalityLastUpdated 
+          ? `Last updated: ${state.personalityLastUpdated}` 
+          : "Not imported yet";
+      }
+
+      // Check auto-detected X Username handle from local storage
+      chrome.storage.local.get(["xUsername"], (localData) => {
+        if (xUsernameInput && localData.xUsername) {
+          xUsernameInput.value = localData.xUsername.startsWith("@") ? localData.xUsername : `@${localData.xUsername}`;
+        }
+      });
+
+      // Populate Adv Model Select
+      advModelSelect.innerHTML = "";
+      pData.models.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        if(m === activeModelVal) opt.selected = true;
+        advModelSelect.appendChild(opt);
+      });
+    });
+  }
+
+  // ── Import Your X Personality & Grok Prompt Logic ─────────────────────────────
+  const grokModal = document.getElementById("grokModal");
+  const openGrokModalBtn = document.getElementById("openGrokModalBtn");
+  const closeGrokModalBtn = document.getElementById("closeGrokModalBtn");
+  const copyGrokPromptBtn = document.getElementById("copyGrokPromptBtn");
+  const savePersonalityBtn = document.getElementById("savePersonalityBtn");
+  const grokPromptPreview = document.getElementById("grokPromptPreview");
+
+  function buildGrokPrompt(username) {
+    const cleanHandle = username ? username.trim().replace(/^@/, '') : '';
+    const target = cleanHandle ? `@${cleanHandle}` : 'my';
+    return `Analyze the public X (Twitter) profile, recent posts, replies, and overall activity of ${target} to generate a structured, compact AI Personality Profile that an AI assistant can use to emulate their authentic writing style and worldview when drafting replies on X.
+
+Do NOT write generic praise or fluffy prose. Produce a compact, structured profile (500–1,500 words) using the exact sections below. Distinguish observed empirical behavior from inferred preferences, and assign a confidence rating (High / Medium / Low) to each section.
+
+### 1. COMMUNICATION & WRITING STYLE
+- **Observed Behavior:** [e.g., Short direct sentences, lowercase style, specific punctuation patterns, emoji usage]
+- **Inferred Preference:** [e.g., Prefers high-signal concise writing over long formal explanations]
+- **Confidence:** [High / Medium / Low]
+
+### 2. TONE, HUMOR & FORMALITY
+- **Observed Behavior:** [e.g., Casual tone, dry/sarcastic wit, no corporate jargon]
+- **Inferred Preference:** [e.g., Values authenticity and sharp directness over excessive politeness]
+- **Confidence:** [High / Medium / Low]
+
+### 3. DOMAIN INTERESTS & TYPICAL OPINIONS
+- **Observed Behavior:** [e.g., Frequently posts about AI development, tech startup building, UI design, indie hacking]
+- **Inferred Preference:** [e.g., Pro-builder mindset, skeptical of unproven hype]
+- **Confidence:** [High / Medium / Low]
+
+### 4. ENGAGEMENT PATTERNS & DISAGREEMENT STYLE
+- **Observed Behavior:** [e.g., Disagrees with cold logic and counter-examples rather than insults]
+- **Inferred Preference:** [e.g., Focuses on dismantling weak premises directly]
+- **Confidence:** [High / Medium / Low]
+
+### 5. TOPICS TO EMBRACE VS. TOPICS TO AVOID
+- **Topics to Embrace:** [e.g., Tech, coding, product building, AI tools]
+- **Topics to Avoid / Expressions to Exclude:** [e.g., Fluffy buzzwords, generic agreement ("Great post!"), political debates]
+- **Confidence:** [High / Medium / Low]
+
+### 6. INSTRUCTIONS FOR AI GENERATING REPLIES
+- [Direct directives telling the AI how to write as this user on X]`;
+  }
+
+  if (openGrokModalBtn) openGrokModalBtn.addEventListener("click", () => grokModal?.classList.remove("hidden"));
+  if (closeGrokModalBtn) closeGrokModalBtn.addEventListener("click", () => grokModal?.classList.add("hidden"));
+
+  if (copyGrokPromptBtn) {
+    copyGrokPromptBtn.addEventListener("click", () => {
+      const xUsernameInput = document.getElementById("xUsernameInput");
+      const userHandle = xUsernameInput ? xUsernameInput.value.trim() : "";
+      const promptToUse = buildGrokPrompt(userHandle);
+
+      if (userHandle) {
+        chrome.storage.local.set({ xUsername: userHandle.replace(/^@/, "") });
+      }
+
+      chrome.storage.local.set({ autoFillGrokPrompt: promptToUse }, () => {
+        try {
+          navigator.clipboard.writeText(promptToUse);
+        } catch (e) {}
+
+        copyGrokPromptBtn.innerHTML = '<i class="fas fa-arrow-right"></i> Opening Grok...';
+        copyGrokPromptBtn.style.background = "#17bf63";
+
+        if (chrome.tabs && chrome.tabs.create) {
+          chrome.tabs.create({ url: "https://x.com/i/grok" });
+        } else {
+          window.open("https://x.com/i/grok", "_blank");
+        }
+
+        setTimeout(() => {
+          copyGrokPromptBtn.innerHTML = '<i class="far fa-copy"></i> Copy Prompt & Open Grok →';
+          copyGrokPromptBtn.style.background = "";
+          grokModal?.classList.add("hidden");
+        }, 1200);
+      });
+    });
+  }
+
+  if (savePersonalityBtn) {
+    savePersonalityBtn.addEventListener("click", () => {
+      const personalityProfileInput = document.getElementById("personalityProfile");
+      const personalityLastUpdatedEl = document.getElementById("personalityLastUpdated");
+      const val = personalityProfileInput ? personalityProfileInput.value.trim() : "";
+      const dateStr = val ? new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
+
+      state.personalityProfile = val;
+      state.personalityLastUpdated = dateStr;
+
+      chrome.storage.sync.set({ personalityProfile: val, personalityLastUpdated: dateStr }, () => {
+        if (personalityLastUpdatedEl) {
+          personalityLastUpdatedEl.textContent = dateStr ? `Last updated: ${dateStr}` : "Not imported yet";
+        }
+        savePersonalityBtn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+        setTimeout(() => {
+          savePersonalityBtn.innerHTML = '<i class="fas fa-check"></i> Save Profile';
+        }, 1500);
+      });
+    });
+  }
+
+  mainChangeAiBtn.addEventListener("click", () => {
+    wizTestStatus.textContent = "";
+    renderKeysList();
+    updateFinishBtn();
+    showView("view-wizard-keys");
+  });
+
+  advToggleBtn.addEventListener("click", () => {
+    advContent.classList.toggle("hidden");
+    advToggleIcon.classList.toggle("rotate-90");
+  });
+
+  advModelSelect.addEventListener("change", () => {
+    const activeModelKey = state.selectedModel + "Model";
+    state[activeModelKey] = advModelSelect.value;
+    mainSummaryModel.textContent = advModelSelect.value;
+  });
+
+  saveSettingsBtn.addEventListener("click", () => {
+    state.customPersona = customPersonaInput.value.trim();
+    state.speechLang = speechLangSelect.value;
+    
+    chrome.storage.sync.set(state, () => {
+      mainStatus.textContent = "Settings saved!";
+      mainStatus.style.color = "#17bf63";
+      setTimeout(() => {
+        mainStatus.textContent = "";
+      }, 1500);
+    });
+  });
+
   exportSettingsBtn.addEventListener("click", () => {
     chrome.storage.sync.get(null, (data) => {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `twitter_reply_settings_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `x_reply_backup_${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      showStatus("✅ Backup downloaded!", "#17bf63");
     });
   });
 
   importSettingsBtn.addEventListener("click", () => importFileInput.click());
-
   importFileInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target.result);
-        chrome.storage.sync.clear(() => {
-          chrome.storage.sync.set(data, () => {
-            showStatus("✅ Settings restored! Reloading...", "#17bf63");
-            setTimeout(() => window.location.reload(), 1500);
-          });
+        chrome.storage.sync.set(data, () => {
+          mainStatus.textContent = "Settings restored! Reloading...";
+          setTimeout(() => window.location.reload(), 1500);
         });
       } catch (err) {
-        showStatus("❌ Invalid backup file", "#e0245e");
+        mainStatus.textContent = "Invalid backup file";
+        mainStatus.style.color = "#e0245e";
       }
     };
     reader.readAsText(file);
   });
-
-  // Handle model selection changes
-  document.querySelectorAll('input[name="model"]').forEach((radio) => {
-    radio.addEventListener("change", (e) => {
-      state.selectedModel = e.target.value;
-      chrome.storage.sync.set({ selectedModel: state.selectedModel }, () => {
-        toggleModelSpecificOptions(state.selectedModel);
-        renderApiKeysForSelectedModel(state.selectedModel);
-      });
-    });
-  });
-
-  // Save model selections
-  geminiModelSelect.addEventListener("change", () => {
-    state.geminiModel = geminiModelSelect.value;
-    chrome.storage.sync.set({ geminiModel: state.geminiModel });
-  });
-
-  openaiModelSelect.addEventListener("change", () => {
-    state.openaiModel = openaiModelSelect.value;
-    chrome.storage.sync.set({ openaiModel: state.openaiModel });
-  });
-
-  edenaiModelSelect.addEventListener("change", () => {
-    state.edenaiModel = edenaiModelSelect.value;
-    chrome.storage.sync.set({ edenaiModel: state.edenaiModel });
-  });
-
-  grokModelSelect.addEventListener("change", () => {
-    state.grokModel = grokModelSelect.value;
-    chrome.storage.sync.set({ grokModel: state.grokModel });
-  });
-
-  ollamaModelSelect.addEventListener("change", () => {
-    state.ollamaModel = ollamaModelSelect.value;
-    chrome.storage.sync.set({ ollamaModel: state.ollamaModel });
-  });
-
-  ollamaUrlInput.addEventListener("input", () => {
-    state.ollamaUrl = ollamaUrlInput.value.trim();
-    chrome.storage.sync.set({ ollamaUrl: state.ollamaUrl });
-  });
-
-  groqModelSelect.addEventListener("change", () => {
-    state.groqModel = groqModelSelect.value;
-    chrome.storage.sync.set({ groqModel: state.groqModel });
-  });
-
-  // Render API keys for selected model
-  function renderApiKeysForSelectedModel(model) {
-    chrome.storage.sync.get("apiKeys", (data) => {
-      renderApiKeys(data.apiKeys || [], state.selectedApiKey, model);
-    });
-  }
-
-  // Render API keys
-  function renderApiKeys(apiKeys, selectedApiKey, model) {
-    apiKeysContainer.innerHTML = ""; // Clear container
-
-    const filteredKeys = apiKeys.filter((key) => key.model === model);
-    if (filteredKeys.length > 0) {
-      filteredKeys.forEach(({ key, name }) => {
-        const keyDiv = document.createElement("div");
-        keyDiv.className = "api-key-item";
-
-        // Mask the key: show first 6 and last 4 chars
-        const maskedKey = key.length > 10
-          ? `${key.substring(0, 6)}...${key.substring(key.length - 4)}`
-          : "********";
-
-        keyDiv.innerHTML = `
-          <input type="radio" name="apiKey" value="${key}" ${key === selectedApiKey ? "checked" : ""
-          }>
-          <div class="flex flex-col flex-1 truncate ml-2">
-            <span class="text-sm font-bold text-twitter-text truncate">${name}</span>
-            <span class="text-[10px] text-twitter-text-secondary font-mono">${maskedKey}</span>
-          </div>
-          <div class="flex gap-1 ml-auto">
-            <button class="edit-api-key-btn p-2 hover:bg-white/10 rounded-lg transition-all" data-key="${key}" data-name="${name}">
-              <i class="fas fa-edit text-twitter-text-secondary text-xs"></i>
-            </button>
-            <button class="delete-api-key-btn p-2 hover:bg-white/10 rounded-lg transition-all" data-key="${key}">
-              <i class="fas fa-trash-alt text-twitter-text-secondary text-xs"></i>
-            </button>
-          </div>
-        `;
-
-        apiKeysContainer.appendChild(keyDiv);
-      });
-
-      apiKeysContainer.querySelectorAll(".edit-api-key-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const keyToEdit = e.target.closest("button").dataset.key;
-          const nameToEdit = e.target.closest("button").dataset.name;
-
-          const newKey = prompt("Edit API Key:", keyToEdit);
-          const newName = prompt("Edit API Key Name:", nameToEdit);
-
-          if (newKey && newName) {
-            chrome.storage.sync.get("apiKeys", (data) => {
-              const apiKeys = data.apiKeys.map((api) =>
-                api.key === keyToEdit ? { key: newKey, name: newName, model: model } : api
-              );
-
-              chrome.storage.sync.set({ apiKeys }, () => {
-                renderApiKeys(apiKeys, selectedApiKey, model);
-                status.textContent = "API key updated!";
-                setTimeout(() => (status.textContent = ""), 2000);
-              });
-            });
-          }
-        });
-      });
-
-
-      apiKeysContainer.querySelectorAll(".delete-api-key-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const keyToDelete = e.target.dataset.key;
-          chrome.storage.sync.get("apiKeys", (data) => {
-            const apiKeys = data.apiKeys.filter((api) => api.key !== keyToDelete);
-            chrome.storage.sync.set({ apiKeys }, () => {
-              renderApiKeys(apiKeys, null, model);
-              status.textContent = "API key deleted!";
-              setTimeout(() => (status.textContent = ""), 2000);
-            });
-          });
-        });
-      });
-    } else {
-      apiKeysContainer.innerHTML = "<p>No API keys available for this model.</p>";
-    }
-  }
-
-  // Toggle options based on selected model
-  function toggleModelSpecificOptions(model) {
-    geminiOptions.style.display = model === "gemini" ? "block" : "none";
-    grokOptions.style.display = model === "grok" ? "block" : "none";
-    openaiOptions.style.display = model === "openai" ? "block" : "none";
-    edenaiOptions.style.display = model === "edenai" ? "block" : "none";
-    ollamaOptions.style.display = model === "ollama" ? "block" : "none";
-    groqOptions.style.display = model === "groq" ? "block" : "none";
-  }
-
-
-
 });

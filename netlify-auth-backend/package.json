@@ -11,6 +11,11 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "jose": "^6.2.8"
+    "drizzle-orm": "^1.0.0-beta.22",
+    "jose": "^6.2.8",
+    "postgres": "^3.4.9"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^1.0.0-beta.22"
   }
 }

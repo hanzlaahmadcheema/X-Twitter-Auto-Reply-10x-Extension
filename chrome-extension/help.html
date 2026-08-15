@@ -3,199 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Setup Guide | X-Reply Agent</title>
+    <title>API Key Guide | Auto Reply 10x</title>
     <link rel="stylesheet" href="popup.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body {
-            width: 400px;
-            min-height: 550px;
+        html, body {
             margin: 0;
-            background-color: #000;
-            color: #fff;
-            font-family: 'Chirp', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 0;
+            background: #0b141d;
+            color: #e7e9ea;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
-        /* additional styling for nice step-by-step */
-        .step-circle {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background-color: var(--twitter-blue, #1da1f2);
-            color: white;
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(11,20,29,0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 12px 16px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-        .provider-card {
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-        .step-row {
-            display: flex;
             gap: 12px;
-            margin-bottom: 12px;
         }
-        .step-text {
-            font-size: 13px;
+
+        #backBtn {
+            background: transparent;
+            border: none;
+            color: #71767b;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #backBtn:hover { color: #e7e9ea; background: rgba(255,255,255,0.06); }
+
+        #pageTitle {
+            font-size: 15px;
+            font-weight: 800;
             color: #e7e9ea;
-            line-height: 1.5;
+            margin: 0;
         }
-        .step-text a {
-            color: var(--twitter-blue, #1da1f2);
+
+        main { padding: 16px; }
+
+        /* ── List view ─────────────────────────── */
+        .provider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.03);
+            cursor: pointer;
+            transition: all 0.15s;
+            margin-bottom: 8px;
             text-decoration: none;
-            font-weight: 500;
+            color: inherit;
         }
-        .step-text a:hover {
-            text-decoration: underline;
+        .provider-row:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: rgba(29,161,242,0.4);
         }
+        .provider-row .icon-wrap {
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            font-size: 15px;
+        }
+        .provider-row .info { flex: 1; }
+        .provider-row .info .name { font-size: 13px; font-weight: 700; color: #e7e9ea; }
+        .provider-row .info .sub  { font-size: 11px; color: #71767b; margin-top: 2px; }
+        .provider-row .chevron { color: #71767b; font-size: 11px; }
+        .badge-rec {
+            font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+            background: rgba(29,161,242,0.15); color: #1da1f2;
+            padding: 2px 6px; border-radius: 4px; display: inline-block; margin-left: 6px;
+        }
+        .badge-free {
+            font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;
+            background: rgba(23,191,99,0.18); color: #17bf63; border: 1px solid rgba(23,191,99,0.3);
+            padding: 2px 6px; border-radius: 4px; display: inline-block; margin-left: 6px;
+        }
+        .badge-paid {
+            font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;
+            background: rgba(244,93,34,0.18); color: #f45d22; border: 1px solid rgba(244,93,34,0.3);
+            padding: 2px 6px; border-radius: 4px; display: inline-block; margin-left: 6px;
+        }
+
+        /* ── Detail view ───────────────────────── */
+        #view-detail { display: none; }
+        #view-detail.active { display: block; }
+
+        .guide-header {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 20px;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            background: rgba(255,255,255,0.03);
+        }
+        .guide-icon {
+            width: 44px; height: 44px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+        .guide-title { font-size: 17px; font-weight: 800; color: #e7e9ea; margin: 0 0 2px; }
+        .guide-sub   { font-size: 12px; color: #71767b; margin: 0; }
+
+        .step {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+        .step-num {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: rgba(29,161,242,0.15);
+            color: #1da1f2;
+            font-size: 12px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .step-body .step-title { font-size: 13px; font-weight: 700; color: #e7e9ea; margin: 0 0 4px; }
+        .step-body .step-desc  { font-size: 12px; color: #71767b; line-height: 1.55; margin: 0; }
+        .step-body code {
+            background: rgba(255,255,255,0.08); color: #1da1f2;
+            font-size: 11px; padding: 2px 5px; border-radius: 4px; font-family: monospace;
+        }
+
+        .action-section {
+            display: flex; flex-direction: column; gap: 8px;
+            margin-top: 8px; margin-bottom: 24px;
+        }
+        .btn-console {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            background: #1da1f2; color: #fff;
+            padding: 13px 20px; border-radius: 12px;
+            text-decoration: none; font-weight: 800; font-size: 13px;
+            transition: all 0.2s; border: none; cursor: pointer;
+        }
+        .btn-console:hover { background: #1a91d9; transform: translateY(-1px); }
+        .btn-docs {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            background: rgba(255,255,255,0.06); color: #e7e9ea;
+            padding: 11px 20px; border-radius: 12px;
+            text-decoration: none; font-weight: 700; font-size: 12px;
+            border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s;
+        }
+        .btn-docs:hover { background: rgba(255,255,255,0.1); }
+
+        .whatsapp-block {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: rgba(37,211,102,0.07);
+            border: 1px solid rgba(37,211,102,0.2);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .whatsapp-block i { color: #25D366; font-size: 20px; flex-shrink: 0; }
+        .whatsapp-block .wa-text { font-size: 12px; color: #71767b; }
+        .whatsapp-block .wa-link {
+            font-size: 12px; color: #25D366; font-weight: 700;
+            text-decoration: none;
+        }
+        .whatsapp-block .wa-link:hover { text-decoration: underline; }
     </style>
 </head>
-<body class="bg-black text-white">
-    <header class="sticky top-0 z-50 glass border-b border-white/10 p-4 flex items-center gap-3">
-        <a href="popup.html" class="p-2 hover:bg-white/10 rounded-full transition-all">
-            <i class="fas fa-arrow-left"></i>
-        </a>
-        <h1 class="text-lg font-black tracking-tight">API Setup Guide</h1>
+<body>
+    <header>
+        <button id="backBtn"><i class="fas fa-arrow-left"></i></button>
+        <h1 id="pageTitle">How do I get an API key?</h1>
     </header>
 
-    <main class="p-4 flex flex-col gap-6 overflow-y-auto pb-8">
-        
-        <p class="text-sm text-twitter-text-secondary leading-relaxed">
-            Welcome! To make the AI work, you need a secret "API Key" from one of our supported AI providers. It's completely free to get started. Choose your preferred AI below:
-        </p>
+    <main>
+        <!-- LIST VIEW -->
+        <div id="view-list">
+            <p style="font-size:12px;color:#71767b;margin:0 0 14px">Pick your AI provider to see step-by-step instructions.</p>
 
-        <!-- Gemini -->
-        <div class="provider-card" id="gemini">
-            <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 mb-4">
-                <i class="fas fa-sparkles text-twitter-blue"></i> Google Gemini <span class="bg-twitter-blue/20 text-twitter-blue px-2 py-0.5 rounded text-[10px] uppercase tracking-wider ml-auto">Recommended</span>
-            </h2>
-            <div class="step-row">
-                <div class="step-circle">1</div>
-                <div class="step-text">Go to the <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a> and sign in with your Google account.</div>
+            <div class="provider-row" data-provider="gemini">
+                <div class="icon-wrap" style="background:rgba(29,161,242,0.15)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#1da1f2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="info">
+                    <div class="name">Google Gemini <span class="badge-free">FREE</span> <span class="badge-rec">Recommended</span></div>
+                    <div class="sub">Free tier available · Easy setup</div>
+                </div>
+                <i class="fas fa-chevron-right chevron"></i>
             </div>
-            <div class="step-row">
-                <div class="step-circle">2</div>
-                <div class="step-text">Click the blue <strong>"Create API key"</strong> button.</div>
+
+            <div class="provider-row" data-provider="groq">
+                <div class="icon-wrap" style="background:rgba(255,255,255,0.07)">
+                    <i class="fas fa-rocket" style="color:#e7e9ea"></i>
+                </div>
+                <div class="info">
+                    <div class="name">Groq <span class="badge-free">FREE</span></div>
+                    <div class="sub">Free tier · Extremely fast responses</div>
+                </div>
+                <i class="fas fa-chevron-right chevron"></i>
             </div>
-            <div class="step-row">
-                <div class="step-circle">3</div>
-                <div class="step-text">Copy the generated long text string. Go back to the extension, select "Gemini", and paste it into the <strong>Authentication</strong> box!</div>
+
+            <div class="provider-row" data-provider="ollama">
+                <div class="icon-wrap" style="background:rgba(255,255,255,0.07)">
+                    <i class="fas fa-terminal" style="color:#e7e9ea"></i>
+                </div>
+                <div class="info">
+                    <div class="name">Ollama <span class="badge-free">FREE</span></div>
+                    <div class="sub">Run AI locally · No API key needed</div>
+                </div>
+                <i class="fas fa-chevron-right chevron"></i>
+            </div>
+
+            <div class="provider-row" data-provider="openai">
+                <div class="icon-wrap" style="background:rgba(255,255,255,0.07)">
+                    <i class="fas fa-comment-dots" style="color:#e7e9ea"></i>
+                </div>
+                <div class="info">
+                    <div class="name">OpenAI <span class="badge-paid">PAID</span></div>
+                    <div class="sub">ChatGPT models · Billing required</div>
+                </div>
+                <i class="fas fa-chevron-right chevron"></i>
+            </div>
+
+            <div class="provider-row" data-provider="grok">
+                <div class="icon-wrap" style="background:rgba(255,255,255,0.07)">
+                    <i class="fas fa-brain" style="color:#e7e9ea"></i>
+                </div>
+                <div class="info">
+                    <div class="name">Grok <span class="badge-paid">PAID</span></div>
+                    <div class="sub">By xAI · Subscription/Credits required</div>
+                </div>
+                <i class="fas fa-chevron-right chevron"></i>
+            </div>
+
+            <div class="provider-row" data-provider="edenai">
+                <div class="icon-wrap" style="background:rgba(255,255,255,0.07)">
+                    <i class="fas fa-layer-group" style="color:#e7e9ea"></i>
+                </div>
+                <div class="info">
+                    <div class="name">Eden AI <span class="badge-paid">PAID</span></div>
+                    <div class="sub">Access multiple models with one key</div>
+                </div>
+                <i class="fas fa-chevron-right chevron"></i>
+            </div>
+
+            <div class="whatsapp-block" style="margin-top:20px">
+                <div style="background:#fff;padding:6px;border-radius:10px;flex-shrink:0">
+                    <img id="qrList" src="" alt="WhatsApp QR" style="width:64px;height:64px;display:block">
+                </div>
+                <div>
+                    <div class="wa-text">Still stuck? We'll help you personally.</div>
+                    <a href="https://wa.me/923266900001" target="_blank" class="wa-link">Chat on WhatsApp →</a>
+                </div>
             </div>
         </div>
 
-        <!-- Groq -->
-        <div class="provider-card" id="groq">
-            <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 mb-4">
-                <i class="fas fa-rocket text-twitter-blue"></i> Groq (Llama / Mixtral)
-            </h2>
-            <div class="step-row">
-                <div class="step-circle">1</div>
-                <div class="step-text">Go to the <a href="https://console.groq.com/keys" target="_blank">Groq Console</a> and log in.</div>
+        <!-- DETAIL VIEW -->
+        <div id="view-detail">
+            <div class="guide-header">
+                <div class="guide-icon" id="detailIcon"></div>
+                <div>
+                    <p class="guide-title" id="detailTitle"></p>
+                    <p class="guide-sub" id="detailSub"></p>
+                </div>
             </div>
-            <div class="step-row">
-                <div class="step-circle">2</div>
-                <div class="step-text">Click <strong>"Create API Key"</strong>.</div>
-            </div>
-            <div class="step-row">
-                <div class="step-circle">3</div>
-                <div class="step-text">Copy the key, return to the extension, select "Groq", and paste it in!</div>
-            </div>
-        </div>
 
-        <!-- Grok -->
-        <div class="provider-card" id="grok">
-            <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 mb-4">
-                <i class="fas fa-brain text-twitter-blue"></i> X.ai (Grok)
-            </h2>
-            <div class="step-row">
-                <div class="step-circle">1</div>
-                <div class="step-text">Visit the <a href="https://console.x.ai/" target="_blank">X.ai Console</a>.</div>
-            </div>
-            <div class="step-row">
-                <div class="step-circle">2</div>
-                <div class="step-text">Log in with your X (Twitter) account.</div>
-            </div>
-            <div class="step-row">
-                <div class="step-circle">3</div>
-                <div class="step-text">Navigate to the API Keys section, generate a key, and paste it into the extension.</div>
-            </div>
-        </div>
+            <div id="detailSteps"></div>
 
-        <!-- OpenAI -->
-        <div class="provider-card" id="openai">
-            <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 mb-4">
-                <i class="fas fa-comment-dots text-twitter-blue"></i> OpenAI (ChatGPT)
-            </h2>
-            <div class="step-row">
-                <div class="step-circle">1</div>
-                <div class="step-text">Go to the <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI API Keys</a> page.</div>
-            </div>
-            <div class="step-row">
-                <div class="step-circle">2</div>
-                <div class="step-text">Click <strong>"Create new secret key"</strong>.</div>
-            </div>
-            <div class="step-row">
-                <div class="step-circle">3</div>
-                <div class="step-text">Copy the key immediately (you won't be able to see it again) and paste it into the extension.</div>
-            </div>
-        </div>
+            <div class="action-section" id="detailActions"></div>
 
-        <!-- Eden AI -->
-        <div class="provider-card" id="edenai">
-            <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 mb-4">
-                <i class="fas fa-layer-group text-twitter-blue"></i> Eden AI
-            </h2>
-            <div class="step-row">
-                <div class="step-circle">1</div>
-                <div class="step-text">Sign up at <a href="https://app.edenai.run/user/register" target="_blank">Eden AI</a>.</div>
-            </div>
-            <div class="step-row">
-                <div class="step-circle">2</div>
-                <div class="step-text">Find your API Key on the main Dashboard or Settings page.</div>
-            </div>
-            <div class="step-row">
-                <div class="step-circle">3</div>
-                <div class="step-text">Copy and paste it into the extension.</div>
+            <div class="whatsapp-block">
+                <div style="background:#fff;padding:6px;border-radius:10px;flex-shrink:0">
+                    <img id="qrDetail" src="" alt="WhatsApp QR" style="width:64px;height:64px;display:block">
+                </div>
+                <div>
+                    <div class="wa-text">Need help? Message us directly.</div>
+                    <a href="https://wa.me/923266900001" target="_blank" class="wa-link">Chat on WhatsApp →</a>
+                </div>
             </div>
         </div>
-
-        <!-- Ollama -->
-        <div class="provider-card" id="ollama">
-            <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 mb-4">
-                <i class="fas fa-terminal text-twitter-blue"></i> Ollama (Local AI)
-            </h2>
-            <div class="step-row">
-                <div class="step-circle">1</div>
-                <div class="step-text">Download and install <a href="https://ollama.com/" target="_blank">Ollama</a> on your computer.</div>
-            </div>
-            <div class="step-row">
-                <div class="step-circle">2</div>
-                <div class="step-text">Open your terminal/command prompt and run <code>ollama run llama3</code> to download a model.</div>
-            </div>
-            <div class="step-row">
-                <div class="step-circle">3</div>
-                <div class="step-text">Ollama runs locally at <code>http://127.0.0.1:11434</code>. Just select Ollama in the extension and you're good to go! No API key needed.</div>
-            </div>
-        </div>
-        <!-- Need Help -->
-        <div class="provider-card mt-4" style="background: rgba(29, 161, 242, 0.05); border-color: rgba(29, 161, 242, 0.2);">
-            <h2 class="text-base font-bold text-twitter-text flex items-center gap-2 mb-3">
-                <i class="fas fa-headset text-twitter-blue"></i> Need Hands-on Setup?
-            </h2>
-            <p class="text-[13px] text-twitter-text-secondary mb-4 leading-relaxed">
-                Having trouble? I can personally help you set this up directly on your computer via AnyDesk. Just shoot me a message on WhatsApp!
-            </p>
-            <a href="https://wa.me/923266900001?text=Hey%20Hanzla Ahmad!%0A%0AContacting%20you%20regarding%20the%20X-Reply%20Agent%20extension.%20I%20would%20appreciate%20your%20help%20setting%20it%20up!%0A%0AMy%20Name%3A%20%5BWrite%20your%20name%5D%0AMy%20Email%3A%20%5BWrite%20your%20email%5D%0AAnyDesk%20Address%3A%20%5BOptional%3A%20write%20your%20address%5D" target="_blank" class="w-full py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl transition-all cursor-pointer border-none flex items-center justify-center gap-2 text-sm text-decoration-none">
-                <i class="fab fa-whatsapp text-lg"></i> Contact on WhatsApp
-            </a>
-        </div>
-
     </main>
+
+    <script type="module" src="help.js"></script>
 </body>
 </html>

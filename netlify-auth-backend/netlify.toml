@@ -1,5 +1,10 @@
 [build]
+  command = "echo 'Functions build complete'"
   functions = "netlify/functions"
+  publish = "."
+
+[dev]
+  framework = "#custom"
 
 [functions]
   node_bundler = "esbuild"

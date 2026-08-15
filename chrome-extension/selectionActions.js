@@ -1,4 +1,26 @@
 (function () {
+  function isExtensionValid() {
+    try {
+      return typeof chrome !== "undefined" && Boolean(chrome.runtime && chrome.runtime.id);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  window.addEventListener("error", (event) => {
+    if (event?.message?.includes("Extension context invalidated")) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  }, true);
+
+  window.addEventListener("unhandledrejection", (event) => {
+    if (String(event?.reason).includes("Extension context invalidated")) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  }, true);
+
   let actionButton = null;
   let actionMenu = null;
   let resultPopup = null;
@@ -206,18 +228,27 @@
 
     showResultPopup('Processing...', true);
 
-    chrome.runtime.sendMessage({
-      action: 'generateReply',
-      selectionAction: actionId === 'improve' ? 'improve' : 'translate_urdu',
-      text: currentSelection
-    }, (response) => {
-      if (response && response.reply) {
-        showResultPopup(response.reply, false, actionId);
-        copyToClipboard(response.reply, false); // Auto-copy as per requirements
-      } else {
-        showResultPopup('Error: ' + (response?.error || 'Failed to generate response'), false);
-      }
-    });
+    if (!isExtensionValid()) {
+      showResultPopup('Extension context reloaded. Please refresh the page.', false);
+      return;
+    }
+
+    try {
+      chrome.runtime.sendMessage({
+        action: 'generateReply',
+        selectionAction: actionId === 'improve' ? 'improve' : 'translate_urdu',
+        text: currentSelection
+      }, (response) => {
+        if (response && response.reply) {
+          showResultPopup(response.reply, false, actionId);
+          copyToClipboard(response.reply, false); // Auto-copy as per requirements
+        } else {
+          showResultPopup('Error: ' + (response?.error || 'Failed to generate response'), false);
+        }
+      });
+    } catch (e) {
+      showResultPopup('Extension updated. Please refresh the page.', false);
+    }
   }
 
   function showResultPopup(content, isLoading, actionType) {

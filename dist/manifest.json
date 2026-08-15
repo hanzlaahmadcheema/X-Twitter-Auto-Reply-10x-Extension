@@ -37,8 +37,8 @@
   "content_scripts": [
     {
       "js": [
-        "assets/contentScript.bundle.js-loader-DlUKUx4S.js",
-        "assets/selectionActions.js-loader-vzlhPDfX.js"
+        "assets/contentScript.bundle.js-loader-BxCS5Hjr.js",
+        "assets/selectionActions.js-loader-Br6eQdCA.js"
       ],
       "matches": [
         "*://x.com/*",
@@ -64,8 +64,8 @@
         "libs/html2canvas.min.js",
         "fonts/*",
         "assets/rolldown-runtime-D9-fqq9M.js",
-        "assets/contentScript.bundle.js-0m6CZ308.js",
-        "assets/selectionActions.js-Bkj78Q_Y.js"
+        "assets/contentScript.bundle.js-Bu1a50gp.js",
+        "assets/selectionActions.js-DW76FG0Y.js"
       ],
       "use_dynamic_url": false
     }

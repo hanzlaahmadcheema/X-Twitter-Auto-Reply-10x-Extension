@@ -150,9 +150,17 @@
   transform: translateY(0);
 }
 
-.popup-trigger-btn svg {
-  display: none;
-  /* Ensure no icons show up even if JS missed something (though JS updates removed them) */
+.popup-trigger-btn svg.dropdown-arrow-icon {
+  display: inline-block !important;
+  width: 12px;
+  height: 12px;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 3px;
+  flex-shrink: 0;
+}
+
+.popup-wrapper.open .popup-trigger-btn svg.dropdown-arrow-icon {
+  transform: rotate(180deg);
 }
 
 .popup-trigger-text {

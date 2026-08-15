@@ -14,12 +14,14 @@ const CONFIG = {
   OPENAI_BASE_URL: "https://api.openai.com/v1/chat/completions",
   OLLAMA_BASE_URL: "http://127.0.0.1:11434",
   API_TIMEOUT: 30000,
-  SYSTEM_PROMPT_TEMPLATE: (persona, tone, accountName, lang, length, customPrompt) => `
+  SYSTEM_PROMPT_TEMPLATE: (persona, tone, accountName, lang, length, customPrompt, personalityProfile) => `
     You are a human — crafting natural, thoughtful, and human-like replies on X (Twitter).
     
     **Your Identity:** ${persona || "A helpful and engaging Twitter user"}
     **Desired Tone:** ${tone}
     
+    ${personalityProfile ? `**User's Authentic X Personality Profile (DO NOT DEVIATE):**\n${personalityProfile}\n` : ""}
+
     **Context:**
     - Replying to: ${accountName || "Unknown User"}
     - Language: ${lang}
@@ -144,7 +146,7 @@ const ACTION_PROMPTS = {
 };
 
 // Helper to generate prompt
-function getSystemPrompt(message, customPersona) {
+function getSystemPrompt(message, customPersona, personalityProfile) {
   if (message.selectionAction && ACTION_PROMPTS[message.selectionAction]) {
     return ACTION_PROMPTS[message.selectionAction];
   }
@@ -160,7 +162,8 @@ function getSystemPrompt(message, customPersona) {
     message.accountName,
     langReq,
     lengthReq,
-    message.customPrompt
+    message.customPrompt,
+    personalityProfile
   );
 }
 
@@ -199,7 +202,22 @@ HQIDAQAB
     );
 
     const isValid = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, signature, data);
-    return isValid && payload.isActivated === true;
+    if (!isValid) return false;
+
+    // Real-time verification check against Postgres backend
+    try {
+      const res = await fetch("https://x-reply-auth-backend.netlify.app/.netlify/functions/status", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const statusData = await res.json();
+        return statusData.verified === true;
+      }
+    } catch (netErr) {
+      // Offline fallback: check JWT payload boolean
+    }
+
+    return payload.verified === true || payload.isActivated === true;
   } catch (e) {
     return false;
   }
@@ -217,10 +235,10 @@ chrome.runtime.onConnect.addListener((port) => {
           return;
         }
         chrome.storage.sync.get(
-          ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "edenaiModel", "ollamaModel", "ollamaUrl", "groqModel", "customPersona"],
+          ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "edenaiModel", "ollamaModel", "ollamaUrl", "groqModel", "customPersona", "personalityProfile"],
           async (data) => {
-            const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, edenaiModel, ollamaModel, ollamaUrl, groqModel, customPersona } = data;
-            const systemPrompt = getSystemPrompt(message, customPersona);
+            const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, edenaiModel, ollamaModel, ollamaUrl, groqModel, customPersona, personalityProfile } = data;
+            const systemPrompt = getSystemPrompt(message, customPersona, personalityProfile);
 
           try {
             if (selectedModel === "gemini") {
@@ -454,16 +472,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
       chrome.storage.sync.get(
-        ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "edenaiModel", "ollamaModel", "ollamaUrl", "groqModel", "customPersona"],
+        ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "edenaiModel", "ollamaModel", "ollamaUrl", "groqModel", "customPersona", "personalityProfile"],
         async (data) => {
-          const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, edenaiModel, ollamaModel, ollamaUrl, groqModel, customPersona } = data;
+          const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, edenaiModel, ollamaModel, ollamaUrl, groqModel, customPersona, personalityProfile } = data;
 
         if (!selectedApiKey && selectedModel !== "ollama") {
           sendResponse({ error: "API key not set. Please select an API key." });
           return;
         }
 
-        const systemPrompt = getSystemPrompt(message, customPersona);
+        const systemPrompt = getSystemPrompt(message, customPersona, personalityProfile);
         const prompt = message.text;
 
         let apiUrl, payload, headers;

@@ -1,3 +1,25 @@
+function isExtensionValid() {
+  try {
+    return typeof chrome !== "undefined" && Boolean(chrome.runtime && chrome.runtime.id);
+  } catch (e) {
+    return false;
+  }
+}
+
+window.addEventListener("error", (event) => {
+  if (event?.message?.includes("Extension context invalidated")) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+}, true);
+
+window.addEventListener("unhandledrejection", (event) => {
+  if (String(event?.reason).includes("Extension context invalidated")) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+}, true);
+
 const ICONS = {
   microphone: '<svg width="22px" height="22px" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" color="#ffffff"><rect x="9" y="2" width="6" height="12" rx="3" stroke="#ffffff" stroke-width="1.5" stroke-width="1.5"></rect><path d="M5 10V11C5 14.866 8.13401 18 12 18V18V18C15.866 18 19 14.866 19 11V10" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 18V22M12 22H9M12 22H15" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
   stop: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512" fill="currentColor"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128z"/></svg>',
@@ -78,17 +100,21 @@ class StorageCache {
 
   async init() {
     try {
-      this.cache = await chrome.storage.sync.get(null);
+      if (!isExtensionValid()) return;
+      this.cache = (await chrome.storage.sync.get(null)) || {};
       this.initialized = true;
 
       // Listen for changes
-      chrome.storage.onChanged.addListener((changes) => {
-        Object.keys(changes).forEach(key => {
-          this.cache[key] = changes[key].newValue;
+      if (chrome.storage?.onChanged) {
+        chrome.storage.onChanged.addListener((changes) => {
+          if (!isExtensionValid()) return;
+          Object.keys(changes).forEach(key => {
+            this.cache[key] = changes[key].newValue;
+          });
         });
-      });
+      }
     } catch (error) {
-      console.error('StorageCache init error:', error);
+      log('StorageCache init error:', error);
     }
   }
 
@@ -320,6 +346,38 @@ function getReplyAccountDetails() {
 
   return { accountUserName, accountName };
 }
+
+// Automatically detect logged-in user's own X handle
+function detectAndSaveLoggedInXUser() {
+  try {
+    let handle = null;
+    const profileLink = document.querySelector('a[data-testid="AppTabBar_Profile_Link"]') ||
+                        document.querySelector('a[aria-label="Profile"]');
+    if (profileLink) {
+      const href = profileLink.getAttribute("href");
+      if (href && href.length > 1) {
+        const raw = href.replace(/^\//, "").replace(/^@/, "").trim();
+        if (raw && !["home", "explore", "notifications", "messages", "bookmarks"].includes(raw.toLowerCase())) {
+          handle = raw;
+        }
+      }
+    }
+    if (!handle) {
+      const switcher = document.querySelector('[data-testid="SideNav_AccountSwitcher_Button"]');
+      if (switcher) {
+        const match = switcher.innerText.match(/@([a-zA-Z0-9_]+)/);
+        if (match && match[1]) handle = match[1];
+      }
+    }
+    if (handle) {
+      chrome.storage.local.set({ xUsername: handle });
+    }
+  } catch (e) {}
+}
+
+// Initial detection attempt and observer fallback
+detectAndSaveLoggedInXUser();
+setTimeout(detectAndSaveLoggedInXUser, 2000);
 
 function filterResponse(response) {
   response = response.replace(/[*"]/g, "");
@@ -1002,7 +1060,7 @@ async function appendToneSelector(toolbar) {
 
     // Helper to update trigger content
     const updateTrigger = (label) => {
-      trigger.innerHTML = `<span class="popup-trigger-text">${label}</span>`;
+      trigger.innerHTML = `<span class="popup-trigger-text">${label}</span><svg class="dropdown-arrow-icon" viewBox="0 0 24 24" width="12" height="12"><path d="M7 10l5 5 5-5z" fill="currentColor"/></svg>`;
     };
 
     // Initial State (Default to first option or placeholder)
@@ -1404,3 +1462,58 @@ function syncTheme() {
 // Watch for theme changes
 const themeObserver = new MutationObserver(syncTheme);
 themeObserver.observe(document.body, { attributes: true, attributeFilter: ["style", "class"] });
+
+// ── Grok Page Auto-Fill & Auto-Send ──────────────────────────────
+function handleGrokAutoFill() {
+  if (!window.location.href.includes("/i/grok")) return;
+  if (!isExtensionValid()) return;
+
+  try {
+    chrome.storage.local.get(["autoFillGrokPrompt"], (data) => {
+      if (!isExtensionValid()) return;
+      const promptText = data?.autoFillGrokPrompt;
+      if (!promptText) return;
+
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        const textarea = document.querySelector('textarea[placeholder*="Ask"], textarea[placeholder*="Grok"], textarea');
+
+        if (textarea) {
+          clearInterval(interval);
+          if (isExtensionValid()) {
+            chrome.storage.local.remove(["autoFillGrokPrompt"]);
+          }
+
+          try {
+            textarea.focus();
+            const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set;
+            if (nativeSetter) {
+              nativeSetter.call(textarea, promptText);
+            } else {
+              textarea.value = promptText;
+            }
+            textarea.dispatchEvent(new Event("input", { bubbles: true }));
+            textarea.dispatchEvent(new Event("change", { bubbles: true }));
+
+            // Auto-click Grok send button (button[aria-label="Grok something"])
+            setTimeout(() => {
+              const sendBtn = document.querySelector('button[aria-label="Grok something"]') ||
+                              textarea.closest("form, div")?.querySelector('button[type="button"]:has(svg)');
+              if (sendBtn) {
+                sendBtn.click();
+              }
+            }, 600);
+          } catch (err) {
+            console.error("Grok auto-fill error:", err);
+          }
+        }
+
+        if (attempts > 30) clearInterval(interval);
+      }, 400);
+    });
+  } catch (err) {}
+}
+
+// Execute on script load and SPA navigation
+handleGrokAutoFill();
