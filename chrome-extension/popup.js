@@ -190,14 +190,19 @@ document.addEventListener("DOMContentLoaded", () => {
     activateBtn.disabled = true;
     activateBtn.classList.add("opacity-70", "cursor-not-allowed");
 
-    const authUrl = "https://x-twitter-auto-reply-10x-extension.vercel.app/api/auth?prompt=select_account&redirect_uri=" + encodeURIComponent(chrome.identity.getRedirectURL());
+    const redirectTarget = chrome.identity.getRedirectURL();
+    const authUrl = "https://x-twitter-auto-reply-10x-extension.vercel.app/api/auth?prompt=select_account&redirect_uri=" + encodeURIComponent(redirectTarget);
+    console.log("[Auth Flow] Initiating webAuthFlow...", { authUrl, redirectTarget });
+
     chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true }, (redirectUrl) => {
       activateBtn.innerHTML = originalContent;
       activateBtn.disabled = false;
       activateBtn.classList.remove("opacity-70", "cursor-not-allowed");
 
       if (chrome.runtime.lastError || !redirectUrl) {
-        activationStatus.textContent = "Activation failed. Try again.";
+        const errMsg = chrome.runtime.lastError ? chrome.runtime.lastError.message : "No redirect URL received";
+        console.error("[Auth Flow] LaunchWebAuthFlow Error:", chrome.runtime.lastError, "redirectUrl:", redirectUrl);
+        activationStatus.textContent = `Activation failed: ${errMsg}`;
         activationStatus.style.color = "#e0245e";
         return;
       }
