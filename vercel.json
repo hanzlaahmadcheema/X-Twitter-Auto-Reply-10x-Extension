@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/.netlify/functions/models", "destination": "/api/models" },
+    { "source": "/.netlify/functions/auth", "destination": "/api/auth" },
+    { "source": "/.netlify/functions/callback", "destination": "/api/callback" },
+    { "source": "/.netlify/functions/status", "destination": "/api/status" },
+    { "source": "/.netlify/functions/admin", "destination": "/api/admin" }
+  ]
+}

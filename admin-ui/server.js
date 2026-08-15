@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3010;
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'local-dev-admin-secret';
-const NETLIFY_ADMIN_URL = process.env.NETLIFY_ADMIN_URL || 'https://x-reply-auth-backend.netlify.app/.netlify/functions/admin';
+const NETLIFY_ADMIN_URL = process.env.VERCEL_ADMIN_URL || process.env.NETLIFY_ADMIN_URL || 'https://x-twitter-auto-reply-10x-extension.vercel.app/api/admin';
 
 app.use(cors());
 app.use(express.json());

@@ -9,3 +9,4 @@ npm-debug.log
 .netlify
 release/
 extension-release.zip
+.vercel

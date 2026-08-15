@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById(viewId).classList.remove("hidden");
   }
 
-  const NETLIFY_MODELS_URL = "https://x-reply-auth-backend.netlify.app/.netlify/functions/models";
+  const NETLIFY_MODELS_URL = "https://x-twitter-auto-reply-10x-extension.vercel.app/api/models";
 
   async function syncModelsFromNetlify() {
     try {
@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showView("view-auth");
     } else {
       // Check real-time verification status from PostgreSQL database
-      fetch("https://x-reply-auth-backend.netlify.app/.netlify/functions/status", {
+      fetch("https://x-twitter-auto-reply-10x-extension.vercel.app/api/status", {
         headers: { "Authorization": `Bearer ${data.activationToken}` }
       })
         .then(res => res.json())
@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
     activateBtn.disabled = true;
     activateBtn.classList.add("opacity-70", "cursor-not-allowed");
 
-    const authUrl = "https://x-reply-auth-backend.netlify.app/.netlify/functions/auth?prompt=select_account&redirect_uri=" + encodeURIComponent(chrome.identity.getRedirectURL());
+    const authUrl = "https://x-twitter-auto-reply-10x-extension.vercel.app/api/auth?prompt=select_account&redirect_uri=" + encodeURIComponent(chrome.identity.getRedirectURL());
     chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true }, (redirectUrl) => {
       activateBtn.innerHTML = originalContent;
       activateBtn.disabled = false;

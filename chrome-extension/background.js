@@ -206,7 +206,7 @@ HQIDAQAB
 
     // Real-time verification check against Postgres backend
     try {
-      const res = await fetch("https://x-reply-auth-backend.netlify.app/.netlify/functions/status", {
+      const res = await fetch("https://x-twitter-auto-reply-10x-extension.vercel.app/api/status", {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
