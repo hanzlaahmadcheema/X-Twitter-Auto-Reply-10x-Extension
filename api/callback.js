@@ -2,11 +2,24 @@ const { SignJWT, importPKCS8 } = require('jose');
 const { getDb } = require('./db');
 
 module.exports = async function handler(req, res) {
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    return res.status(200).end();
+  }
+
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
   const code = req.query.code;
   const state = req.query.state;
-  
-  if (!code || !state) {
-    return res.status(400).send('Missing code or state');
+  let redirectUri = req.query.redirect_uri || req.query.redirectUri;
+
+  if (!redirectUri && state) {
+    try {
+      redirectUri = Buffer.from(state, 'base64').toString('ascii');
+    } catch (e) {}
   }
 
   const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -14,11 +27,14 @@ module.exports = async function handler(req, res) {
   const ALLOWED_EMAILS = (process.env.ALLOWED_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
   const PRIVATE_KEY_PEM = process.env.PRIVATE_KEY;
 
-  const redirectUri = Buffer.from(state, 'base64').toString('ascii');
   const isLocal = (req.headers.host || '').includes('localhost');
-  const callbackUrl = isLocal 
-    ? `http://${req.headers.host}/api/callback` 
-    : `https://x-twitter-auto-reply-10x-extension.vercel.app/api/callback`;
+  const googleTokenRedirectUri = (redirectUri && (redirectUri.startsWith('chrome-extension://') || redirectUri.includes('chromiumapp.org')))
+    ? redirectUri
+    : (isLocal ? `http://${req.headers.host}/api/callback` : `https://x-twitter-auto-reply-10x-extension.vercel.app/api/callback`);
+
+  if (!code) {
+    return res.status(400).json({ error: 'Missing code parameter' });
+  }
 
   try {
     // 1. Exchange OAuth code for Google access token
@@ -29,7 +45,7 @@ module.exports = async function handler(req, res) {
         code,
         client_id: GOOGLE_CLIENT_ID,
         client_secret: GOOGLE_CLIENT_SECRET,
-        redirect_uri: callbackUrl,
+        redirect_uri: googleTokenRedirectUri,
         grant_type: 'authorization_code',
       }),
     });
@@ -38,7 +54,7 @@ module.exports = async function handler(req, res) {
     
     if (!tokenData.access_token) {
       console.error('Failed to obtain Google access token:', tokenData);
-      return res.status(400).send('Failed to obtain access token');
+      return res.status(400).json({ error: 'Failed to obtain access token', details: tokenData });
     }
 
     // 2. Get user info from Google
@@ -52,7 +68,7 @@ module.exports = async function handler(req, res) {
     const name = userData.name || userData.given_name || email?.split('@')[0] || 'User';
 
     if (!email || !googleId) {
-      return res.status(400).send('Failed to retrieve user email or Google ID');
+      return res.status(400).json({ error: 'Failed to retrieve user email or Google ID' });
     }
 
     // 3. Query or Upsert User in PostgreSQL Database
@@ -106,16 +122,25 @@ module.exports = async function handler(req, res) {
       .setExpirationTime('10y')
       .sign(privateKey);
 
-    // 5. Redirect back to extension
-    const targetUrl = new URL(redirectUri);
-    targetUrl.searchParams.set('token', jwt);
-    targetUrl.searchParams.set('verified', isVerified ? 'true' : 'false');
-    targetUrl.searchParams.set('email', email);
-    targetUrl.searchParams.set('name', name);
+    // 5. Send response
+    if (state && redirectUri) {
+      const targetUrl = new URL(redirectUri);
+      targetUrl.searchParams.set('token', jwt);
+      targetUrl.searchParams.set('verified', isVerified ? 'true' : 'false');
+      targetUrl.searchParams.set('email', email);
+      targetUrl.searchParams.set('name', name);
+      return res.redirect(302, targetUrl.toString());
+    }
 
-    return res.redirect(302, targetUrl.toString());
+    return res.status(200).json({
+      success: true,
+      token: jwt,
+      verified: isVerified,
+      email,
+      name
+    });
   } catch (error) {
     console.error('OAuth callback error:', error);
-    return res.status(500).send('Internal Server Error');
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 };

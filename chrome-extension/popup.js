@@ -184,17 +184,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  function handleTokenSuccess(token, isVerifiedParam, paramEmail, paramName) {
+    const payload = parseJwt(token);
+    const userEmail = paramEmail || (payload && payload.email) || "";
+    const userName = paramName || (payload && (payload.name || payload.given_name)) || "";
+    const isVerified = isVerifiedParam === true || isVerifiedParam === "true" || (payload && (payload.verified === true || payload.isActivated === true));
+
+    chrome.storage.local.set({ activationToken: token, userEmail, userName }, () => {
+      setupWhatsAppLink();
+      if (!isVerified) {
+        activationStatus.textContent = "Your account is registered! Access hasn't been activated yet. Contact support and we'll activate your account.";
+        activationStatus.style.color = "#f45d22";
+        showView("view-auth");
+      } else {
+        activationStatus.textContent = "Activated successfully!";
+        activationStatus.style.color = "#17bf63";
+        setTimeout(() => showView("view-wizard-welcome"), 1000);
+      }
+    });
+  }
+
   activateBtn.addEventListener("click", () => {
     const originalContent = activateBtn.innerHTML;
     activateBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin text-lg"></i> Activating...';
     activateBtn.disabled = true;
     activateBtn.classList.add("opacity-70", "cursor-not-allowed");
 
+    const GOOGLE_CLIENT_ID = "171982538199-2b4tmp25ej2rd5cntrtlu3o6l4s78nm0.apps.googleusercontent.com";
     const redirectTarget = chrome.identity.getRedirectURL();
-    const authUrl = "https://x-twitter-auto-reply-10x-extension.vercel.app/api/auth?prompt=select_account&redirect_uri=" + encodeURIComponent(redirectTarget);
-    console.log("[Auth Flow] Initiating webAuthFlow...", { authUrl, redirectTarget });
 
-    chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true }, (redirectUrl) => {
+    const authUrl = "https://accounts.google.com/o/oauth2/v2/auth?" + new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: redirectTarget,
+      response_type: "code",
+      scope: "email profile",
+      prompt: "select_account"
+    }).toString();
+
+    console.log("[Auth Flow] Launching direct Google webAuthFlow...", { authUrl, redirectTarget });
+
+    chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true }, async (redirectUrl) => {
       activateBtn.innerHTML = originalContent;
       activateBtn.disabled = false;
       activateBtn.classList.remove("opacity-70", "cursor-not-allowed");
@@ -207,32 +236,35 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       
-      const url = new URL(redirectUrl);
-      const token = url.searchParams.get("token");
-      const isVerifiedParam = url.searchParams.get("verified");
-      const paramEmail = url.searchParams.get("email");
-      const paramName = url.searchParams.get("name");
+      try {
+        const url = new URL(redirectUrl);
+        const code = url.searchParams.get("code");
+        const tokenFromUrl = url.searchParams.get("token");
 
-      if (token) {
-        const payload = parseJwt(token);
-        const userEmail = paramEmail || (payload && payload.email) || "";
-        const userName = paramName || (payload && (payload.name || payload.given_name)) || "";
-        const isVerified = isVerifiedParam === "true" || (payload && (payload.verified === true || payload.isActivated === true));
+        if (tokenFromUrl) {
+          handleTokenSuccess(tokenFromUrl, url.searchParams.get("verified"), url.searchParams.get("email"), url.searchParams.get("name"));
+          return;
+        }
 
-        chrome.storage.local.set({ activationToken: token, userEmail, userName }, () => {
-          setupWhatsAppLink();
-          if (!isVerified) {
-            activationStatus.textContent = "Your account is registered! Access hasn't been activated yet. Contact support and we'll activate your account.";
-            activationStatus.style.color = "#f45d22";
-            showView("view-auth");
-          } else {
-            activationStatus.textContent = "Activated successfully!";
-            activationStatus.style.color = "#17bf63";
-            setTimeout(() => showView("view-wizard-welcome"), 1000);
-          }
-        });
-      } else if (url.searchParams.get("error")) {
-        activationStatus.textContent = "Sign in error. Contact support for assistance.";
+        if (!code) {
+          activationStatus.textContent = "Sign in error or cancelled.";
+          activationStatus.style.color = "#e0245e";
+          return;
+        }
+
+        // Exchange code with Vercel API
+        const response = await fetch(`https://x-twitter-auto-reply-10x-extension.vercel.app/api/callback?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectTarget)}`);
+        const data = await response.json();
+
+        if (data && data.token) {
+          handleTokenSuccess(data.token, data.verified, data.email, data.name);
+        } else {
+          activationStatus.textContent = "Failed to verify account with server.";
+          activationStatus.style.color = "#e0245e";
+        }
+      } catch (err) {
+        console.error("[Auth Flow] Backend exchange error:", err);
+        activationStatus.textContent = "Network error connecting to backend.";
         activationStatus.style.color = "#e0245e";
       }
     });
