@@ -6,6 +6,9 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+
   const redirectUri = req.query.redirect_uri || req.query.redirectUri;
   
   if (!redirectUri) {
