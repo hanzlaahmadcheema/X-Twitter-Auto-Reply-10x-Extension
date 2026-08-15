@@ -7,7 +7,7 @@ function log(...args) {
 }
 
 const CONFIG = {
-  DEFAULT_MODEL: "gemini-3.6-flash",
+  DEFAULT_MODEL: "gemini-3.7-flash",
   GEMINI_BASE_URL: "https://generativelanguage.googleapis.com/v1beta/models/",
   GROK_BASE_URL: "https://api.x.ai/v1/chat/completions",
   EDENAI_BASE_URL: "https://api.edenai.run/v2/text/chat/",
@@ -346,7 +346,7 @@ chrome.runtime.onConnect.addListener((port) => {
             } else if (["groq", "openai", "grok"].includes(selectedModel)) {
               let apiUrl, model;
               if (selectedModel === "groq") {
-                model = groqModel || "llama-3.3-70b-versatile";
+                model = groqModel || "openai/gpt-oss-120b";
                 apiUrl = "https://api.groq.com/openai/v1/chat/completions";
               } else if (selectedModel === "openai") {
                 model = openaiModel || "gpt-4o";
@@ -441,7 +441,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               "Content-Type": "application/json",
               "x-goog-api-key": message.key
             },
-            body: JSON.stringify({ model: "gemini-3.6-flash", input: "hi" })
+            body: JSON.stringify({ model: "gemini-3.7-flash", input: "hi" })
           });
           const data = await response.json();
           if (data.error) throw new Error(data.error.message);
@@ -572,7 +572,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           };
           headers = { "Content-Type": "application/json" };
         } else if (selectedModel === "groq") {
-          const model = groqModel || "llama-3.3-70b-versatile";
+          const model = groqModel || "openai/gpt-oss-120b";
           apiUrl = "https://api.groq.com/openai/v1/chat/completions";
           payload = {
             messages: [

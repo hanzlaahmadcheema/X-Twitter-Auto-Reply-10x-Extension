@@ -73,13 +73,13 @@ document.addEventListener("DOMContentLoaded", () => {
   let state = {
     selectedModel: "gemini",
     selectedApiKey: "",
-    geminiModel: "gemini-2.5-flash",
+    geminiModel: "gemini-3.7-flash",
     openaiModel: "gpt-4o",
     edenaiModel: "openai/gpt-4o",
     grokModel: "grok-2-1212",
     ollamaModel: "gemma2:9b",
     ollamaUrl: "http://127.0.0.1:11434",
-    groqModel: "llama-3.3-70b-versatile",
+    groqModel: "openai/gpt-oss-120b",
     // apiKeys: array of { key, label, model, isPrimary, isFallback }
     apiKeys: [],
     customPersona: "",
@@ -90,12 +90,12 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const MODELS = {
-    gemini: { name: "Google Gemini", tier: "FREE", keyRequired: true, models: ["gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro-preview", "gemini-2.5-flash"] },
-    groq: { name: "Groq", tier: "FREE", keyRequired: true, models: ["llama-3.3-70b-versatile", "mixtral-8x7b-32768", "gemma2-9b-it"] },
-    ollama: { name: "Ollama", tier: "FREE", keyRequired: false, models: ["gemma2:9b", "llama3", "mistral"] },
-    openai: { name: "OpenAI", tier: "PAID", keyRequired: true, models: ["gpt-4o", "gpt-4o-mini", "o1", "o1-mini"] },
+    gemini: { name: "Google Gemini", tier: "FREE", keyRequired: true, models: ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"] },
+    groq: { name: "Groq", tier: "FREE", keyRequired: true, models: ["openai/gpt-oss-120b", "qwen/qwen-3.6-27b"] },
+    ollama: { name: "Ollama", tier: "FREE", keyRequired: false, models: ["gemma2:9b", "llama3", "mistral", "phi3"] },
+    openai: { name: "OpenAI", tier: "PAID", keyRequired: true, models: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "o1", "o1-mini"] },
     grok: { name: "Grok", tier: "PAID", keyRequired: true, models: ["grok-2-vision-1212", "grok-2-1212", "grok-vision-beta", "grok-beta"] },
-    edenai: { name: "Eden AI", tier: "PAID", keyRequired: true, models: ["openai/gpt-4o", "openai/gpt-4o-mini", "xai/grok-2"] }
+    edenai: { name: "Eden AI", tier: "PAID", keyRequired: true, models: ["openai/gpt-4o", "openai/gpt-4o-mini", "xai/grok-2", "anthropic/claude-3-5-sonnet"] }
   };
 
   function showView(viewId) {
@@ -107,6 +107,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     document.getElementById(viewId).classList.remove("hidden");
   }
+
+  const NETLIFY_MODELS_URL = "https://x-reply-auth-backend.netlify.app/.netlify/functions/models";
+
+  async function syncModelsFromNetlify() {
+    try {
+      chrome.storage.local.get(["remoteModels"], (stored) => {
+        if (stored && stored.remoteModels) {
+          Object.assign(MODELS, stored.remoteModels);
+          if (typeof renderKeysList === "function") renderKeysList();
+        }
+      });
+
+      const response = await fetch(NETLIFY_MODELS_URL);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.success && data.models) {
+          Object.assign(MODELS, data.models);
+          chrome.storage.local.set({ remoteModels: data.models });
+          if (typeof renderKeysList === "function") renderKeysList();
+          const activeView = document.querySelector('[id^="view-"]:not(.hidden)')?.id;
+          if (activeView === "view-main" && typeof initMainView === "function") {
+            initMainView();
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Using offline / fallback model list:", e);
+    }
+  }
+
+  syncModelsFromNetlify();
 
   // Auth Flow & Real-time Verification Check
   setupWhatsAppLink();
