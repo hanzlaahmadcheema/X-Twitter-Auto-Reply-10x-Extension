@@ -15,9 +15,10 @@ module.exports = async function handler(req, res) {
   const PRIVATE_KEY_PEM = process.env.PRIVATE_KEY;
 
   const redirectUri = Buffer.from(state, 'base64').toString('ascii');
-  const host = req.headers.host || 'localhost';
-  const protocol = host.includes('localhost') ? 'http' : 'https';
-  const callbackUrl = `${protocol}://${host}/api/callback`;
+  const isLocal = (req.headers.host || '').includes('localhost');
+  const callbackUrl = isLocal 
+    ? `http://${req.headers.host}/api/callback` 
+    : `https://x-twitter-auto-reply-10x-extension.vercel.app/api/callback`;
 
   try {
     // 1. Exchange OAuth code for Google access token

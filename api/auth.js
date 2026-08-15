@@ -13,11 +13,10 @@ module.exports = async function handler(req, res) {
   }
 
   const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-  const host = req.headers.host || 'localhost';
-  const protocol = host.includes('localhost') ? 'http' : 'https';
-  
-  // Use Vercel API callback route
-  const callbackUrl = `${protocol}://${host}/api/callback`;
+  const isLocal = (req.headers.host || '').includes('localhost');
+  const callbackUrl = isLocal 
+    ? `http://${req.headers.host}/api/callback` 
+    : `https://x-twitter-auto-reply-10x-extension.vercel.app/api/callback`;
   const state = Buffer.from(redirectUri).toString('base64');
 
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
