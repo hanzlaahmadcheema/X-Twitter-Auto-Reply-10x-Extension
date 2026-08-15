@@ -30,40 +30,6 @@ const MODELS = {
       "mistral",
       "phi3"
     ]
-  },
-  openai: {
-    name: "OpenAI",
-    tier: "PAID",
-    keyRequired: true,
-    models: [
-      "gpt-4o",
-      "gpt-4o-mini",
-      "gpt-4-turbo",
-      "o1",
-      "o1-mini"
-    ]
-  },
-  grok: {
-    name: "Grok",
-    tier: "PAID",
-    keyRequired: true,
-    models: [
-      "grok-2-vision-1212",
-      "grok-2-1212",
-      "grok-vision-beta",
-      "grok-beta"
-    ]
-  },
-  edenai: {
-    name: "Eden AI",
-    tier: "PAID",
-    keyRequired: true,
-    models: [
-      "openai/gpt-4o",
-      "openai/gpt-4o-mini",
-      "xai/grok-2",
-      "anthropic/claude-3-5-sonnet"
-    ]
   }
 };
 
