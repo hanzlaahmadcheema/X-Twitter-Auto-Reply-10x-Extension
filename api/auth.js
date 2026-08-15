@@ -29,5 +29,19 @@ module.exports = async function handler(req, res) {
     `scope=email%20profile&` +
     `state=${state}`;
 
-  return res.redirect(302, authUrl);
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  return res.status(200).send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting to Google...</title>
+  <meta http-equiv="refresh" content="0;url=${authUrl}">
+</head>
+<body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #0f1419; color: #fff;">
+  <p>Redirecting to Google sign in...</p>
+  <script>
+    window.location.href = ${JSON.stringify(authUrl)};
+  </script>
+</body>
+</html>`);
 };
