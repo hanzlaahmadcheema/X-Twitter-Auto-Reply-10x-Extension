@@ -1,4 +1,3 @@
-const { SignJWT, importPKCS8 } = require('jose');
 const { getDb } = require('./db');
 
 module.exports = async function handler(req, res) {
@@ -12,13 +11,16 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  const code = req.query.code;
-  const state = req.query.state;
-  let redirectUri = req.query.redirect_uri || req.query.redirectUri;
+  const query = req.query || {};
+  const code = query.code;
+  const state = query.state;
+  let redirectUri = query.redirect_uri || query.redirectUri;
+  let isRedirectFromGoogle = false;
 
-  if (!redirectUri && state) {
+  if (state && !query.redirect_uri && !query.redirectUri) {
     try {
       redirectUri = Buffer.from(state, 'base64').toString('ascii');
+      isRedirectFromGoogle = true;
     } catch (e) {}
   }
 
@@ -28,9 +30,9 @@ module.exports = async function handler(req, res) {
   const PRIVATE_KEY_PEM = process.env.PRIVATE_KEY;
 
   const isLocal = (req.headers.host || '').includes('localhost');
-  const googleTokenRedirectUri = (redirectUri && (redirectUri.startsWith('chrome-extension://') || redirectUri.includes('chromiumapp.org')))
-    ? redirectUri
-    : (isLocal ? `http://${req.headers.host}/api/callback` : `https://x-twitter-auto-reply-10x-extension.vercel.app/api/callback`);
+  const googleTokenRedirectUri = isRedirectFromGoogle
+    ? (isLocal ? `http://${req.headers.host}/api/callback` : `https://x-twitter-auto-reply-10x-extension.vercel.app/api/callback`)
+    : (redirectUri || (isLocal ? `http://${req.headers.host}/api/callback` : `https://x-twitter-auto-reply-10x-extension.vercel.app/api/callback`));
 
   if (!code) {
     return res.status(400).json({ error: 'Missing code parameter' });
@@ -109,6 +111,7 @@ module.exports = async function handler(req, res) {
     }
 
     // 4. Sign RSA JWT token
+    const { SignJWT, importPKCS8 } = await import('jose');
     const privateKey = await importPKCS8(PRIVATE_KEY_PEM, 'RS256');
     const jwt = await new SignJWT({
       email,

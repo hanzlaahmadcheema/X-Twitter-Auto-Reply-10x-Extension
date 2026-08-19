@@ -6,8 +6,9 @@
   "scripts": {
     "build:css": "tailwindcss -i ./chrome-extension/input.css -o ./chrome-extension/popup.css --minify",
     "watch:css": "tailwindcss -i ./chrome-extension/input.css -o ./chrome-extension/popup.css --watch",
-    "build": "vite build",
-    "build:clean": "rm -rf dist && vite build",
+    "build:admin": "cd admin-ui && npm install && npm run build",
+    "build": "vite build && npm run build:admin",
+    "build:clean": "rm -rf dist && vite build && npm run build:admin",
     "build:release": "npm run build:clean && node obfuscate.js"
   },
   "repository": {

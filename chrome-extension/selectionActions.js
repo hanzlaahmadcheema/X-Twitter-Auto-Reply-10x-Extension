@@ -243,12 +243,56 @@
           showResultPopup(response.reply, false, actionId);
           copyToClipboard(response.reply, false); // Auto-copy as per requirements
         } else {
-          showResultPopup('Error: ' + (response?.error || 'Failed to generate response'), false);
+          const cleanErr = formatCleanError(response?.error || 'Failed to generate response');
+          showResultPopup(`⚠️ ${cleanErr}`, false);
         }
       });
     } catch (e) {
       showResultPopup('Extension updated. Please refresh the page.', false);
     }
+  }
+
+  function formatCleanError(error) {
+    if (!error) return 'An unexpected error occurred. Please try again.';
+    let message = typeof error === 'string' ? error : (error.message || JSON.stringify(error));
+
+    if (message.includes('{') && message.includes('}')) {
+      try {
+        const jsonStart = message.indexOf('{');
+        const jsonEnd = message.lastIndexOf('}') + 1;
+        const parsed = JSON.parse(message.substring(jsonStart, jsonEnd));
+        if (parsed.error?.message) message = parsed.error.message;
+        else if (parsed.error) message = typeof parsed.error === 'string' ? parsed.error : JSON.stringify(parsed.error);
+      } catch (e) {}
+    }
+
+    const lower = message.toLowerCase();
+
+    if (lower.includes('license not activated') || lower.includes('not activated')) {
+      return 'License not activated. Please open extension popup to activate.';
+    }
+    if (lower.includes('api key not set') || lower.includes('select an api key')) {
+      return 'API Key missing. Please set your API key in extension settings.';
+    }
+    if (lower.includes('invalid_api_key') || lower.includes('incorrect api key') || lower.includes('401')) {
+      return 'Invalid API Key. Please check your key in extension settings.';
+    }
+    if (lower.includes('429') || lower.includes('rate_limit') || lower.includes('quota exceeded') || lower.includes('resource_exhausted')) {
+      return 'Rate limit or quota exceeded. Please try again in a moment.';
+    }
+    if (lower.includes('500') || lower.includes('502') || lower.includes('503') || lower.includes('504')) {
+      return 'AI Service temporarily unavailable. Please try again shortly.';
+    }
+    if (lower.includes('failed to fetch') || lower.includes('networkerror') || lower.includes('net::err')) {
+      return 'Network error. Please check your internet connection.';
+    }
+
+    message = message.replace(/^(\w+\s*Error:\s*\d*\s*-\s*)+/i, '');
+    message = message.replace(/^API Error:\s*/i, '');
+    message = message.replace(/^HTTP \d+:\s*/i, '');
+    message = message.trim();
+
+    return message || 'Failed to generate response.';
   }
 
   function showResultPopup(content, isLoading, actionType) {

@@ -1251,7 +1251,7 @@ async function appendToneSelector(toolbar) {
         isGenerating = false;
         generateButton.disabled = false;
         generateButton.textContent = "Generate";
-        showErrorInButton(response.error);
+        showCleanErrorBanner(response.error);
         port.disconnect();
       } else if (response.chunk) {
         // We no longer insert chunks to avoid doubling issues on Twitter's complex editor.
@@ -1303,6 +1303,99 @@ async function appendToneSelector(toolbar) {
       generateButton.style.backgroundColor = color;
       generateButton.style.color = "#fff";
     }
+  }
+
+  function showCleanErrorBanner(rawError) {
+    const cleanMsg = formatCleanError(rawError);
+    const existing = document.querySelector(".x-reply-clean-error-toast");
+    if (existing) existing.remove();
+
+    const toast = document.createElement("div");
+    toast.className = "x-reply-clean-error-toast";
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 999999;
+      background: rgba(220, 38, 38, 0.95);
+      color: #ffffff;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+    `;
+
+    toast.innerHTML = `
+      <span style="font-size: 16px;">⚠️</span>
+      <span style="line-height: 1.4;">${cleanMsg}</span>
+      <button style="background: transparent; border: none; color: rgba(255,255,255,0.9); cursor: pointer; font-size: 18px; font-weight: bold; margin-left: 6px; padding: 0; line-height: 1;">&times;</button>
+    `;
+
+    const closeBtn = toast.querySelector("button");
+    closeBtn.onclick = () => toast.remove();
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.4s ease";
+        setTimeout(() => toast.remove(), 400);
+      }
+    }, 6000);
+  }
+
+  function formatCleanError(error) {
+    if (!error) return "An unexpected error occurred. Please try again.";
+    let message = typeof error === "string" ? error : (error.message || JSON.stringify(error));
+
+    if (message.includes("{") && message.includes("}")) {
+      try {
+        const jsonStart = message.indexOf("{");
+        const jsonEnd = message.lastIndexOf("}") + 1;
+        const parsed = JSON.parse(message.substring(jsonStart, jsonEnd));
+        if (parsed.error?.message) message = parsed.error.message;
+        else if (parsed.error) message = typeof parsed.error === "string" ? parsed.error : JSON.stringify(parsed.error);
+      } catch (e) {}
+    }
+
+    const lower = message.toLowerCase();
+
+    if (lower.includes("license not activated") || lower.includes("not activated")) {
+      return "License not activated. Please open the extension popup to activate.";
+    }
+    if (lower.includes("api key not set") || lower.includes("select an api key")) {
+      return "API Key missing. Please set your API key in the extension popup.";
+    }
+    if (lower.includes("invalid_api_key") || lower.includes("incorrect api key") || lower.includes("401")) {
+      return "Invalid API Key. Please check your key in extension settings.";
+    }
+    if (lower.includes("429") || lower.includes("rate_limit") || lower.includes("quota exceeded") || lower.includes("resource_exhausted")) {
+      return "Rate limit or quota exceeded. Please try again in a moment.";
+    }
+    if (lower.includes("500") || lower.includes("502") || lower.includes("503") || lower.includes("504")) {
+      return "AI Service temporarily unavailable. Please try again shortly or switch providers.";
+    }
+    if (lower.includes("failed to fetch") || lower.includes("networkerror") || lower.includes("net::err")) {
+      return "Network error. Please check your internet connection.";
+    }
+    if (lower.includes("ollama error") || lower.includes("ollama not responding") || lower.includes("connection refused")) {
+      return "Unable to connect to Ollama. Make sure Ollama is running locally.";
+    }
+
+    message = message.replace(/^(\w+\s*Error:\s*\d*\s*-\s*)+/i, "");
+    message = message.replace(/^API Error:\s*/i, "");
+    message = message.replace(/^HTTP \d+:\s*/i, "");
+    message = message.trim();
+
+    return message || "Failed to generate reply. Please try again.";
   }
 }
 

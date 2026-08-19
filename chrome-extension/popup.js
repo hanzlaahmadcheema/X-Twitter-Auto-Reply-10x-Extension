@@ -210,18 +210,10 @@ document.addEventListener("DOMContentLoaded", () => {
     activateBtn.disabled = true;
     activateBtn.classList.add("opacity-70", "cursor-not-allowed");
 
-    const GOOGLE_CLIENT_ID = "171982538199-2b4tmp25ej2rd5cntrtlu3o6l4s78nm0.apps.googleusercontent.com";
     const redirectTarget = chrome.identity.getRedirectURL();
+    const authUrl = "https://x-twitter-auto-reply-10x-extension.vercel.app/api/auth?prompt=select_account&redirect_uri=" + encodeURIComponent(redirectTarget);
 
-    const authUrl = "https://accounts.google.com/o/oauth2/v2/auth?" + new URLSearchParams({
-      client_id: GOOGLE_CLIENT_ID,
-      redirect_uri: redirectTarget,
-      response_type: "code",
-      scope: "email profile",
-      prompt: "select_account"
-    }).toString();
-
-    console.log("[Auth Flow] Launching direct Google webAuthFlow...", { authUrl, redirectTarget });
+    console.log("[Auth Flow] Launching webAuthFlow with Vercel auth...", { authUrl, redirectTarget });
 
     chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true }, async (redirectUrl) => {
       activateBtn.innerHTML = originalContent;
@@ -238,30 +230,30 @@ document.addEventListener("DOMContentLoaded", () => {
       
       try {
         const url = new URL(redirectUrl);
-        const code = url.searchParams.get("code");
         const tokenFromUrl = url.searchParams.get("token");
+        const isVerifiedParam = url.searchParams.get("verified");
+        const paramEmail = url.searchParams.get("email");
+        const paramName = url.searchParams.get("name");
 
         if (tokenFromUrl) {
-          handleTokenSuccess(tokenFromUrl, url.searchParams.get("verified"), url.searchParams.get("email"), url.searchParams.get("name"));
+          handleTokenSuccess(tokenFromUrl, isVerifiedParam, paramEmail, paramName);
           return;
         }
 
-        if (!code) {
-          activationStatus.textContent = "Sign in error or cancelled.";
-          activationStatus.style.color = "#e0245e";
-          return;
+        const code = url.searchParams.get("code");
+        if (code) {
+          // Fallback exchange if code returned instead of token
+          const response = await fetch(`https://x-twitter-auto-reply-10x-extension.vercel.app/api/callback?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectTarget)}`);
+          const data = await response.json();
+
+          if (data && data.token) {
+            handleTokenSuccess(data.token, data.verified, data.email, data.name);
+            return;
+          }
         }
 
-        // Exchange code with Vercel API
-        const response = await fetch(`https://x-twitter-auto-reply-10x-extension.vercel.app/api/callback?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectTarget)}`);
-        const data = await response.json();
-
-        if (data && data.token) {
-          handleTokenSuccess(data.token, data.verified, data.email, data.name);
-        } else {
-          activationStatus.textContent = "Failed to verify account with server.";
-          activationStatus.style.color = "#e0245e";
-        }
+        activationStatus.textContent = "Sign in error. Contact support for assistance.";
+        activationStatus.style.color = "#e0245e";
       } catch (err) {
         console.error("[Auth Flow] Backend exchange error:", err);
         activationStatus.textContent = "Network error connecting to backend.";
@@ -525,6 +517,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
+  // System Notice Fetcher
+  function fetchNotice() {
+    const noticeContainer = document.getElementById("systemNoticeContainer");
+    const noticeTitle = document.getElementById("noticeTitle");
+    const noticeDesc = document.getElementById("noticeDesc");
+    const noticeBtn = document.getElementById("noticeBtn");
+    const noticeBtnText = document.getElementById("noticeBtnText");
+    const dismissBtn = document.getElementById("dismissNoticeBtn");
+
+    if (!noticeContainer) return;
+
+    fetch("https://x-twitter-auto-reply-10x-extension.vercel.app/api/notice")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.notice && data.notice.enabled && data.notice.title) {
+          const notice = data.notice;
+          const noticeKey = `dismissed_notice_${notice.id}_${notice.updatedAt}`;
+
+          chrome.storage.local.get([noticeKey], (res) => {
+            if (res[noticeKey]) return; // Dismissed by user
+
+            noticeTitle.textContent = notice.title;
+            noticeDesc.textContent = notice.description;
+
+            if (notice.buttonText && notice.buttonUrl) {
+              noticeBtnText.textContent = notice.buttonText;
+              noticeBtn.href = notice.buttonUrl;
+              noticeBtn.classList.remove("hidden");
+            } else {
+              noticeBtn.classList.add("hidden");
+            }
+
+            noticeContainer.classList.remove("hidden");
+
+            if (dismissBtn) {
+              dismissBtn.onclick = () => {
+                noticeContainer.classList.add("hidden");
+                chrome.storage.local.set({ [noticeKey]: true });
+              };
+            }
+          });
+        } else {
+          noticeContainer.classList.add("hidden");
+        }
+      })
+      .catch(err => {
+        console.error("Notice fetch error:", err);
+        noticeContainer.classList.add("hidden");
+      });
+  }
+
   // Main View Logic
   function initMainView() {
     chrome.storage.sync.get(null, (data) => {
@@ -572,6 +615,9 @@ document.addEventListener("DOMContentLoaded", () => {
           xUsernameInput.value = localData.xUsername.startsWith("@") ? localData.xUsername : `@${localData.xUsername}`;
         }
       });
+
+      // Fetch and display active System Notice
+      fetchNotice();
 
       // Populate Adv Model Select
       advModelSelect.innerHTML = "";
@@ -702,7 +748,8 @@ Do NOT write generic praise or fluffy prose. Produce a compact, structured profi
   advModelSelect.addEventListener("change", () => {
     const activeModelKey = state.selectedModel + "Model";
     state[activeModelKey] = advModelSelect.value;
-    mainSummaryModel.textContent = advModelSelect.value;
+    if (mainSummaryModel) mainSummaryModel.textContent = advModelSelect.value;
+    chrome.storage.sync.set({ [activeModelKey]: advModelSelect.value });
   });
 
   saveSettingsBtn.addEventListener("click", () => {

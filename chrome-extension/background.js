@@ -261,7 +261,7 @@ chrome.runtime.onConnect.addListener((port) => {
               if (!response.ok) {
                 const errText = await response.text();
                 console.error("[generateReply Stream] API Error:", errText);
-                port.postMessage({ error: `API Error: ${response.status} - ${errText}` });
+                port.postMessage({ error: formatCleanError(errText || `API Error: ${response.status}`) });
                 return;
               }
 
@@ -319,7 +319,7 @@ chrome.runtime.onConnect.addListener((port) => {
               if (!response.ok) {
                 const errText = await response.text();
                 console.error("[generateReply Stream] Ollama Error:", errText);
-                port.postMessage({ error: `Ollama Error: ${response.status} - ${errText}` });
+                port.postMessage({ error: formatCleanError(errText || `Ollama Error: ${response.status}`) });
                 return;
               }
 
@@ -375,7 +375,7 @@ chrome.runtime.onConnect.addListener((port) => {
               if (!response.ok) {
                 const errText = await response.text();
                 console.error(`[generateReply Stream] ${selectedModel} Error:`, errText);
-                port.postMessage({ error: `${selectedModel} Error: ${response.status} - ${errText}` });
+                port.postMessage({ error: formatCleanError(errText || `${selectedModel} Error: ${response.status}`) });
                 return;
               }
 
@@ -613,13 +613,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             data = JSON.parse(text);
           } catch (e) {
             console.error(`[generateReply] JSON Parse Error:`, e);
-            sendResponse({ error: `Failed to parse response: ${e.message}` });
+            sendResponse({ error: formatCleanError(text || `Failed to parse response`) });
             return;
           }
 
           if (!response.ok) {
             console.error(`[generateReply] API Error:`, data);
-            sendResponse({ error: data.error?.message || data.error || `HTTP ${response.status}` });
+            const rawErr = data.error?.message || data.error || `HTTP ${response.status}`;
+            sendResponse({ error: formatCleanError(rawErr) });
             return;
           }
 
@@ -640,10 +641,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           console.log(`[generateReply] Extracted Reply:`, reply);
 
           if (reply) sendResponse({ reply: reply });
-          else sendResponse({ error: `${selectedModel} returned an empty response. Data: ${JSON.stringify(data)}` });
+          else sendResponse({ error: formatCleanError(`${selectedModel} returned an empty response.`) });
         } catch (error) {
           console.error(`[generateReply] Caught Exception:`, error);
-          sendResponse({ error: error.message });
+          sendResponse({ error: formatCleanError(error) });
         }
       });
     });
@@ -787,6 +788,53 @@ function sendNotification() {
     message: "It's time to generate another reply!",
     priority: 2
   });
+}
+
+// Helper: Format technical API/Provider errors into clean, user-friendly messages
+function formatCleanError(error) {
+  if (!error) return "An unexpected error occurred. Please try again.";
+  let message = typeof error === "string" ? error : (error.message || JSON.stringify(error));
+
+  if (message.includes("{") && message.includes("}")) {
+    try {
+      const jsonStart = message.indexOf("{");
+      const jsonEnd = message.lastIndexOf("}") + 1;
+      const parsed = JSON.parse(message.substring(jsonStart, jsonEnd));
+      if (parsed.error?.message) message = parsed.error.message;
+      else if (parsed.error) message = typeof parsed.error === "string" ? parsed.error : JSON.stringify(parsed.error);
+    } catch (e) {}
+  }
+
+  const lower = message.toLowerCase();
+
+  if (lower.includes("license not activated") || lower.includes("not activated")) {
+    return "License not activated. Please open the extension popup to activate.";
+  }
+  if (lower.includes("api key not set") || lower.includes("select an api key")) {
+    return "API Key missing. Please set your API key in the extension popup.";
+  }
+  if (lower.includes("invalid_api_key") || lower.includes("incorrect api key") || lower.includes("401")) {
+    return "Invalid API Key. Please check your key in extension settings.";
+  }
+  if (lower.includes("429") || lower.includes("rate_limit") || lower.includes("quota exceeded") || lower.includes("resource_exhausted")) {
+    return "Rate limit or quota exceeded. Please try again in a moment.";
+  }
+  if (lower.includes("500") || lower.includes("502") || lower.includes("503") || lower.includes("504")) {
+    return "AI Service temporarily unavailable. Please try again shortly or switch providers.";
+  }
+  if (lower.includes("failed to fetch") || lower.includes("networkerror") || lower.includes("net::err")) {
+    return "Network error. Please check your internet connection.";
+  }
+  if (lower.includes("ollama error") || lower.includes("ollama not responding") || lower.includes("connection refused")) {
+    return "Unable to connect to Ollama. Make sure Ollama is running locally.";
+  }
+
+  message = message.replace(/^(\w+\s*Error:\s*\d*\s*-\s*)+/i, "");
+  message = message.replace(/^API Error:\s*/i, "");
+  message = message.replace(/^HTTP \d+:\s*/i, "");
+  message = message.trim();
+
+  return message || "Failed to generate reply. Please try again.";
 }
 
 if (chrome.sidePanel && chrome.sidePanel.setPanelBehavior) {

@@ -1,4 +1,3 @@
-const { jwtVerify, importSPKI } = require('jose');
 const { getDb } = require('./db');
 
 const PUBLIC_KEY_PEM = `-----BEGIN PUBLIC KEY-----
@@ -28,6 +27,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    const { jwtVerify, importSPKI } = await import('jose');
     const publicKey = await importSPKI(PUBLIC_KEY_PEM, 'RS256');
     const { payload } = await jwtVerify(token, publicKey);
     const email = payload.email?.toLowerCase()?.trim();

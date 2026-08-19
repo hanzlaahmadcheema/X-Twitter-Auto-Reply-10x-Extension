@@ -143,12 +143,22 @@
       <p class="text-twitter-text-secondary text-xs mb-4">Add keys from one or more providers. Mix &amp; match for fallback reliability.</p>
 
       <!-- Provider pill selector -->
-      <div class="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide" id="providerPills" style="scrollbar-width:none">
-        <button class="provider-pill active flex items-center shrink-0" data-provider="gemini">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Gemini <span class="ml-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-[#17bf63]/20 text-[#17bf63] border border-[#17bf63]/30">FREE</span>
+      <div class="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide items-center" id="providerPills" style="scrollbar-width:none">
+        <button class="provider-pill active" data-provider="gemini">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" class="shrink-0"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Gemini</span>
+          <span class="provider-pill-badge">FREE</span>
         </button>
-        <button class="provider-pill flex items-center shrink-0" data-provider="groq"><i class="fas fa-rocket" style="font-size:10px;margin-right:4px"></i>Groq <span class="ml-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-[#17bf63]/20 text-[#17bf63] border border-[#17bf63]/30">FREE</span></button>
-        <button class="provider-pill flex items-center shrink-0" data-provider="ollama"><i class="fas fa-terminal" style="font-size:10px;margin-right:4px"></i>Ollama <span class="ml-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-[#17bf63]/20 text-[#17bf63] border border-[#17bf63]/30">FREE</span></button>
+        <button class="provider-pill" data-provider="groq">
+          <i class="fas fa-rocket text-xs shrink-0"></i>
+          <span>Groq</span>
+          <span class="provider-pill-badge">FREE</span>
+        </button>
+        <button class="provider-pill" data-provider="ollama">
+          <i class="fas fa-terminal text-xs shrink-0"></i>
+          <span>Ollama</span>
+          <span class="provider-pill-badge">FREE</span>
+        </button>
       </div>
 
       <!-- Key input (hidden for ollama) -->
@@ -200,6 +210,24 @@
     <!-- VIEW 5: MAIN SETTINGS -->
     <div id="view-main" class="w-full min-h-full p-4 flex flex-col overflow-y-auto animate-in fade-in duration-300 hidden">
       
+      <!-- System Broadcast Notice Container -->
+      <div id="systemNoticeContainer" class="hidden glass p-4 rounded-2xl border border-twitter-blue/30 bg-twitter-blue/10 mb-5 relative animate-in fade-in duration-300">
+        <button id="dismissNoticeBtn" class="absolute top-3 right-3 text-twitter-text-secondary hover:text-white bg-transparent border-none cursor-pointer text-sm p-1 leading-none">&times;</button>
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-xl bg-twitter-blue/20 flex items-center justify-center shrink-0 text-twitter-blue text-sm mt-0.5">
+            <i class="fas fa-bullhorn"></i>
+          </div>
+          <div class="flex-1 min-w-0 pr-4">
+            <h4 id="noticeTitle" class="text-xs font-bold text-white m-0 leading-tight"></h4>
+            <p id="noticeDesc" class="text-[11px] text-white/80 mt-1 mb-2.5 leading-normal"></p>
+            <a id="noticeBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden inline-flex items-center gap-1.5 px-3 py-1.5 bg-twitter-blue text-white text-[11px] font-bold rounded-lg hover:bg-twitter-blue/90 transition-all no-underline shadow-sm">
+              <span id="noticeBtnText">View Details</span>
+              <i class="fas fa-external-link-alt text-[9px]"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
       <!-- Account Card -->
       <div class="glass p-4 rounded-2xl border border-white/10 mb-6 flex items-center gap-4">
         <div class="w-12 h-12 rounded-full bg-gradient-to-br from-twitter-blue to-purple-600 flex items-center justify-center shadow-lg shrink-0">
@@ -216,57 +244,85 @@
       </div>
 
       <h3 class="text-xs font-bold text-twitter-text-secondary uppercase tracking-widest mb-3 px-1 border-b border-white/10 pb-2">AI Connection</h3>
-      <div class="glass p-4 rounded-2xl border border-white/10 mb-6 relative">
-        <button id="mainChangeAiBtn" class="absolute top-4 right-4 text-xs text-twitter-blue hover:underline bg-transparent border-none cursor-pointer p-0 font-medium">Change</button>
-        <div class="grid grid-cols-[80px_1fr] gap-y-3 gap-x-2 text-sm">
-          <div class="text-twitter-text-secondary">Provider</div>
-          <div id="mainSummaryProvider" class="text-white font-bold capitalize">Gemini</div>
-          
-          <div class="text-twitter-text-secondary">Model</div>
-          <div id="mainSummaryModel" class="text-white">Gemini 2.5 Flash</div>
-          
-          <div class="text-twitter-text-secondary" id="mainSummaryKeyLabel">API Key</div>
-          <div id="mainSummaryKey" class="text-white font-mono text-xs mt-0.5">••••••••••••</div>
+      <div class="glass p-4 rounded-2xl border border-white/10 mb-6 space-y-3 relative">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-lg bg-twitter-blue/20 flex items-center justify-center">
+              <i class="fas fa-plug text-twitter-blue text-xs"></i>
+            </div>
+            <span class="text-xs font-bold text-white">Active Connection</span>
+          </div>
+          <button id="mainChangeAiBtn" class="text-xs text-twitter-blue hover:underline bg-transparent border-none cursor-pointer p-0 font-bold flex items-center gap-1">
+            <i class="fas fa-sync-alt text-[10px]"></i> Change
+          </button>
+        </div>
+
+        <div class="bg-black/30 border border-white/10 rounded-xl p-3.5 space-y-3 text-xs">
+          <!-- Provider -->
+          <div class="flex items-center justify-between">
+            <span class="text-twitter-text-secondary font-medium">Provider</span>
+            <span id="mainSummaryProvider" class="text-white font-bold capitalize bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg">Gemini</span>
+          </div>
+
+          <!-- Model Selection Dropdown -->
+          <div class="flex items-center justify-between gap-2" id="advModelSelectContainer">
+            <span class="text-twitter-text-secondary font-medium shrink-0">Model</span>
+            <div class="relative min-w-0 flex-1 flex justify-end">
+              <select id="advModelSelect" class="bg-white/5 border border-white/10 hover:bg-white/10 text-twitter-blue font-mono font-bold text-xs py-1 px-2.5 rounded-lg outline-none focus:border-twitter-blue transition-all cursor-pointer appearance-none max-w-full truncate text-right">
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+          </div>
+
+          <!-- API Key / Ollama URL -->
+          <div class="flex items-center justify-between">
+            <span class="text-twitter-text-secondary font-medium" id="mainSummaryKeyLabel">API Key</span>
+            <span id="mainSummaryKey" class="text-twitter-blue font-mono font-bold text-xs bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg truncate max-w-[180px]">gsk_dX...v04f</span>
+          </div>
         </div>
       </div>
+      <span id="mainSummaryModel" class="hidden"></span>
 
       <h3 class="text-xs font-bold text-twitter-text-secondary uppercase tracking-widest mb-3 px-1 border-b border-white/10 pb-2">AI Preferences</h3>
       <div class="mb-5 px-1">
-        <label for="customPersona" class="block text-xs text-twitter-text-secondary mb-2">Custom Instructions</label>
-        <textarea id="customPersona" placeholder="e.g. A tech enthusiast who loves minimalist design..." class="w-full h-20 py-3 px-4 bg-black/40 border border-white/10 rounded-xl text-sm text-white outline-none focus:border-twitter-blue transition-all resize-none glass"></textarea>
+        <label for="customPersona" class="block text-xs font-bold text-white/80 mb-2">Custom Instructions</label>
+        <textarea id="customPersona" placeholder="e.g. A tech enthusiast who loves minimalist design..." class="w-full h-20 py-3 px-3.5 bg-black/40 border border-white/15 focus:border-twitter-blue rounded-xl text-xs text-white outline-none transition-all resize-none font-sans leading-relaxed"></textarea>
       </div>
 
       <!-- IMPORT YOUR X PERSONALITY SECTION -->
       <div class="mb-6 px-1">
         <div class="p-4 bg-white/[0.03] border border-white/10 rounded-2xl space-y-3.5 glass">
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded-lg bg-twitter-blue/20 flex items-center justify-center">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-twitter-blue/20 border border-twitter-blue/30 flex items-center justify-center shrink-0 shadow-sm">
                 <i class="fas fa-brain text-twitter-blue text-xs"></i>
               </div>
               <label for="personalityProfile" class="block text-xs font-bold text-white">Import Your X Personality</label>
             </div>
-            <span id="personalityLastUpdated" class="px-4 py-2 rounded-full text-[9px] font-bold bg-white/5 border border-white/10 text-twitter-text-secondary">Not imported yet</span>
+            <span id="personalityLastUpdated" class="px-3 py-1 rounded-full text-[9px] font-bold bg-white/5 border border-white/10 text-twitter-text-secondary">Not imported yet</span>
           </div>
 
-          <p class="text-white text-[11px] leading-relaxed">
-            Grok can analyze your X activity and create a personality profile that your AI assistant can use when generating responses.
+          <p class="text-twitter-text-secondary text-[11px] leading-relaxed m-0">
+            Grok can analyze your X activity and create a personalized writing style profile for your AI.
           </p>
 
           <!-- X Username Handle Input -->
-          <div class="flex items-center gap-2.5 bg-black/30 border border-white/10 rounded-xl px-3 py-2 mt-4">
-            <span class="text-xs text-twitter-text-secondary font-bold shrink-0">X Handle:</span>
-            <input type="text" id="xUsernameInput" placeholder="@username" class="w-full bg-twitter-text-secondary border-none text-xs text-twitter-blue font-mono font-bold outline-none p-0">
+          <div class="flex items-center gap-2 bg-black/30 border border-white/10 focus-within:border-twitter-blue rounded-xl px-3.5 py-2.5 transition-all">
+            <i class="fab fa-x-twitter text-twitter-text-secondary text-xs shrink-0"></i>
+            <span class="text-xs text-twitter-text-secondary font-bold shrink-0">@</span>
+            <input type="text" id="xUsernameInput" placeholder="username" class="w-full bg-transparent border-none text-xs text-twitter-blue font-mono font-bold outline-none p-0">
           </div>
 
-          <textarea id="personalityProfile" placeholder="Paste your Grok-generated personality profile here..." class="w-full h-28 py-3 px-3.5 bg-black/40 border border-white/10 rounded-xl text-xs text-white/90 outline-none focus:border-twitter-blue transition-all resize-none font-mono leading-relaxed mt-4"></textarea>
+          <textarea id="personalityProfile" placeholder="Paste your Grok-generated personality profile here..." class="w-full h-24 py-3 px-3.5 bg-black/30 border border-white/10 rounded-xl text-xs text-white/90 outline-none focus:border-twitter-blue transition-all resize-none font-mono leading-relaxed"></textarea>
 
-          <div class="flex gap-2.5 pt-1">
-            <button id="openGrokModalBtn" class="flex-1 py-2.5 px-3 bg-white/5 hover:bg-white/10 border border-white/15 rounded-xl text-white text-xs font-bold transition-all border-none cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
-              <i class="fas fa-brain text-twitter-blue"></i> Build Profile with Grok
+          <div class="flex gap-2 pt-1">
+            <button id="openGrokModalBtn" class="flex-1 py-2.5 px-3 bg-white/5 hover:bg-white/10 border border-white/15 rounded-xl text-white text-xs font-bold transition-all border-none cursor-pointer flex items-center justify-center gap-2 shadow-sm group">
+              <i class="fas fa-sparkles text-twitter-blue transition-transform group-hover:scale-110"></i>
+              <span>Build with Grok</span>
             </button>
-            <button id="savePersonalityBtn" class="py-2.5 px-4 bg-twitter-blue hover:bg-[#1a8cd8] text-white text-xs font-bold rounded-xl transition-all border-none cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
-              <i class="fas fa-check"></i> Save Profile
+            <button id="savePersonalityBtn" class="py-2.5 px-4 bg-twitter-blue hover:bg-[#1a8cd8] text-white text-xs font-bold rounded-xl transition-all border-none cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(29,155,240,0.35)]">
+              <i class="fas fa-check"></i>
+              <span>Save Profile</span>
             </button>
           </div>
         </div>
@@ -297,18 +353,6 @@
         </button>
         
         <div id="advContent" class="hidden flex flex-col gap-5 border-l-2 border-white/10 pl-4 py-2">
-          
-          <div id="advModelSelectContainer">
-            <label class="block text-xs text-twitter-text-secondary mb-2">Specific Model Version</label>
-            <div class="relative">
-              <select id="advModelSelect" class="premium-select w-full py-2.5 px-3 rounded-xl text-sm outline-none focus:border-twitter-blue transition-all cursor-pointer glass appearance-none">
-                <!-- Dynamically populated based on active provider -->
-              </select>
-              <div class="absolute right-4 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
-                <i class="fas fa-chevron-down"></i>
-              </div>
-            </div>
-          </div>
 
           <div>
             <label class="block text-xs text-twitter-text-secondary mb-2">Backup & Restore</label>
@@ -336,46 +380,60 @@
     </div>
 
   <!-- GROK PROMPT INSTRUCTION MODAL -->
-  <div id="grokModal" class="hidden fixed inset-0 z-[99999] flex items-center justify-center p-5 bg-[#0b141d] backdrop-blur-none">
-    <div class="bg-[#15202b] border border-white/15 rounded-3xl p-6 max-w-sm w-full shadow-2xl relative text-white space-y-4">
-      <button id="closeGrokModalBtn" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all border-none cursor-pointer text-sm">
-        <i class="fas fa-times"></i>
-      </button>
-      
-      <div class="flex items-center gap-3 pr-8">
-        <div class="w-10 h-10 rounded-2xl bg-twitter-blue/20 flex items-center justify-center shrink-0 shadow-sm">
-          <i class="fas fa-brain text-twitter-blue text-base"></i>
+  <div id="grokModal" class="hidden fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
+    <!-- Double-Bezel Outer Shell -->
+    <div class="w-full max-w-sm p-1.5 bg-white/10 rounded-[28px] border border-white/15 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)]">
+      <!-- Inner Core Card -->
+      <div class="bg-[#15202b] rounded-[22px] p-5 space-y-4 border border-white/10 relative text-white">
+        
+        <!-- Close Button -->
+        <button id="closeGrokModalBtn" class="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white flex items-center justify-center transition-all border-none cursor-pointer text-xs">
+          <i class="fas fa-times"></i>
+        </button>
+        
+        <!-- Modal Title Header -->
+        <div class="flex items-center gap-3 pr-6">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#1d9bf0]/25 to-[#1d9bf0]/10 border border-[#1d9bf0]/30 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(29,155,240,0.25)]">
+            <i class="fas fa-brain text-[#1d9bf0] text-base"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-white leading-tight tracking-tight">Import Your X Personality</h3>
+            <p class="text-[11px] text-twitter-text-secondary mt-0.5 font-medium">Analyze your posts with Grok in 4 steps</p>
+          </div>
         </div>
-        <div>
-          <h3 class="text-base font-bold text-white leading-tight">Import Your X Personality</h3>
-          <p class="text-[11px] text-twitter-text-secondary mt-0.5">Analyze your posts with Grok in 4 steps</p>
+        
+        <!-- Step List Box -->
+        <div class="space-y-3 bg-black/30 p-3.5 border border-white/10 rounded-2xl">
+          <div class="flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full bg-[#1d9bf0]/20 text-[#1d9bf0] border border-[#1d9bf0]/40 text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">1</span>
+            <p class="text-xs text-twitter-text-secondary leading-relaxed m-0">Click <strong class="text-white font-bold">Copy Prompt</strong> below to copy the analysis prompt.</p>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full bg-[#1d9bf0]/20 text-[#1d9bf0] border border-[#1d9bf0]/40 text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">2</span>
+            <p class="text-xs text-twitter-text-secondary leading-relaxed m-0">Open <strong class="text-white font-bold">Grok</strong> on X or <a href="https://x.ai" target="_blank" class="text-[#1d9bf0] hover:underline font-bold no-underline">x.ai</a>.</p>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full bg-[#1d9bf0]/20 text-[#1d9bf0] border border-[#1d9bf0]/40 text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">3</span>
+            <p class="text-xs text-twitter-text-secondary leading-relaxed m-0">Paste the prompt. Grok will analyze your public X profile &amp; posts.</p>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full bg-[#1d9bf0]/20 text-[#1d9bf0] border border-[#1d9bf0]/40 text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">4</span>
+            <p class="text-xs text-twitter-text-secondary leading-relaxed m-0">Copy Grok's structured response and paste it into the box.</p>
+          </div>
         </div>
-      </div>
-      
-      <!-- DETAILED GUIDANCE STEPS -->
-      <div class="space-y-3 bg-[#0b141d] p-4 border border-white/10 rounded-2xl">
-        <div class="flex items-start gap-3">
-          <span class="w-6 h-6 rounded-full bg-twitter-blue/20 text-twitter-blue text-xs font-black flex items-center justify-center shrink-0 mt-0.5">1</span>
-          <p class="text-xs text-twitter-text-secondary leading-relaxed">Click <strong class="text-white">Copy Prompt</strong> below to copy the analysis prompt.</p>
-        </div>
-        <div class="flex items-start gap-3">
-          <span class="w-6 h-6 rounded-full bg-twitter-blue/20 text-twitter-blue text-xs font-black flex items-center justify-center shrink-0 mt-0.5">2</span>
-          <p class="text-xs text-twitter-text-secondary leading-relaxed">Open <strong class="text-white">Grok</strong> on X or <a href="https://x.ai" target="_blank" class="text-twitter-blue underline font-bold">x.ai</a>.</p>
-        </div>
-        <div class="flex items-start gap-3">
-          <span class="w-6 h-6 rounded-full bg-twitter-blue/20 text-twitter-blue text-xs font-black flex items-center justify-center shrink-0 mt-0.5">3</span>
-          <p class="text-xs text-twitter-text-secondary leading-relaxed">Paste the prompt. Grok will analyze your public X profile & posts.</p>
-        </div>
-        <div class="flex items-start gap-3">
-          <span class="w-6 h-6 rounded-full bg-twitter-blue/20 text-twitter-blue text-xs font-black flex items-center justify-center shrink-0 mt-0.5">4</span>
-          <p class="text-xs text-twitter-text-secondary leading-relaxed">Copy Grok's structured response and paste it into the box.</p>
-        </div>
-      </div>
 
-      <!-- PROMPT COPY & REDIRECT ACTION -->
-      <button id="copyGrokPromptBtn" class="w-full py-3.5 px-4 bg-twitter-blue hover:bg-[#1a8cd8] active:scale-98 text-white font-black rounded-xl text-xs tracking-wide transition-all border-none cursor-pointer flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(29,155,240,0.3)]">
-        <i class="far fa-copy"></i> Copy Prompt & Open Grok →
-      </button>
+        <!-- Button-in-Button Trailing Icon CTA -->
+        <button id="copyGrokPromptBtn" class="group w-full py-3 px-4 bg-gradient-to-r from-[#1d9bf0] to-[#0c8ad9] hover:from-[#1a8cd8] hover:to-[#097abf] active:scale-[0.98] text-white font-black text-xs rounded-xl transition-all duration-200 shadow-[0_4px_16px_rgba(29,155,240,0.35)] flex items-center justify-between border-none cursor-pointer">
+          <div class="flex items-center gap-2">
+            <i class="far fa-copy text-sm"></i>
+            <span class="tracking-wide">Copy Prompt &amp; Open Grok</span>
+          </div>
+          <span class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white transition-transform group-hover:translate-x-1">
+            <i class="fas fa-arrow-right text-[10px]"></i>
+          </span>
+        </button>
+
+      </div>
     </div>
   </div>
 

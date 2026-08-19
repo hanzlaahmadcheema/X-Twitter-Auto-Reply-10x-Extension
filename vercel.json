@@ -5,6 +5,9 @@
     { "source": "/.netlify/functions/auth", "destination": "/api/auth" },
     { "source": "/.netlify/functions/callback", "destination": "/api/callback" },
     { "source": "/.netlify/functions/status", "destination": "/api/status" },
-    { "source": "/.netlify/functions/admin", "destination": "/api/admin" }
+    { "source": "/.netlify/functions/notice", "destination": "/api/notice" },
+    { "source": "/.netlify/functions/admin", "destination": "/api/admin" },
+    { "source": "/admin/(.*)", "destination": "/admin/index.html" },
+    { "source": "/admin", "destination": "/admin/index.html" }
   ]
 }
