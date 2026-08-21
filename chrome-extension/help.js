@@ -22,10 +22,10 @@ function updateWhatsAppLinks() {
         const applyUrl = (e, n) => {
             const msg = `Hey Hanzla Ahmad!\n\nContacting you regarding the X-Reply Agent extension. I would appreciate your help setting it up!\n\nMy Name: ${n}\nMy Email: ${e}\nAnyDesk Address: [Optional: write your address]`;
             const waUrl = `https://wa.me/923266900001?text=${encodeURIComponent(msg)}`;
-            const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=${encodeURIComponent(waUrl)}`;
+            const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(waUrl)}`;
             
             document.querySelectorAll('.wa-link').forEach(a => a.href = waUrl);
-            document.querySelectorAll('#qrList, #qrDetail').forEach(img => img.src = qrSrc);
+            document.querySelectorAll('#qrList, #qrDetail, #modalHelpQr').forEach(img => img.src = qrSrc);
         };
 
         if ((email === "[Write your email]" || name === "[Write your name]") && typeof chrome !== "undefined" && chrome.identity && chrome.identity.getProfileUserInfo) {
@@ -49,6 +49,34 @@ function updateWhatsAppLinks() {
 }
 
 updateWhatsAppLinks();
+
+// Fullscreen QR Modal Handler in Help Page
+const helpQrModal = document.getElementById("helpQrModal");
+const closeHelpQrModalBtn = document.getElementById("closeHelpQrModalBtn");
+
+const openHelpQr = (e) => {
+    if (e) e.preventDefault();
+    if (helpQrModal) helpQrModal.style.display = "flex";
+};
+
+const closeHelpQr = (e) => {
+    if (e) e.preventDefault();
+    if (helpQrModal) helpQrModal.style.display = "none";
+};
+
+document.querySelectorAll('.open-qr-modal-btn, .qr-wrap, #qrList, #qrDetail').forEach(el => {
+    el.addEventListener('click', openHelpQr);
+});
+
+if (closeHelpQrModalBtn) closeHelpQrModalBtn.addEventListener('click', closeHelpQr);
+if (helpQrModal) {
+    helpQrModal.addEventListener('click', (e) => {
+        if (e.target === helpQrModal) closeHelpQr();
+    });
+}
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeHelpQr();
+});
 
 const GUIDES = {
     gemini: {

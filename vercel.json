@@ -1,6 +1,7 @@
 {
   "version": 2,
   "rewrites": [
+    { "source": "/.netlify/functions/config", "destination": "/api/config" },
     { "source": "/.netlify/functions/models", "destination": "/api/models" },
     { "source": "/.netlify/functions/auth", "destination": "/api/auth" },
     { "source": "/.netlify/functions/callback", "destination": "/api/callback" },

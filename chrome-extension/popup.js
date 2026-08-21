@@ -59,6 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const mainSummaryKey = document.getElementById("mainSummaryKey");
   const mainSummaryKeyLabel = document.getElementById("mainSummaryKeyLabel");
   const customPersonaInput = document.getElementById("customPersona");
+  const textLangSelect = document.getElementById("textLangSelect");
   const speechLangSelect = document.getElementById("speechLang");
   const advToggleBtn = document.getElementById("advToggleBtn");
   const advToggleIcon = document.getElementById("advToggleIcon");
@@ -85,6 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
     customPersona: "",
     personalityProfile: "",
     personalityLastUpdated: "",
+    textLang: "auto",
     speechLang: "en-US",
     setupComplete: false
   };
@@ -105,24 +107,46 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById(viewId).classList.remove("hidden");
   }
 
-  const NETLIFY_MODELS_URL = "https://x-twitter-auto-reply-10x-extension.vercel.app/api/models";
+  const CONFIG_API_URL = "https://x-twitter-auto-reply-10x-extension.vercel.app/api/config";
 
-  async function syncModelsFromNetlify() {
+  async function syncConfigFromRemote() {
     try {
-      chrome.storage.local.get(["remoteModels"], (stored) => {
-        if (stored && stored.remoteModels) {
-          Object.assign(MODELS, stored.remoteModels);
+      chrome.storage.local.get(["remoteConfig"], (stored) => {
+        if (stored && stored.remoteConfig) {
+          if (stored.remoteConfig.models) Object.assign(MODELS, stored.remoteConfig.models);
           if (typeof renderKeysList === "function") renderKeysList();
         }
       });
 
-      const response = await fetch(NETLIFY_MODELS_URL);
+      const response = await fetch(CONFIG_API_URL);
       if (response.ok) {
         const data = await response.json();
-        if (data && data.success && data.models) {
-          Object.assign(MODELS, data.models);
-          chrome.storage.local.set({ remoteModels: data.models });
+        if (data && data.success && data.config) {
+          if (data.config.models) {
+            Object.assign(MODELS, data.config.models);
+          }
+          chrome.storage.local.set({ remoteConfig: data.config });
           if (typeof renderKeysList === "function") renderKeysList();
+
+          // Handle Emergency Kill-Switch notification banner
+          if (data.config.features && data.config.features.extensionEnabled === false) {
+            const noticeTitle = document.getElementById("noticeTitle");
+            const noticeDesc = document.getElementById("noticeDesc");
+            const noticeContainer = document.getElementById("systemNoticeContainer");
+            if (noticeContainer && noticeTitle && noticeDesc) {
+              noticeTitle.textContent = "🚨 Extension Temporarily Disabled";
+              noticeDesc.textContent = "Auto-reply generation has been temporarily disabled by the administrator.";
+              noticeContainer.classList.remove("hidden");
+            }
+          }
+
+          if (data.config.languages && Array.isArray(data.config.languages) && textLangSelect) {
+            const currentSelected = state.textLang || "auto";
+            textLangSelect.innerHTML = data.config.languages.map(l => 
+              `<option value="${l.id}" ${l.id === currentSelected ? 'selected' : ''}>${l.label}</option>`
+            ).join('');
+          }
+
           const activeView = document.querySelector('[id^="view-"]:not(.hidden)')?.id;
           if (activeView === "view-main" && typeof initMainView === "function") {
             initMainView();
@@ -130,11 +154,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     } catch (e) {
-      console.warn("Using offline / fallback model list:", e);
+      console.warn("Using offline / fallback config:", e);
     }
   }
 
-  syncModelsFromNetlify();
+  syncConfigFromRemote();
 
   // Auth Flow & Real-time Verification Check
   setupWhatsAppLink();
@@ -290,11 +314,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const buildUrl = (e, n) => {
         const msg = `Hey Hanzla Ahmad!\n\nContacting you regarding the X-Reply Agent extension. I would appreciate your help setting it up!\n\nMy Name: ${n}\nMy Email: ${e}\nAnyDesk Address: [Optional: write your address]`;
         const url = `https://wa.me/923266900001?text=${encodeURIComponent(msg)}`;
-        if (authWhatsappLink) authWhatsappLink.href = url;
+        document.querySelectorAll("#authWhatsappLink, .waSupportLink").forEach(a => a.href = url);
         if (mainAccountEmail) mainAccountEmail.textContent = e;
 
-        const waQr = document.getElementById("whatsappQrCode");
-        if (waQr) waQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`;
+        const waQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}`;
+        document.querySelectorAll("#whatsappQrCode, .whatsappQrCode, #modalQrCode").forEach(img => img.src = waQrUrl);
       };
 
       if ((email === "[Write your email]" || name === "[Write your name]") && chrome.identity && chrome.identity.getProfileUserInfo) {
@@ -596,7 +620,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       customPersonaInput.value = state.customPersona || "";
-      speechLangSelect.value = state.speechLang || "en-US";
+      if (textLangSelect) textLangSelect.value = state.textLang || "auto";
+      if (speechLangSelect) speechLangSelect.value = state.speechLang || "en-US";
       
       const personalityProfileInput = document.getElementById("personalityProfile");
       const personalityLastUpdatedEl = document.getElementById("personalityLastUpdated");
@@ -754,7 +779,8 @@ Do NOT write generic praise or fluffy prose. Produce a compact, structured profi
 
   saveSettingsBtn.addEventListener("click", () => {
     state.customPersona = customPersonaInput.value.trim();
-    state.speechLang = speechLangSelect.value;
+    if (textLangSelect) state.textLang = textLangSelect.value;
+    if (speechLangSelect) state.speechLang = speechLangSelect.value;
     
     chrome.storage.sync.set(state, () => {
       mainStatus.textContent = "Settings saved!";
@@ -796,4 +822,37 @@ Do NOT write generic praise or fluffy prose. Produce a compact, structured profi
     };
     reader.readAsText(file);
   });
+
+  //#region Fullscreen QR Modal Controls
+  const qrModal = document.getElementById("qrModal");
+  const closeQrModalBtn = document.getElementById("closeQrModalBtn");
+
+  const openQrModal = (e) => {
+    if (e) e.preventDefault();
+    if (qrModal) qrModal.classList.remove("hidden");
+  };
+
+  const closeQrModal = (e) => {
+    if (e) e.preventDefault();
+    if (qrModal) qrModal.classList.add("hidden");
+  };
+
+  document.body.addEventListener("click", (e) => {
+    const trigger = e.target.closest("#openQrModalBtn, .openQrModalBtn, #qrPreviewWrapper, .qrPreviewWrapper, #whatsappQrCode, .whatsappQrCode");
+    if (trigger) {
+      openQrModal(e);
+    }
+  });
+
+  if (closeQrModalBtn) closeQrModalBtn.addEventListener("click", closeQrModal);
+  if (qrModal) {
+    qrModal.addEventListener("click", (e) => {
+      if (e.target === qrModal) closeQrModal();
+    });
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeQrModal();
+  });
+  //#endregion
 });

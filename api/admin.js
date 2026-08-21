@@ -71,6 +71,22 @@ module.exports = async function handler(req, res) {
       );
     `;
 
+    await client`
+      CREATE TABLE IF NOT EXISTS models_config (
+        id INT PRIMARY KEY DEFAULT 1,
+        data JSONB NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+    `;
+
+    await client`
+      CREATE TABLE IF NOT EXISTS app_config (
+        key VARCHAR(255) PRIMARY KEY,
+        data JSONB NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+    `;
+
     // ── GET /api/admin ──────────────────────────────────────────────
     if (req.method === 'GET') {
       if (req.query.type === 'notice') {
@@ -81,6 +97,28 @@ module.exports = async function handler(req, res) {
           LIMIT 1
         `;
         return res.status(200).json({ notice: rows && rows.length > 0 ? rows[0] : null });
+      }
+
+      if (req.query.type === 'models') {
+        const rows = await client`
+          SELECT data, updated_at as "updatedAt"
+          FROM models_config
+          WHERE id = 1
+          LIMIT 1
+        `;
+        return res.status(200).json({ models: rows && rows.length > 0 ? rows[0].data : null });
+      }
+
+      if (req.query.type === 'config' || req.query.type === 'features' || req.query.type === 'tones' || req.query.type === 'lengths' || req.query.type === 'languages' || req.query.type === 'systemPrompt') {
+        const targetKey = req.query.type === 'config' ? null : req.query.type;
+        if (targetKey) {
+          const rows = await client`SELECT data FROM app_config WHERE key = ${targetKey} LIMIT 1`;
+          return res.status(200).json({ [targetKey]: rows && rows.length > 0 ? rows[0].data : null });
+        }
+        const rows = await client`SELECT key, data FROM app_config`;
+        const result = {};
+        if (rows) rows.forEach(r => { result[r.key] = r.data; });
+        return res.status(200).json({ config: result });
       }
 
       const search = req.query.q?.toLowerCase()?.trim() || '';
@@ -107,6 +145,26 @@ module.exports = async function handler(req, res) {
     if (req.method === 'POST' || req.method === 'PATCH') {
       const body = req.body || {};
 
+      // Handle App Config Save/Update (features, tones, lengths, languages, systemPrompt, etc.)
+      const configKey = req.query.type || body.type;
+      if (['features', 'tones', 'lengths', 'languages', 'systemPrompt', 'app_config'].includes(configKey)) {
+        const payloadData = body.data !== undefined ? body.data : body[configKey];
+        if (payloadData === undefined) {
+          return res.status(400).json({ error: `Missing payload data for ${configKey}` });
+        }
+
+        const updated = await client`
+          INSERT INTO app_config (key, data, updated_at)
+          VALUES (${configKey}, ${JSON.stringify(payloadData)}::jsonb, NOW())
+          ON CONFLICT (key) DO UPDATE SET
+            data = EXCLUDED.data,
+            updated_at = NOW()
+          RETURNING key, data, updated_at as "updatedAt"
+        `;
+
+        return res.status(200).json({ success: true, key: configKey, data: updated[0].data });
+      }
+
       // Handle Notice Save/Update
       if (req.query.type === 'notice' || body.type === 'notice') {
         const title = (body.title || '').trim();
@@ -129,6 +187,34 @@ module.exports = async function handler(req, res) {
         `;
 
         return res.status(200).json({ success: true, notice: updated[0] });
+      }
+
+      // Handle Models Save/Update
+      if (req.query.type === 'models' || body.type === 'models') {
+        const modelsData = body.models || body.data;
+        if (!modelsData || typeof modelsData !== 'object') {
+          return res.status(400).json({ error: 'Invalid models configuration JSON payload.' });
+        }
+
+        const updated = await client`
+          INSERT INTO models_config (id, data, updated_at)
+          VALUES (1, ${JSON.stringify(modelsData)}::jsonb, NOW())
+          ON CONFLICT (id) DO UPDATE SET
+            data = EXCLUDED.data,
+            updated_at = NOW()
+          RETURNING data, updated_at as "updatedAt"
+        `;
+
+        // Also sync into app_config table key 'models' for consistency
+        await client`
+          INSERT INTO app_config (key, data, updated_at)
+          VALUES ('models', ${JSON.stringify(modelsData)}::jsonb, NOW())
+          ON CONFLICT (key) DO UPDATE SET
+            data = EXCLUDED.data,
+            updated_at = NOW()
+        `;
+
+        return res.status(200).json({ success: true, models: updated[0].data });
       }
 
       // Handle User Verification Update

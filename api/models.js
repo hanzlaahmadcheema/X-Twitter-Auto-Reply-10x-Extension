@@ -1,4 +1,6 @@
-const MODELS = {
+const { getDb } = require("./db");
+
+const DEFAULT_MODELS = {
   gemini: {
     name: "Google Gemini",
     tier: "FREE",
@@ -30,6 +32,24 @@ const MODELS = {
       "mistral",
       "phi3"
     ]
+  },
+  grok: {
+    name: "xAI Grok",
+    tier: "PAID",
+    keyRequired: true,
+    models: [
+      "grok-2-1212",
+      "grok-beta"
+    ]
+  },
+  openai: {
+    name: "OpenAI",
+    tier: "PAID",
+    keyRequired: true,
+    models: [
+      "gpt-4o",
+      "gpt-4o-mini"
+    ]
   }
 };
 
@@ -43,11 +63,34 @@ module.exports = async function handler(req, res) {
   }
 
   res.setHeader("Content-Type", "application/json");
-  res.setHeader("Cache-Control", "public, max-age=300");
+  res.setHeader("Cache-Control", "public, max-age=60, must-revalidate");
+
+  let activeModels = DEFAULT_MODELS;
+
+  try {
+    const { client } = getDb();
+    await client`
+      CREATE TABLE IF NOT EXISTS models_config (
+        id INT PRIMARY KEY DEFAULT 1,
+        data JSONB NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+    `;
+
+    const rows = await client`
+      SELECT data FROM models_config WHERE id = 1 LIMIT 1
+    `;
+
+    if (rows && rows.length > 0 && rows[0].data) {
+      activeModels = rows[0].data;
+    }
+  } catch (err) {
+    console.error("Failed to fetch dynamic models from DB, using fallback:", err);
+  }
 
   return res.status(200).json({
     success: true,
     timestamp: new Date().toISOString(),
-    models: MODELS
+    models: activeModels
   });
 };

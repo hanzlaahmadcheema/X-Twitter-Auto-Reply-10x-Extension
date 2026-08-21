@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>X-Twitter Auto Reply Settings</title>
+  <title>HA ReplyX Settings</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     .sr-only {
@@ -43,21 +43,19 @@
       border: 1px solid rgba(255, 255, 255, 0.08) !important;
     }
   </style>
-  <script type="module" crossorigin src="/assets/popup.html-B8gUevcL.js"></script>
+  <script type="module" crossorigin src="/assets/popup.html-DoND2iPI.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-D9-fqq9M.js">
-  <link rel="modulepreload" crossorigin href="/assets/popup-BWUYm2I5.js">
-  <link rel="stylesheet" crossorigin href="/assets/popup-Da-EF-Ur.css">
+  <link rel="modulepreload" crossorigin href="/assets/popup-BrkovYP4.js">
+  <link rel="stylesheet" crossorigin href="/assets/popup-Crf8rKuy.css">
 </head>
 
 <body class="bg-[#0b141d]/95 text-twitter-text font-chirp w-full h-screen mx-auto p-0 flex flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-[#1d9bf011] to-transparent">
 
   <!-- TOP HEADER (Visible only in MAIN view) -->
   <header id="mainHeader" class="hidden shrink-0 flex items-center justify-between p-4 border-b border-white/10 glass z-10">
-    <div class="flex items-center gap-2">
-      <div class="p-1.5 bg-white/10 rounded-lg border border-white/15 flex items-center justify-center shadow-[0_0_12px_rgba(255,255,255,0.1)]">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-      </div>
-      <span class="font-black text-sm">Auto Reply <span class="text-twitter-blue">10x</span></span>
+    <div class="flex items-center gap-2.5">
+      <img src="data:image/png;base64,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" alt="HA ReplyX Logo" class="w-7 h-7 rounded-lg object-contain shadow-sm border border-white/10 p-0.5 bg-white/5">
+      <span class="font-black text-sm tracking-tight">HA <span class="text-twitter-blue">ReplyX</span></span>
     </div>
     <div class="flex items-center gap-2">
       <a href="help.html" title="Help" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-twitter-text-secondary hover:text-twitter-blue transition-colors text-sm">
@@ -78,13 +76,11 @@
         <!-- decorative bg -->
         <div class="absolute -top-20 -right-20 w-40 h-40 bg-twitter-blue/20 blur-3xl rounded-full"></div>
         
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-twitter-blue to-blue-600 flex items-center justify-center shadow-lg relative z-10">
-          <i class="fas fa-robot text-3xl text-white"></i>
-        </div>
+        <img src="/assets/icon-128-8RDNJ1sj.png" alt="HA ReplyX Logo" class="w-20 h-20 rounded-2xl object-contain shadow-2xl relative z-10 p-1 bg-white/5 border border-white/15">
         
         <div class="relative z-10">
-          <h2 class="text-2xl font-black text-white m-0 tracking-tight">Welcome to X-Reply</h2>
-          <p class="text-twitter-text-secondary text-sm mt-2">Your AI assistant for X/Twitter.<br/>Sign in to activate your account.</p>
+          <h2 class="text-2xl font-black text-white m-0 tracking-tight">HA ReplyX</h2>
+          <p class="text-twitter-text-secondary text-xs font-semibold mt-2">AI-Powered Replies. Smarter X Engagement.<br/><span class="text-white/60">Sign in with Google to activate your account.</span></p>
         </div>
         
         <button id="activateBtn" class="relative z-10 w-full py-3.5 px-6 bg-white text-black font-black rounded-xl hover:bg-[#eff3f4] active:scale-95 transition-all shadow-[0_8px_24px_rgba(255,255,255,0.1)] flex items-center justify-center gap-3 border-none cursor-pointer">
@@ -97,10 +93,20 @@
       <div class="mt-6 text-center glass rounded-2xl p-4 border border-white/5 flex flex-col items-center gap-3">
         <p class="text-xs text-twitter-text-secondary font-bold m-0">Need help activating?</p>
         <p class="text-[10px] text-twitter-text-secondary/60 m-0">Scan to contact support on WhatsApp.</p>
-        <div class="bg-white p-1.5 rounded-xl">
-          <img id="whatsappQrCode" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fwa.me%2F923266900001" alt="WhatsApp QR" class="w-20 h-20 block">
+        
+        <div id="qrPreviewWrapper" class="bg-white p-2.5 rounded-2xl shadow-xl border border-white/20 hover:scale-105 transition-all cursor-pointer group relative" title="Click to view full screen">
+          <img id="whatsappQrCode" src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https%3A%2F%2Fwa.me%2F923266900001" alt="WhatsApp QR" class="w-28 h-28 block object-contain">
+          <div class="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1">
+            <i class="fas fa-expand"></i> Enlarge
+          </div>
         </div>
-        <a id="authWhatsappLink" href="#" data-ext-link class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 font-bold rounded-lg transition-all text-xs no-underline border border-[#25D366]/20">
+
+        <button id="openQrModalBtn" type="button" class="w-full py-2.5 px-3 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl border border-white/15 cursor-pointer flex items-center justify-center gap-2 transition-all">
+          <i class="fas fa-expand text-twitter-blue"></i>
+          <span>View Fullscreen QR</span>
+        </button>
+
+        <a id="authWhatsappLink" href="#" data-ext-link class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 font-bold rounded-xl transition-all text-xs no-underline border border-[#25D366]/20">
           <i class="fab fa-whatsapp text-sm"></i> Chat on WhatsApp
         </a>
       </div>
@@ -331,19 +337,40 @@
         </div>
       </div>
 
-      <h3 class="text-xs font-bold text-twitter-text-secondary uppercase tracking-widest mb-3 px-1 border-b border-white/10 pb-2">Voice</h3>
-      <div class="mb-6 px-1">
-        <label for="speechLang" class="block text-xs text-twitter-text-secondary mb-2">Language</label>
-        <div class="relative">
-          <select id="speechLang" class="premium-select w-full py-3 px-4 rounded-xl text-sm outline-none focus:border-twitter-blue transition-all cursor-pointer glass appearance-none">
-            <option value="en-US">English (US)</option>
-            <option value="ur-PK">Urdu (Pakistan)</option>
-            <option value="hi-IN">Hindi (India)</option>
-            <option value="es-ES">Spanish</option>
-            <option value="fr-FR">French</option>
-          </select>
-          <div class="absolute right-4 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
-            <i class="fas fa-chevron-down"></i>
+      <h3 class="text-xs font-bold text-twitter-text-secondary uppercase tracking-widest mb-3 px-1 border-b border-white/10 pb-2">Language Preferences</h3>
+      <div class="mb-6 px-1 flex flex-col gap-4">
+        <div>
+          <label for="textLangSelect" class="block text-xs text-twitter-text-secondary mb-2">Default Reply Text Language</label>
+          <div class="relative">
+            <select id="textLangSelect" class="premium-select w-full py-3 px-4 rounded-xl text-sm outline-none focus:border-twitter-blue transition-all cursor-pointer glass appearance-none">
+              <option value="auto">Auto-Detect Tweet Language</option>
+              <option value="en-US">English (US)</option>
+              <option value="ur-PK">Urdu (Pakistan)</option>
+              <option value="hi-IN">Hindi (India)</option>
+              <option value="es-ES">Spanish</option>
+              <option value="fr-FR">French</option>
+              <option value="ar-SA">Arabic</option>
+              <option value="de-DE">German</option>
+            </select>
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
+              <i class="fas fa-chevron-down"></i>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label for="speechLang" class="block text-xs text-twitter-text-secondary mb-2">Speech-to-Text Voice Language</label>
+          <div class="relative">
+            <select id="speechLang" class="premium-select w-full py-3 px-4 rounded-xl text-sm outline-none focus:border-twitter-blue transition-all cursor-pointer glass appearance-none">
+              <option value="en-US">English (US)</option>
+              <option value="ur-PK">Urdu (Pakistan)</option>
+              <option value="hi-IN">Hindi (India)</option>
+              <option value="es-ES">Spanish</option>
+              <option value="fr-FR">French</option>
+            </select>
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-twitter-text-secondary pointer-events-none text-xs">
+              <i class="fas fa-chevron-down"></i>
+            </div>
           </div>
         </div>
       </div>
@@ -371,6 +398,28 @@
           </div>
           
         </div>
+      </div>
+
+      <!-- Support & Activation WhatsApp QR Section -->
+      <div class="mb-6 text-center glass rounded-2xl p-4 border border-white/5 flex flex-col items-center gap-3">
+        <p class="text-xs text-twitter-text-secondary font-bold m-0">Need WhatsApp Support?</p>
+        <p class="text-[10px] text-twitter-text-secondary/60 m-0">Scan or tap below to chat directly with support.</p>
+        
+        <div class="qrPreviewWrapper bg-white p-2.5 rounded-2xl shadow-xl border border-white/20 hover:scale-105 transition-all cursor-pointer group relative" title="Click to view full screen">
+          <img class="whatsappQrCode w-28 h-28 block object-contain" src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https%3A%2F%2Fwa.me%2F923266900001" alt="WhatsApp QR">
+          <div class="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1">
+            <i class="fas fa-expand"></i> Enlarge
+          </div>
+        </div>
+
+        <button type="button" class="openQrModalBtn w-full py-2.5 px-3 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl border border-white/15 cursor-pointer flex items-center justify-center gap-2 transition-all">
+          <i class="fas fa-expand text-twitter-blue"></i>
+          <span>View Fullscreen QR</span>
+        </button>
+
+        <a href="https://wa.me/923266900001" target="_blank" data-ext-link class="waSupportLink w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 font-bold rounded-xl transition-all text-xs no-underline border border-[#25D366]/20">
+          <i class="fab fa-whatsapp text-sm"></i> Chat on WhatsApp
+        </a>
       </div>
 
       <div class="mt-auto sticky bottom-0 pt-4 pb-2 bg-[#0b141d]/95 backdrop-blur-md border-t border-white/10 -mx-4 px-4 shadow-[0_-10px_20px_rgba(11,20,29,1)]">
@@ -434,9 +483,29 @@
           <span class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white transition-transform group-hover:translate-x-1">
             <i class="fas fa-arrow-right text-[10px]"></i>
           </span>
-        </button>
-
       </div>
+    </div>
+  </div>
+
+  <!-- FULLSCREEN QR MODAL -->
+  <div id="qrModal" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 hidden animate-in fade-in duration-200">
+    <div class="relative max-w-xs w-full bg-[#15202b] border border-white/20 rounded-3xl p-6 flex flex-col items-center text-center shadow-2xl">
+      <button id="closeQrModalBtn" type="button" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border-none cursor-pointer text-xs font-bold transition-all">
+        <i class="fas fa-xmark"></i>
+      </button>
+
+      <div class="w-12 h-12 rounded-2xl bg-[#25D366]/15 border border-[#25D366]/30 flex items-center justify-center text-[#25D366] text-xl mb-3">
+        <i class="fab fa-whatsapp"></i>
+      </div>
+
+      <h3 class="text-base font-black text-white m-0 tracking-tight">WhatsApp Support QR</h3>
+      <p class="text-xs text-twitter-text-secondary mt-1 mb-4">Point your phone camera or WhatsApp scanner to connect</p>
+      
+      <div class="p-4 bg-white rounded-2xl shadow-2xl border border-black/10 mb-4">
+        <img id="modalQrCode" src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https%3A%2F%2Fwa.me%2F923266900001" alt="WhatsApp QR Fullscreen" class="w-56 h-56 block object-contain">
+      </div>
+      
+      <p class="text-[11px] font-medium text-twitter-text-secondary/70 m-0">Direct support line: +92 326 6900001</p>
     </div>
   </div>
 

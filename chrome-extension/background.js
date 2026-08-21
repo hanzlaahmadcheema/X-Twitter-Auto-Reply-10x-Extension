@@ -145,16 +145,64 @@ const ACTION_PROMPTS = {
   `
 };
 
+let remoteConfigCache = {
+  features: { extensionEnabled: true, enableVoiceInput: true, enableSelectionMenu: true, enableScreenshot: true, maxDailyRepliesPerUser: 100 },
+  tones: null,
+  lengths: null,
+  systemPrompt: null
+};
+
+async function syncFullConfigFromRemote() {
+  try {
+    const res = await fetch("https://x-twitter-auto-reply-10x-extension.vercel.app/api/config");
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.config) {
+        remoteConfigCache = data.config;
+        chrome.storage.local.set({ remoteConfig: data.config });
+
+        if (Array.isArray(data.config.tones) && data.config.tones.length > 0) {
+          CONFIG.TONES = data.config.tones;
+          data.config.tones.forEach(t => {
+            if (t.id && t.prompt) tonePrompts[t.id] = t.prompt;
+          });
+        }
+        if (Array.isArray(data.config.lengths) && data.config.lengths.length > 0) {
+          CONFIG.LENGTHS = data.config.lengths;
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Failed to sync remote config:", err);
+  }
+}
+
+// Initial remote config sync
+syncFullConfigFromRemote();
+
 // Helper to generate prompt
 function getSystemPrompt(message, customPersona, personalityProfile) {
   if (message.selectionAction && ACTION_PROMPTS[message.selectionAction]) {
     return ACTION_PROMPTS[message.selectionAction];
   }
 
-  const toneDesc = tonePrompts[message.tone] || tonePrompts.optimal;
-  const lengthObj = CONFIG.LENGTHS.find(l => l.id === message.length) || CONFIG.LENGTHS[1];
+  const toneObj = (CONFIG.TONES || []).find(t => t.id === message.tone);
+  const toneDesc = (toneObj && toneObj.prompt) || tonePrompts[message.tone] || tonePrompts.optimal || "Write in a natural tone.";
+  const lengthObj = (CONFIG.LENGTHS || []).find(l => l.id === message.length) || CONFIG.LENGTHS[1];
   const langReq = message.lang || "The response language should match the tweet";
-  const lengthReq = lengthObj.value;
+  const lengthReq = lengthObj ? lengthObj.value : "match typical tweet length";
+
+  if (remoteConfigCache.systemPrompt) {
+    let prompt = remoteConfigCache.systemPrompt;
+    prompt = prompt.replace(/\{\{persona\}\}/g, customPersona || "A helpful and engaging Twitter user");
+    prompt = prompt.replace(/\{\{tone\}\}/g, toneDesc);
+    prompt = prompt.replace(/\{\{accountName\}\}/g, message.accountName || "Unknown User");
+    prompt = prompt.replace(/\{\{lang\}\}/g, langReq);
+    prompt = prompt.replace(/\{\{length\}\}/g, lengthReq);
+    prompt = prompt.replace(/\{\{customPrompt\}\}/g, message.customPrompt ? `Specific Instruction: ${message.customPrompt}` : "");
+    prompt = prompt.replace(/\{\{personalityProfile\}\}/g, personalityProfile ? `**User's Authentic X Personality Profile (DO NOT DEVIATE):**\n${personalityProfile}\n` : "");
+    return prompt;
+  }
 
   return CONFIG.SYSTEM_PROMPT_TEMPLATE(
     customPersona,
@@ -229,6 +277,10 @@ chrome.runtime.onConnect.addListener((port) => {
 
   port.onMessage.addListener(async (message) => {
     if (message.action === "generateReply") {
+      if (remoteConfigCache.features && remoteConfigCache.features.extensionEnabled === false) {
+        port.postMessage({ error: "Auto-reply generation is temporarily disabled by administrator." });
+        return;
+      }
       chrome.storage.local.get(["activationToken"], async (localData) => {
         if (!localData.activationToken || !(await verifyJWT(localData.activationToken))) {
           port.postMessage({ chunk: "\n\n[License Not Activated. Please activate via the extension popup.]", fullReply: "", done: true });

@@ -10,3 +10,5 @@ npm-debug.log
 release/
 extension-release.zip
 .vercel
+.env*
+scratch/

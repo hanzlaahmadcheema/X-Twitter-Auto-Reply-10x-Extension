@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Key Guide | Auto Reply 10x</title>
+    <title>HA ReplyX — AI-Powered Replies. Smarter X Engagement.</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         html, body {
@@ -177,10 +177,10 @@
         }
         .whatsapp-block .wa-link:hover { text-decoration: underline; }
     </style>
-  <script type="module" crossorigin src="/assets/help-CYPW4B7m.js"></script>
+  <script type="module" crossorigin src="/assets/help-BJzRE_vH.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-D9-fqq9M.js">
-  <link rel="modulepreload" crossorigin href="/assets/popup-BWUYm2I5.js">
-  <link rel="stylesheet" crossorigin href="/assets/popup-Da-EF-Ur.css">
+  <link rel="modulepreload" crossorigin href="/assets/popup-BrkovYP4.js">
+  <link rel="stylesheet" crossorigin href="/assets/popup-Crf8rKuy.css">
 </head>
 <body>
     <header>
@@ -259,13 +259,18 @@
                 <i class="fas fa-chevron-right chevron"></i>
             </div>
 
-            <div class="whatsapp-block" style="margin-top:20px">
-                <div style="background:#fff;padding:6px;border-radius:10px;flex-shrink:0">
-                    <img id="qrList" src="" alt="WhatsApp QR" style="width:64px;height:64px;display:block">
+            <div class="whatsapp-block" style="margin-top:20px;display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);padding:14px;border-radius:14px">
+                <div class="qr-wrap" style="background:#fff;padding:8px;border-radius:12px;flex-shrink:0;cursor:pointer" title="Click to enlarge QR">
+                    <img id="qrList" src="" alt="WhatsApp QR" style="width:84px;height:84px;display:block">
                 </div>
-                <div>
-                    <div class="wa-text">Still stuck? We'll help you personally.</div>
-                    <a href="https://wa.me/923266900001" target="_blank" class="wa-link">Chat on WhatsApp →</a>
+                <div style="flex:1">
+                    <div class="wa-text" style="font-weight:bold;margin-bottom:6px;font-size:13px">Still stuck? We'll help you personally.</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button type="button" class="open-qr-modal-btn" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:6px 12px;border-radius:8px;font-weight:bold;font-size:11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+                            <i class="fas fa-expand" style="color:#1da1f2"></i> Enlarge QR
+                        </button>
+                        <a href="https://wa.me/923266900001" target="_blank" class="wa-link" style="color:#25D366;font-weight:bold;font-size:12px;text-decoration:none">Chat on WhatsApp →</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -284,17 +289,38 @@
 
             <div class="action-section" id="detailActions"></div>
 
-            <div class="whatsapp-block">
-                <div style="background:#fff;padding:6px;border-radius:10px;flex-shrink:0">
-                    <img id="qrDetail" src="" alt="WhatsApp QR" style="width:64px;height:64px;display:block">
+            <div class="whatsapp-block" style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);padding:14px;border-radius:14px">
+                <div class="qr-wrap" style="background:#fff;padding:8px;border-radius:12px;flex-shrink:0;cursor:pointer" title="Click to enlarge QR">
+                    <img id="qrDetail" src="" alt="WhatsApp QR" style="width:84px;height:84px;display:block">
                 </div>
-                <div>
-                    <div class="wa-text">Need help? Message us directly.</div>
-                    <a href="https://wa.me/923266900001" target="_blank" class="wa-link">Chat on WhatsApp →</a>
+                <div style="flex:1">
+                    <div class="wa-text" style="font-weight:bold;margin-bottom:6px;font-size:13px">Need help? Message us directly.</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button type="button" class="open-qr-modal-btn" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:6px 12px;border-radius:8px;font-weight:bold;font-size:11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+                            <i class="fas fa-expand" style="color:#1da1f2"></i> Enlarge QR
+                        </button>
+                        <a href="https://wa.me/923266900001" target="_blank" class="wa-link" style="color:#25D366;font-weight:bold;font-size:12px;text-decoration:none">Chat on WhatsApp →</a>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- FULLSCREEN QR MODAL IN HELP PAGE -->
+    <div id="helpQrModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px">
+        <div style="position:relative;max-width:320px;width:100%;background:#15202b;border:1px solid rgba(255,255,255,0.2);border-radius:24px;padding:24px;text-align:center;color:#fff">
+            <button id="closeHelpQrModalBtn" type="button" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);color:#fff;border:none;cursor:pointer;font-weight:bold">✕</button>
+            <div style="width:48px;height:48px;border-radius:16px;background:rgba(37,211,102,0.15);color:#25D366;display:inline-flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:12px">
+                <i class="fab fa-whatsapp"></i>
+            </div>
+            <h3 style="margin:0;font-size:18px;font-weight:900">Scan WhatsApp QR</h3>
+            <p style="font-size:12px;color:#71767b;margin:6px 0 16px">Point your phone camera or WhatsApp scanner to connect</p>
+            <div style="background:#fff;padding:16px;border-radius:20px;display:inline-block;margin-bottom:14px">
+                <img id="modalHelpQr" src="" alt="WhatsApp QR Fullscreen" style="width:224px;height:224px;display:block;object-fit:contain">
+            </div>
+            <div style="font-size:11px;color:#71767b">Direct support line: +92 326 6900001</div>
+        </div>
+    </div>
 
 </body>
 </html>
