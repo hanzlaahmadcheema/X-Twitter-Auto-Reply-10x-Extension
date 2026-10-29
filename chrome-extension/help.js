@@ -139,6 +139,22 @@ const GUIDES = {
             { title: "Copy and paste", desc: "Copy the key and paste it into the extension." }
         ]
     },
+    brave_mic: {
+        title: "Brave Browser Voice Input",
+        sub: "Enable speech recognition in Brave",
+        iconHtml: '<i class="fas fa-microphone" style="color:#1da1f2;font-size:18px"></i>',
+        iconBg: "rgba(29,161,242,0.15)",
+        consoleUrl: "brave://settings/system",
+        consoleTxt: "Open Brave Settings",
+        docsUrl: "https://support.brave.com/",
+        docsTxt: "Brave Support",
+        steps: [
+            { title: "Open Brave System Settings", desc: "Open a new tab and navigate to <code>brave://settings/system</code> (or search for 'speech' in Brave Settings)." },
+            { title: "Toggle Google Speech Services", desc: "Turn ON the option: <strong>'Use Google services for speech recognition'</strong>." },
+            { title: "Allow Site Microphone Access", desc: "On x.com or web.whatsapp.com, click the tune/lock icon in the URL bar and make sure <strong>Microphone</strong> is set to <strong>Allow</strong>." },
+            { title: "Relaunch Brave", desc: "Restart Brave Browser. You can now click the microphone button or double-tap Space to transcribe voice directly!" }
+        ]
+    },
     edenai: {
         title: "Eden AI (PAID)",
         sub: "One key, many AI providers",

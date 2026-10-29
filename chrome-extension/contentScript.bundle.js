@@ -176,24 +176,35 @@ class SpeechRecognitionManager {
       // showSuccessMessage(`${ICONS.check} Speech recognized`);
     };
 
-    this.recognition.onerror = (event) => {
+    this.recognition.onerror = async (event) => {
       const errorMsg = event.error;
       let userMessage = `${ICONS.exclamationCircle} Speech recognition error: ${errorMsg}`;
 
+      let isBrave = false;
+      try {
+        if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
+          isBrave = await navigator.brave.isBrave();
+        }
+      } catch (e) {}
+
       // Categorize errors for better user feedback
-      if (errorMsg === 'no-speech' || errorMsg === 'audio-capture') {
-        userMessage = `${ICONS.exclamationCircle} No audio detected. Please check your microphone.`;
-      } else if (errorMsg === 'network') {
-        userMessage = `${ICONS.exclamationCircle} Network error. Please check your connection.`;
-      } else if (errorMsg === 'not-allowed') {
-        userMessage = `${ICONS.exclamationCircle} Microphone permission denied.`;
+      if (errorMsg === 'network') {
+        if (isBrave) {
+          userMessage = `${ICONS.exclamationCircle} <b>Brave blocks Google speech services by default.</b><br>To enable: Go to <b>brave://settings/system</b> &rarr; toggle on <i>"Use Google services for speech recognition"</i>, then restart Brave.`;
+        } else {
+          userMessage = `${ICONS.exclamationCircle} Speech recognition network error. Please check your internet connection.`;
+        }
+      } else if (errorMsg === 'not-allowed' || errorMsg === 'service-not-allowed') {
+        userMessage = `${ICONS.exclamationCircle} Microphone access denied. Please click the permissions icon in the address bar to allow microphone access.`;
+      } else if (errorMsg === 'no-speech' || errorMsg === 'audio-capture') {
+        userMessage = `${ICONS.exclamationCircle} No audio detected. Please check your microphone input device.`;
       }
 
       if (DEBUG) {
         log('Speech recognition error:', errorMsg);
       }
 
-      // showSuccessMessage(userMessage);
+      showNotification(userMessage, true, 7000);
       this.stop();
     };
 
@@ -202,7 +213,7 @@ class SpeechRecognitionManager {
     };
   }
 
-  start(button, config = {}) {
+  async start(button, config = {}) {
     // Stop any existing recording
     if (this.isRecording) {
       this.stop();
@@ -221,8 +232,24 @@ class SpeechRecognitionManager {
       this.recognition = null;
     }
 
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      let isBrave = false;
+      try {
+        if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
+          isBrave = await navigator.brave.isBrave();
+        }
+      } catch (e) {}
+      if (isBrave) {
+        showNotification(`${ICONS.exclamationCircle} Speech recognition is disabled in Brave.<br>Go to <b>brave://settings/system</b> &rarr; enable <i>"Use Google services for speech recognition"</i>.`, true, 7000);
+      } else {
+        showNotification(`${ICONS.exclamationCircle} Speech recognition is not supported in this browser.`, true, 4000);
+      }
+      return;
+    }
+
     // Create new recognition instance
-    this.recognition = new webkitSpeechRecognition();
+    this.recognition = new SpeechRecognition();
     this.recognition.lang = config.lang || "ur-PK";
     this.recognition.interimResults = config.interimResults || false;
     this.recognition.maxAlternatives = config.maxAlternatives || 1;
@@ -654,26 +681,32 @@ async function takeScreenshot(tweetElement) {
 let notificationElement = null;
 let notificationTimeout = null;
 
-// Function to show a small success notification (optimized with element reuse)
-function showSuccessMessage(message) {
+// Function to show notification with configurable duration & styling
+function showNotification(message, isError = false, duration = 3000) {
   // Create notification element if it doesn't exist
   if (!notificationElement) {
     notificationElement = document.createElement("div");
     notificationElement.className = "speech-extension-notification";
     notificationElement.style.cssText = `
       position: fixed;
-      bottom: 20px;
-      right: 40pc;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
       background: #1DA1F2;
       color: white;
-      padding: 20px 25px;
-      border-radius: 5px;
-      font-size: 16px;
-      z-index: 10000;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      padding: 14px 22px;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.45;
+      z-index: 100000;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
       opacity: 0;
-      transition: opacity 0.3s ease-in-out;
+      transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
       pointer-events: none;
+      max-width: 90vw;
+      width: max-content;
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     `;
     document.body.appendChild(notificationElement);
   }
@@ -683,18 +716,25 @@ function showSuccessMessage(message) {
     clearTimeout(notificationTimeout);
   }
 
+  // Set color: error red (#e0245e) or primary blue (#1DA1F2)
+  notificationElement.style.background = isError ? "#e0245e" : "#1DA1F2";
+  notificationElement.style.border = isError ? "1px solid rgba(255, 255, 255, 0.2)" : "none";
+
   // Update message and show
   notificationElement.innerHTML = message;
   notificationElement.style.opacity = "1";
   notificationElement.style.pointerEvents = "auto";
 
-  // Hide after 2000ms (reduced from 3000ms for faster feedback)
   notificationTimeout = setTimeout(() => {
     if (notificationElement) {
       notificationElement.style.opacity = "0";
       notificationElement.style.pointerEvents = "none";
     }
-  }, 2000);
+  }, duration);
+}
+
+function showSuccessMessage(message) {
+  showNotification(message, false, 2500);
 }
 
 
@@ -1016,14 +1056,139 @@ function initializeWhatsAppMicButton() {
 //#endregion
 
 //#region Tone Prompts
+let extensionConfigCache = null;
+let pendingConfigPromise = null;
+
+function getExtensionConfig() {
+  if (extensionConfigCache) return Promise.resolve(extensionConfigCache);
+  if (pendingConfigPromise) return pendingConfigPromise;
+
+  pendingConfigPromise = new Promise(resolve => {
+    try {
+      if (!isExtensionValid()) {
+        resolve({ tones: [], lengths: [] });
+        pendingConfigPromise = null;
+        return;
+      }
+      chrome.runtime.sendMessage({ action: "getConfig" }, (response) => {
+        if (chrome.runtime.lastError || !response) {
+          resolve({ tones: [], lengths: [] });
+        } else {
+          extensionConfigCache = response;
+          resolve(response);
+        }
+        pendingConfigPromise = null;
+      });
+    } catch (e) {
+      resolve({ tones: [], lengths: [] });
+      pendingConfigPromise = null;
+    }
+  });
+
+  return pendingConfigPromise;
+}
+
+// Prefetch config immediately
+getExtensionConfig();
+
+// Close dropdowns on outside click (registered once globally)
+document.addEventListener("click", () => {
+  document.querySelectorAll(".popup-list").forEach(l => l.classList.add("hidden"));
+  document.querySelectorAll(".popup-wrapper").forEach(w => w.classList.remove("open"));
+});
+
+function getComposerScope(element) {
+  if (!element) return null;
+  return (
+    element.closest('[data-testid="tweetTextarea_0_Wrapper"]') ||
+    element.closest('form') ||
+    element.closest('[role="dialog"]') ||
+    element.closest('article') ||
+    element.parentElement
+  );
+}
+
+function cleanDuplicateToneSelectors() {
+  // 1. Remove duplicate containers within the same toolbar element
+  document.querySelectorAll('[data-testid="toolBar"]').forEach(tb => {
+    const containers = tb.querySelectorAll('.tone-selector-container');
+    if (containers.length > 1) {
+      for (let i = 1; i < containers.length; i++) {
+        containers[i].remove();
+      }
+    }
+  });
+
+  // 2. Remove immediate sibling duplicates
+  document.querySelectorAll('.tone-selector-container + .tone-selector-container').forEach(el => {
+    el.remove();
+  });
+
+  // 3. Remove duplicate containers within the same composer scope
+  const seenScopes = new Set();
+  document.querySelectorAll('.tone-selector-container').forEach(container => {
+    const scope = getComposerScope(container) || container.parentElement;
+    if (scope) {
+      if (seenScopes.has(scope)) {
+        container.remove();
+      } else {
+        seenScopes.add(scope);
+      }
+    }
+  });
+}
+
+function findComposerToolbars() {
+  // Primary: Official Twitter toolbar testid
+  const primaryToolbars = Array.from(document.querySelectorAll('[data-testid="toolBar"]'));
+  if (primaryToolbars.length > 0) {
+    return primaryToolbars.filter(tb => !primaryToolbars.some(other => other !== tb && other.contains(tb)));
+  }
+
+  // Fallback ONLY when NO data-testid="toolBar" exists anywhere in the document
+  const fallbackToolbars = Array.from(
+    document.querySelectorAll('[class="css-175oi2r r-1iusvr4 r-16y2uox r-1777fci r-1h8ys4a r-1bylmt5 r-13tjlyg r-7qyjyx r-1ftll1t"]')
+  );
+  return fallbackToolbars.filter(tb => !tb.querySelector('[data-testid="toolBar"]') && !tb.closest('[data-testid="toolBar"]'));
+}
+
 async function appendToneSelector(toolbar) {
+  if (!toolbar) return;
+
+  const composerScope = getComposerScope(toolbar);
+
+  // Synchronous guard checks:
+  if (
+    toolbar.dataset.tonePending === "true" ||
+    toolbar.dataset.toneInjected === "true" ||
+    toolbar.querySelector(".tone-selector-container") ||
+    toolbar.closest(".tone-selector-container") ||
+    (composerScope && (composerScope.querySelector(".tone-selector-container") || composerScope.dataset.tonePending === "true"))
+  ) {
+    return;
+  }
+
+  // Mark pending SYNCHRONOUSLY to prevent duplicate async invocations
+  toolbar.dataset.tonePending = "true";
+  if (composerScope) composerScope.dataset.tonePending = "true";
+
+  // Fetch config (uses memory cache if already fetched)
+  const config = await getExtensionConfig();
+
+  // Safety re-check after await
+  if (
+    toolbar.querySelector(".tone-selector-container") ||
+    (composerScope && composerScope.querySelector(".tone-selector-container")) ||
+    toolbar.dataset.toneInjected === "true"
+  ) {
+    delete toolbar.dataset.tonePending;
+    if (composerScope) delete composerScope.dataset.tonePending;
+    toolbar.dataset.toneInjected = "true";
+    return;
+  }
+
   const container = document.createElement("div");
   container.className = "tone-selector-container";
-
-  // Fetch config from background
-  const config = await new Promise(resolve => {
-    chrome.runtime.sendMessage({ action: "getConfig" }, resolve);
-  });
 
   const createDropdown = (id, options, type) => {
     const wrapper = document.createElement("div");
@@ -1137,13 +1302,24 @@ async function appendToneSelector(toolbar) {
   controlsRow.insertBefore(micButtonEl, generateBtn);
   controlsRow.insertBefore(toneDrop, micButtonEl);
   controlsRow.insertBefore(lengthDrop, toneDrop);
-  toolbar.appendChild(container);
 
-  // Close dropdowns on outside click
-  document.addEventListener("click", () => {
-    document.querySelectorAll(".popup-list").forEach(l => l.classList.add("hidden"));
-    document.querySelectorAll(".popup-wrapper").forEach(w => w.classList.remove("open"));
-  });
+  // Final guard check right before appending
+  if (
+    toolbar.querySelector(".tone-selector-container") ||
+    (composerScope && composerScope.querySelector(".tone-selector-container"))
+  ) {
+    delete toolbar.dataset.tonePending;
+    if (composerScope) delete composerScope.dataset.tonePending;
+    toolbar.dataset.toneInjected = "true";
+    return;
+  }
+
+  toolbar.appendChild(container);
+  delete toolbar.dataset.tonePending;
+  if (composerScope) delete composerScope.dataset.tonePending;
+  toolbar.dataset.toneInjected = "true";
+
+  cleanDuplicateToneSelectors();
 
   //#region Mic Setting
 
@@ -1296,13 +1472,13 @@ async function appendToneSelector(toolbar) {
 
   function applyColor(color) {
     document.documentElement.style.setProperty("--model-color", color);
-    const toolbar = document.querySelector(".tone-selector-container");
-    if (toolbar) toolbar.style.borderColor = color;
-    const generateButton = document.querySelector(".generate-reply-btn");
-    if (generateButton) {
-      generateButton.style.backgroundColor = color;
-      generateButton.style.color = "#fff";
-    }
+    document.querySelectorAll(".tone-selector-container").forEach(toolbar => {
+      toolbar.style.borderColor = color;
+    });
+    document.querySelectorAll(".generate-reply-btn").forEach(btn => {
+      btn.style.backgroundColor = color;
+      btn.style.color = "#fff";
+    });
   }
 
   function showCleanErrorBanner(rawError) {
@@ -1502,13 +1678,23 @@ function copyWithFallback(tweetText, button) {
 
 // Observers and Initialization
 const debouncedAppendToneSelector = debounce(() => {
-  const toolbars = document.querySelectorAll('[data-testid="toolBar"], [class="css-175oi2r r-1iusvr4 r-16y2uox r-1777fci r-1h8ys4a r-1bylmt5 r-13tjlyg r-7qyjyx r-1ftll1t"]');
+  cleanDuplicateToneSelectors();
+
+  const toolbars = findComposerToolbars();
   toolbars.forEach(toolbar => {
-    if (!toolbar.querySelector(".tone-selector-container") && !toolbar.querySelector(".mic-btn")) {
+    const composerScope = getComposerScope(toolbar);
+    const hasExistingContainer =
+      toolbar.querySelector(".tone-selector-container") ||
+      (composerScope && composerScope.querySelector(".tone-selector-container")) ||
+      toolbar.dataset.tonePending === "true" ||
+      toolbar.dataset.toneInjected === "true";
+
+    if (!hasExistingContainer && !toolbar.querySelector(".mic-btn")) {
       appendToneSelector(toolbar);
-      syncTheme();
     }
   });
+
+  syncTheme();
 }, 300);
 
 const debouncedInsertCopyTweetButton = debounce(() => {
@@ -1526,30 +1712,32 @@ initializeWhatsAppMicButton();
 
 // Theme Sync Logic
 function syncTheme() {
-  const container = document.querySelector(".tone-selector-container");
-  if (!container) return;
+  const containers = document.querySelectorAll(".tone-selector-container");
+  if (!containers.length) return;
 
   const isDark = getComputedStyle(document.body).backgroundColor !== "rgb(255, 255, 255)";
 
-  if (isDark) {
-    container.style.background = "rgba(255, 255, 255, 0.03)";
-    container.style.borderColor = "rgba(255, 255, 255, 0.08)";
-    container.style.color = "white";
-    container.querySelectorAll("select").forEach(s => {
-      s.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
-      s.style.color = "white";
-      s.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`;
-    });
-  } else {
-    container.style.background = "rgba(0, 0, 0, 0.03)";
-    container.style.borderColor = "rgba(0, 0, 0, 0.08)";
-    container.style.color = "#0f1419";
-    container.querySelectorAll("select").forEach(s => {
-      s.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
-      s.style.color = "#0f1419";
-      s.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f1419'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`;
-    });
-  }
+  containers.forEach(container => {
+    if (isDark) {
+      container.style.background = "rgba(255, 255, 255, 0.03)";
+      container.style.borderColor = "rgba(255, 255, 255, 0.08)";
+      container.style.color = "white";
+      container.querySelectorAll("select").forEach(s => {
+        s.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+        s.style.color = "white";
+        s.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`;
+      });
+    } else {
+      container.style.background = "rgba(0, 0, 0, 0.03)";
+      container.style.borderColor = "rgba(0, 0, 0, 0.08)";
+      container.style.color = "#0f1419";
+      container.querySelectorAll("select").forEach(s => {
+        s.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+        s.style.color = "#0f1419";
+        s.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f1419'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`;
+      });
+    }
+  });
 }
 
 // Watch for theme changes
