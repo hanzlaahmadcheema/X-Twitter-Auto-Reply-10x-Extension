@@ -281,13 +281,20 @@ class SpeechRecognitionManager {
       const base64Data = (reader.result || "").split(',')[1] || "";
       const selectedLang = (this.currentConfig && this.currentConfig.lang) || "ur-PK";
 
+      const cleanType = (audioBlob.type || 'audio/webm').split(';')[0].trim();
       chrome.runtime.sendMessage({
         action: "transcribeAudio",
         audioBase64: base64Data,
-        mimeType: audioBlob.type,
+        mimeType: cleanType,
         lang: selectedLang
       }, (response) => {
         this._resetButton();
+
+        if (chrome.runtime.lastError) {
+          console.error("Transcription communication error:", chrome.runtime.lastError);
+          showNotification(`${ICONS.exclamationCircle} ${chrome.runtime.lastError.message || "Failed to communicate with extension background"}`, true, 6500);
+          return;
+        }
 
         if (response && response.success && response.text) {
           let speechResult = response.text.replace(DASH_REPLACEMENT_REGEX, "۔");
@@ -298,7 +305,7 @@ class SpeechRecognitionManager {
           }
           showNotification("✅ Voice transcribed successfully!", false, 2500);
         } else {
-          const err = (response && response.error) || "Transcription failed";
+          const err = (response && response.error) || "Transcription failed. Please check your API key in extension settings.";
           showNotification(`${ICONS.exclamationCircle} ${err}`, true, 6500);
         }
       });

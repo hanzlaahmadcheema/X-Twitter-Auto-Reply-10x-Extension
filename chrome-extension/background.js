@@ -276,140 +276,7 @@ chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== "replyStreaming") return;
 
   port.onMessage.addListener(async (message) => {
-    if (message.action === "transcribeAudio") {
-    (async () => {
-      try {
-        const data = await chrome.storage.sync.get([
-          "selectedApiKey",
-          "selectedModel",
-          "apiKeys"
-        ]);
-
-        const selectedApiKey = data.selectedApiKey || "";
-        const selectedModel = data.selectedModel || "gemini";
-        const apiKeys = data.apiKeys || [];
-
-        // Check for available transcription providers
-        let groqKey = "";
-        let geminiKey = "";
-        let openaiKey = "";
-
-        if (selectedModel === "groq" && selectedApiKey) groqKey = selectedApiKey;
-        if (selectedModel === "gemini" && selectedApiKey) geminiKey = selectedApiKey;
-        if (selectedModel === "openai" && selectedApiKey) openaiKey = selectedApiKey;
-
-        if (!groqKey) {
-          const k = apiKeys.find(item => item.model === "groq" && item.key);
-          if (k) groqKey = k.key;
-        }
-        if (!geminiKey) {
-          const k = apiKeys.find(item => item.model === "gemini" && item.key);
-          if (k) geminiKey = k.key;
-        }
-        if (!openaiKey) {
-          const k = apiKeys.find(item => item.model === "openai" && item.key);
-          if (k) openaiKey = k.key;
-        }
-
-        // --- 1. Groq Whisper (Free, blazing fast, multilingual) ---
-        if (groqKey) {
-          const binaryStr = atob(message.audioBase64);
-          const bytes = new Uint8Array(binaryStr.length);
-          for (let i = 0; i < binaryStr.length; i++) {
-            bytes[i] = binaryStr.charCodeAt(i);
-          }
-          const audioBlob = new Blob([bytes], { type: message.mimeType || "audio/webm" });
-          const formData = new FormData();
-          formData.append("file", audioBlob, "audio.webm");
-          formData.append("model", "whisper-large-v3-turbo");
-          if (message.lang) {
-            formData.append("language", message.lang.split("-")[0]);
-          }
-
-          const res = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${groqKey}` },
-            body: formData
-          });
-
-          const resData = await res.json();
-          if (resData.error) throw new Error(resData.error.message || "Groq Whisper failed");
-          sendResponse({ success: true, text: resData.text || "" });
-          return;
-        }
-
-        // --- 2. Gemini Flash Multimodal Audio ---
-        if (geminiKey) {
-          const langHint = message.lang && message.lang.startsWith("ur") ? "in Urdu" : "in the spoken language";
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{
-                parts: [
-                  {
-                    inline_data: {
-                      mime_type: message.mimeType || "audio/webm",
-                      data: message.audioBase64
-                    }
-                  },
-                  {
-                    text: `Transcribe this recorded voice audio verbatim ${langHint}. Return ONLY the exact spoken transcription text, without any explanation, markdown formatting, or timestamps.`
-                  }
-                ]
-              }]
-            })
-          });
-
-          const resData = await res.json();
-          if (resData.error) throw new Error(resData.error.message || "Gemini audio transcription failed");
-          const text = resData.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (!text) throw new Error("No transcription generated from audio.");
-          sendResponse({ success: true, text: text.trim() });
-          return;
-        }
-
-        // --- 3. OpenAI Whisper ---
-        if (openaiKey) {
-          const binaryStr = atob(message.audioBase64);
-          const bytes = new Uint8Array(binaryStr.length);
-          for (let i = 0; i < binaryStr.length; i++) {
-            bytes[i] = binaryStr.charCodeAt(i);
-          }
-          const audioBlob = new Blob([bytes], { type: message.mimeType || "audio/webm" });
-          const formData = new FormData();
-          formData.append("file", audioBlob, "audio.webm");
-          formData.append("model", "whisper-1");
-          if (message.lang) {
-            formData.append("language", message.lang.split("-")[0]);
-          }
-
-          const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${openaiKey}` },
-            body: formData
-          });
-
-          const resData = await res.json();
-          if (resData.error) throw new Error(resData.error.message || "OpenAI Whisper failed");
-          sendResponse({ success: true, text: resData.text || "" });
-          return;
-        }
-
-        // Neither Groq, Gemini, nor OpenAI key found
-        sendResponse({
-          success: false,
-          error: "Brave blocks Google's Web Speech API. Please add a free Groq or Gemini API key in extension settings for voice transcription in Brave!"
-        });
-      } catch (err) {
-        console.error("Transcribe audio error:", err);
-        sendResponse({ success: false, error: err.message || "Failed to transcribe audio." });
-      }
-    })();
-    return true;
-  }
-
-  if (message.action === "generateReply") {
+    if (message.action === "generateReply") {
       if (remoteConfigCache.features && remoteConfigCache.features.extensionEnabled === false) {
         port.postMessage({ error: "Auto-reply generation is temporarily disabled by administrator." });
         return;
@@ -611,6 +478,148 @@ chrome.runtime.onConnect.addListener((port) => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "transcribeAudio") {
+    (async () => {
+      try {
+        if (!message.audioBase64 || message.audioBase64.length < 50) {
+          sendResponse({ success: false, error: "No voice audio was detected. Please try speaking again." });
+          return;
+        }
+
+        const data = await chrome.storage.sync.get([
+          "selectedApiKey",
+          "selectedModel",
+          "apiKeys"
+        ]);
+
+        const selectedApiKey = data.selectedApiKey || "";
+        const selectedModel = data.selectedModel || "gemini";
+        const apiKeys = data.apiKeys || [];
+
+        // Check for available transcription providers
+        let groqKey = "";
+        let geminiKey = "";
+        let openaiKey = "";
+
+        if (selectedModel === "groq" && selectedApiKey) groqKey = selectedApiKey;
+        if (selectedModel === "gemini" && selectedApiKey) geminiKey = selectedApiKey;
+        if (selectedModel === "openai" && selectedApiKey) openaiKey = selectedApiKey;
+
+        if (!groqKey) {
+          const k = apiKeys.find(item => item.model === "groq" && item.key);
+          if (k) groqKey = k.key;
+        }
+        if (!geminiKey) {
+          const k = apiKeys.find(item => item.model === "gemini" && item.key);
+          if (k) geminiKey = k.key;
+        }
+        if (!openaiKey) {
+          const k = apiKeys.find(item => item.model === "openai" && item.key);
+          if (k) openaiKey = k.key;
+        }
+
+        // Clean MIME type (e.g. "audio/webm;codecs=opus" -> "audio/webm")
+        let cleanMime = (message.mimeType || "audio/webm").split(";")[0].trim().toLowerCase();
+        if (!cleanMime || cleanMime === "audio/") cleanMime = "audio/webm";
+
+        // --- 1. Groq Whisper (Free, blazing fast, multilingual) ---
+        if (groqKey) {
+          const binaryStr = atob(message.audioBase64);
+          const bytes = new Uint8Array(binaryStr.length);
+          for (let i = 0; i < binaryStr.length; i++) {
+            bytes[i] = binaryStr.charCodeAt(i);
+          }
+          const audioBlob = new Blob([bytes], { type: cleanMime });
+          const formData = new FormData();
+          formData.append("file", audioBlob, "audio.webm");
+          formData.append("model", "whisper-large-v3-turbo");
+          if (message.lang) {
+            formData.append("language", message.lang.split("-")[0]);
+          }
+
+          const res = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${groqKey}` },
+            body: formData
+          });
+
+          const resData = await res.json();
+          if (resData.error) throw new Error(resData.error.message || "Groq Whisper failed");
+          sendResponse({ success: true, text: resData.text || "" });
+          return;
+        }
+
+        // --- 2. Gemini Flash Multimodal Audio ---
+        if (geminiKey) {
+          const langHint = message.lang && message.lang.startsWith("ur") ? "in Urdu" : "in the original spoken language";
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  {
+                    inline_data: {
+                      mime_type: cleanMime,
+                      data: message.audioBase64
+                    }
+                  },
+                  {
+                    text: `Transcribe this recorded voice audio verbatim ${langHint}. Return ONLY the exact spoken transcription text, without any explanation, markdown formatting, or timestamps.`
+                  }
+                ]
+              }]
+            })
+          });
+
+          const resData = await res.json();
+          if (resData.error) throw new Error(resData.error.message || "Gemini audio transcription failed");
+          const text = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!text) throw new Error("No transcription text returned from Gemini.");
+          sendResponse({ success: true, text: text.trim() });
+          return;
+        }
+
+        // --- 3. OpenAI Whisper ---
+        if (openaiKey) {
+          const binaryStr = atob(message.audioBase64);
+          const bytes = new Uint8Array(binaryStr.length);
+          for (let i = 0; i < binaryStr.length; i++) {
+            bytes[i] = binaryStr.charCodeAt(i);
+          }
+          const audioBlob = new Blob([bytes], { type: cleanMime });
+          const formData = new FormData();
+          formData.append("file", audioBlob, "audio.webm");
+          formData.append("model", "whisper-1");
+          if (message.lang) {
+            formData.append("language", message.lang.split("-")[0]);
+          }
+
+          const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${openaiKey}` },
+            body: formData
+          });
+
+          const resData = await res.json();
+          if (resData.error) throw new Error(resData.error.message || "OpenAI Whisper failed");
+          sendResponse({ success: true, text: resData.text || "" });
+          return;
+        }
+
+        // Neither Groq, Gemini, nor OpenAI key found
+        sendResponse({
+          success: false,
+          error: "Brave blocks Google's Web Speech API. Please add a free Groq or Gemini API key in extension settings for voice transcription!"
+        });
+      } catch (err) {
+        console.error("Transcribe audio error:", err);
+        sendResponse({ success: false, error: err.message || "Failed to transcribe audio." });
+      }
+    })();
+    return true; // Keep channel open for async sendResponse
+  }
+
   if (message.action === "getConfig") {
     sendResponse({ tones: CONFIG.TONES, lengths: CONFIG.LENGTHS });
     return true;
