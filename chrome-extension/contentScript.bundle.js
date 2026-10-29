@@ -140,16 +140,20 @@ const storageCache = new StorageCache();
 // Regex pattern cached at module level for performance
 const DASH_REPLACEMENT_REGEX = /\bDash\b|ڈیش/g;
 
-// Speech Recognition Manager (Singleton)
+// Speech Recognition Manager with Brave AI Fallback (Singleton)
 class SpeechRecognitionManager {
   constructor() {
     this.recognition = null;
+    this.mediaRecorder = null;
+    this.audioStream = null;
+    this.audioChunks = [];
     this.isRecording = false;
     this.currentButton = null;
     this.currentConfig = null;
+    this.recordingMode = null; // 'native' | 'mediaRecorder'
   }
 
-  _setupEventHandlers(config) {
+  _setupNativeHandlers(config) {
     if (!this.recognition) return;
 
     this.recognition.onstart = () => {
@@ -160,7 +164,6 @@ class SpeechRecognitionManager {
         this.currentButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`;
         this.currentButton.dataset.state = "recording";
       }
-      // showSuccessMessage(`${ICONS.microphone} Speech recognition started...`);
     };
 
     this.recognition.onresult = (event) => {
@@ -172,39 +175,28 @@ class SpeechRecognitionManager {
       } else {
         insertReplyText(speechResult);
       }
-
-      // showSuccessMessage(`${ICONS.check} Speech recognized`);
     };
 
     this.recognition.onerror = async (event) => {
       const errorMsg = event.error;
-      let userMessage = `${ICONS.exclamationCircle} Speech recognition error: ${errorMsg}`;
+      if (DEBUG) log('Speech recognition error:', errorMsg);
 
-      let isBrave = false;
-      try {
-        if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
-          isBrave = await navigator.brave.isBrave();
-        }
-      } catch (e) {}
-
-      // Categorize errors for better user feedback
+      // If network error (Google Speech blocked), switch seamlessly to MediaRecorder
       if (errorMsg === 'network') {
-        if (isBrave) {
-          userMessage = `${ICONS.exclamationCircle} <b>Brave blocks Google speech services by default.</b><br>To enable: Go to <b>brave://settings/system</b> &rarr; toggle on <i>"Use Google services for speech recognition"</i>, then restart Brave.`;
-        } else {
-          userMessage = `${ICONS.exclamationCircle} Speech recognition network error. Please check your internet connection.`;
-        }
-      } else if (errorMsg === 'not-allowed' || errorMsg === 'service-not-allowed') {
-        userMessage = `${ICONS.exclamationCircle} Microphone access denied. Please click the permissions icon in the address bar to allow microphone access.`;
+        this.stop();
+        showNotification("Switching to AI Voice Recording...", false, 2000);
+        this.startMediaRecorder(this.currentButton, this.currentConfig);
+        return;
+      }
+
+      let userMessage = `${ICONS.exclamationCircle} Speech recognition error: ${errorMsg}`;
+      if (errorMsg === 'not-allowed' || errorMsg === 'service-not-allowed') {
+        userMessage = `${ICONS.exclamationCircle} Microphone access denied. Please click the site permissions icon in the address bar to allow microphone access.`;
       } else if (errorMsg === 'no-speech' || errorMsg === 'audio-capture') {
-        userMessage = `${ICONS.exclamationCircle} No audio detected. Please check your microphone input device.`;
+        userMessage = `${ICONS.exclamationCircle} No audio detected. Please check your microphone device.`;
       }
 
-      if (DEBUG) {
-        log('Speech recognition error:', errorMsg);
-      }
-
-      showNotification(userMessage, true, 7000);
+      showNotification(userMessage, true, 5000);
       this.stop();
     };
 
@@ -213,8 +205,107 @@ class SpeechRecognitionManager {
     };
   }
 
+  async startMediaRecorder(button, config = {}) {
+    try {
+      this.currentButton = button;
+      this.currentConfig = config;
+      this.recordingMode = 'mediaRecorder';
+      this.audioChunks = [];
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showNotification(`${ICONS.exclamationCircle} Audio recording is not supported in this browser.`, true, 5000);
+        return;
+      }
+
+      this.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      const mimeType = (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))
+        ? 'audio/webm;codecs=opus'
+        : ((typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm')) ? 'audio/webm' : '');
+
+      this.mediaRecorder = mimeType ? new MediaRecorder(this.audioStream, { mimeType }) : new MediaRecorder(this.audioStream);
+
+      this.mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          this.audioChunks.push(e.data);
+        }
+      };
+
+      this.mediaRecorder.onstop = () => {
+        this._handleMediaRecorderStop();
+      };
+
+      this.mediaRecorder.start();
+      this.isRecording = true;
+
+      if (this.currentButton) {
+        this.currentButton.classList.remove('mic-idle');
+        this.currentButton.classList.add('mic-recording');
+        this.currentButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`;
+        this.currentButton.dataset.state = "recording";
+      }
+
+      showNotification("🎙️ Listening... Speak into your mic, then click stop when done.", false, 4000);
+
+    } catch (err) {
+      console.error('MediaRecorder start error:', err);
+      this._resetButton();
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        showNotification(`${ICONS.exclamationCircle} Microphone permission denied. Please allow microphone in the address bar.`, true, 6000);
+      } else {
+        showNotification(`${ICONS.exclamationCircle} Could not open microphone: ${err.message}`, true, 5000);
+      }
+    }
+  }
+
+  _handleMediaRecorderStop() {
+    if (!this.audioChunks || this.audioChunks.length === 0) {
+      this._resetButton();
+      return;
+    }
+
+    if (this.currentButton) {
+      this.currentButton.innerHTML = `<span style="font-size: 14px;">⏳</span>`;
+      this.currentButton.dataset.state = "processing";
+    }
+
+    showNotification("⚡ Transcribing audio with AI...", false, 25000);
+
+    const blobType = this.mediaRecorder?.mimeType || 'audio/webm';
+    const audioBlob = new Blob(this.audioChunks, { type: blobType });
+    this.audioChunks = [];
+
+    const reader = new FileReader();
+    reader.readAsDataURL(audioBlob);
+    reader.onloadend = () => {
+      const base64Data = (reader.result || "").split(',')[1] || "";
+      const selectedLang = (this.currentConfig && this.currentConfig.lang) || "ur-PK";
+
+      chrome.runtime.sendMessage({
+        action: "transcribeAudio",
+        audioBase64: base64Data,
+        mimeType: audioBlob.type,
+        lang: selectedLang
+      }, (response) => {
+        this._resetButton();
+
+        if (response && response.success && response.text) {
+          let speechResult = response.text.replace(DASH_REPLACEMENT_REGEX, "۔");
+          if (this.currentConfig && this.currentConfig.onResult) {
+            this.currentConfig.onResult(speechResult);
+          } else {
+            insertReplyText(speechResult);
+          }
+          showNotification("✅ Voice transcribed successfully!", false, 2500);
+        } else {
+          const err = (response && response.error) || "Transcription failed";
+          showNotification(`${ICONS.exclamationCircle} ${err}`, true, 6500);
+        }
+      });
+    };
+  }
+
   async start(button, config = {}) {
-    // Stop any existing recording
     if (this.isRecording) {
       this.stop();
     }
@@ -222,86 +313,75 @@ class SpeechRecognitionManager {
     this.currentButton = button;
     this.currentConfig = config;
 
-    // Clean up existing recognition instance
-    if (this.recognition) {
-      try {
-        this.recognition.stop();
-      } catch (e) {
-        // Ignore errors when stopping
+    // Check if Brave Browser
+    let isBrave = false;
+    try {
+      if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
+        isBrave = await navigator.brave.isBrave();
       }
+    } catch (e) {}
+
+    // In Brave, Google Speech Recognition service is permanently stripped,
+    // so always use MediaRecorder + AI transcription!
+    if (isBrave) {
+      return this.startMediaRecorder(button, config);
+    }
+
+    // In Chrome/Edge: Try native Web Speech API first
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      return this.startMediaRecorder(button, config);
+    }
+
+    if (this.recognition) {
+      try { this.recognition.stop(); } catch (e) {}
       this.recognition = null;
     }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      let isBrave = false;
-      try {
-        if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
-          isBrave = await navigator.brave.isBrave();
-        }
-      } catch (e) {}
-      if (isBrave) {
-        showNotification(`${ICONS.exclamationCircle} Speech recognition is disabled in Brave.<br>Go to <b>brave://settings/system</b> &rarr; enable <i>"Use Google services for speech recognition"</i>.`, true, 7000);
-      } else {
-        showNotification(`${ICONS.exclamationCircle} Speech recognition is not supported in this browser.`, true, 4000);
-      }
-      return;
-    }
-
-    // Create new recognition instance
+    this.recordingMode = 'native';
     this.recognition = new SpeechRecognition();
     this.recognition.lang = config.lang || "ur-PK";
     this.recognition.interimResults = config.interimResults || false;
     this.recognition.maxAlternatives = config.maxAlternatives || 1;
 
-    // Setup fresh event handlers
-    this._setupEventHandlers(config);
+    this._setupNativeHandlers(config);
 
     try {
       this.recognition.start();
     } catch (error) {
-      if (DEBUG) {
-        log('Speech recognition start error:', error);
-      }
-      console.error('Speech recognition start error:', error);
-      this.stop();
+      console.error('Speech recognition start error, falling back to MediaRecorder:', error);
+      this.startMediaRecorder(button, config);
     }
   }
 
   stop() {
-    if (this.recognition && this.isRecording) {
-      try {
-        this.recognition.stop();
-      } catch (error) {
-        if (DEBUG) {
-          log('Speech recognition stop error:', error);
-        }
-        console.error('Speech recognition stop error:', error);
+    if (this.recordingMode === 'mediaRecorder') {
+      if (this.mediaRecorder && this.isRecording) {
+        try { this.mediaRecorder.stop(); } catch (e) {}
       }
+      if (this.audioStream) {
+        try { this.audioStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+        this.audioStream = null;
+      }
+      this.isRecording = false;
+      return;
     }
 
+    if (this.recognition && this.isRecording) {
+      try { this.recognition.stop(); } catch (e) {}
+    }
     this.isRecording = false;
+    this._resetButton();
+  }
 
+  _resetButton() {
+    this.isRecording = false;
     if (this.currentButton) {
       this.currentButton.classList.remove('mic-recording');
       this.currentButton.classList.add('mic-idle');
       this.currentButton.innerHTML = ICONS.microphone;
       this.currentButton.dataset.state = "idle";
     }
-
-    // Dispose of recognition object
-    if (this.recognition) {
-      // Remove event handlers before disposing
-      this.recognition.onstart = null;
-      this.recognition.onresult = null;
-      this.recognition.onerror = null;
-      this.recognition.onend = null;
-      this.recognition = null;
-    }
-
-    this.currentConfig = null;
-
-    // showSuccessMessage(`${ICONS.stop} Speech recognition stopped.`);
   }
 
   cleanup() {
