@@ -140,7 +140,7 @@ const storageCache = new StorageCache();
 // Regex pattern cached at module level for performance
 const DASH_REPLACEMENT_REGEX = /\bDash\b|ڈیش/g;
 
-// Speech Recognition Manager with Brave AI Fallback (Singleton)
+// Speech Recognition Manager with Brave AI Fallback & 3s Silence Auto-Stop (Singleton)
 class SpeechRecognitionManager {
   constructor() {
     this.recognition = null;
@@ -151,6 +151,13 @@ class SpeechRecognitionManager {
     this.currentButton = null;
     this.currentConfig = null;
     this.recordingMode = null; // 'native' | 'mediaRecorder'
+    this.audioContext = null;
+    this.audioAnalyser = null;
+    this.silenceCheckInterval = null;
+    this.abortedNoSpeech = false;
+    this.hasSpoken = false;
+    this.lastSpeechTime = 0;
+    this._nativeSilenceTimer = null;
   }
 
   _setupNativeHandlers(config) {
@@ -164,9 +171,31 @@ class SpeechRecognitionManager {
         this.currentButton.innerHTML = `<span style="color: red;">${ICONS.stop}</span>`;
         this.currentButton.dataset.state = "recording";
       }
+      showNotification("🎙️ Listening... Speak now (auto-stops after 3s of silence)", false, 3500);
+    };
+
+    this.recognition.onspeechstart = () => {
+      if (this._nativeSilenceTimer) {
+        clearTimeout(this._nativeSilenceTimer);
+        this._nativeSilenceTimer = null;
+      }
+    };
+
+    this.recognition.onspeechend = () => {
+      if (this._nativeSilenceTimer) clearTimeout(this._nativeSilenceTimer);
+      this._nativeSilenceTimer = setTimeout(() => {
+        if (this.isRecording) {
+          this.stop();
+        }
+      }, 3000);
     };
 
     this.recognition.onresult = (event) => {
+      if (this._nativeSilenceTimer) {
+        clearTimeout(this._nativeSilenceTimer);
+        this._nativeSilenceTimer = null;
+      }
+
       let speechResult = event.results[0][0].transcript;
       speechResult = speechResult.replace(DASH_REPLACEMENT_REGEX, "۔");
 
@@ -180,6 +209,11 @@ class SpeechRecognitionManager {
     this.recognition.onerror = async (event) => {
       const errorMsg = event.error;
       if (DEBUG) log('Speech recognition error:', errorMsg);
+
+      if (this._nativeSilenceTimer) {
+        clearTimeout(this._nativeSilenceTimer);
+        this._nativeSilenceTimer = null;
+      }
 
       // If network error (Google Speech blocked), switch seamlessly to MediaRecorder
       if (errorMsg === 'network') {
@@ -201,8 +235,108 @@ class SpeechRecognitionManager {
     };
 
     this.recognition.onend = () => {
+      if (this._nativeSilenceTimer) {
+        clearTimeout(this._nativeSilenceTimer);
+        this._nativeSilenceTimer = null;
+      }
       this.stop();
     };
+  }
+
+  _startSilenceDetection() {
+    this._stopSilenceDetection();
+
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass || !this.audioStream) return;
+
+      this.audioContext = new AudioContextClass();
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume().catch(() => {});
+      }
+
+      const source = this.audioContext.createMediaStreamSource(this.audioStream);
+      const analyser = this.audioContext.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.2;
+      source.connect(analyser);
+
+      this.audioAnalyser = analyser;
+      this.hasSpoken = false;
+      this.lastSpeechTime = Date.now();
+      const startTime = Date.now();
+      let noiseFloor = 0.01;
+
+      const SILENCE_TIMEOUT = 3000; // 3 seconds of silence after speaking
+      const NO_SPEECH_TIMEOUT = 6000; // 6 seconds if user never spoke at all
+
+      this.silenceCheckInterval = setInterval(() => {
+        if (!this.isRecording || !this.audioAnalyser) {
+          this._stopSilenceDetection();
+          return;
+        }
+
+        const dataArray = new Uint8Array(this.audioAnalyser.fftSize);
+        this.audioAnalyser.getByteTimeDomainData(dataArray);
+
+        let sumSquares = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          const norm = (dataArray[i] - 128) / 128;
+          sumSquares += norm * norm;
+        }
+        const rms = Math.sqrt(sumSquares / dataArray.length);
+
+        const now = Date.now();
+
+        // Calibrate noise floor in the first 400ms
+        if (now - startTime < 400) {
+          if (rms > 0 && rms < noiseFloor) {
+            noiseFloor = Math.max(0.005, rms);
+          }
+        }
+
+        const speechThreshold = Math.max(0.018, noiseFloor * 1.8);
+
+        if (rms >= speechThreshold) {
+          this.hasSpoken = true;
+          this.lastSpeechTime = now;
+        } else {
+          // Silence detected in this sample
+          if (this.hasSpoken) {
+            const silenceDuration = now - this.lastSpeechTime;
+            if (silenceDuration >= SILENCE_TIMEOUT) {
+              if (DEBUG) log(`[Silence Detection] Auto-stopping after ${silenceDuration}ms of silence.`);
+              this.stop();
+            }
+          } else {
+            // User hasn't spoken yet since clicking mic
+            const elapsedSinceStart = now - startTime;
+            if (elapsedSinceStart >= NO_SPEECH_TIMEOUT) {
+              if (DEBUG) log(`[Silence Detection] No speech detected after ${elapsedSinceStart}ms.`);
+              this.stop(true); // abort due to no speech
+            }
+          }
+        }
+      }, 100);
+    } catch (e) {
+      console.warn("Could not start silence detection:", e);
+    }
+  }
+
+  _stopSilenceDetection() {
+    if (this.silenceCheckInterval) {
+      clearInterval(this.silenceCheckInterval);
+      this.silenceCheckInterval = null;
+    }
+    if (this.audioContext) {
+      try {
+        if (this.audioContext.state !== 'closed') {
+          this.audioContext.close();
+        }
+      } catch (e) {}
+      this.audioContext = null;
+    }
+    this.audioAnalyser = null;
   }
 
   async startMediaRecorder(button, config = {}) {
@@ -211,6 +345,8 @@ class SpeechRecognitionManager {
       this.currentConfig = config;
       this.recordingMode = 'mediaRecorder';
       this.audioChunks = [];
+      this.abortedNoSpeech = false;
+      this.hasSpoken = false;
 
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         showNotification(`${ICONS.exclamationCircle} Audio recording is not supported in this browser.`, true, 5000);
@@ -245,7 +381,8 @@ class SpeechRecognitionManager {
         this.currentButton.dataset.state = "recording";
       }
 
-      showNotification("🎙️ Listening... Speak into your mic, then click stop when done.", false, 4000);
+      this._startSilenceDetection();
+      showNotification("🎙️ Listening... Speak now (auto-stops after 3s of silence)", false, 3500);
 
     } catch (err) {
       console.error('MediaRecorder start error:', err);
@@ -259,6 +396,14 @@ class SpeechRecognitionManager {
   }
 
   _handleMediaRecorderStop() {
+    if (this.abortedNoSpeech) {
+      this.abortedNoSpeech = false;
+      this.audioChunks = [];
+      this._resetButton();
+      showNotification("Mic stopped (no speech detected).", false, 3000);
+      return;
+    }
+
     if (!this.audioChunks || this.audioChunks.length === 0) {
       this._resetButton();
       return;
@@ -361,20 +506,36 @@ class SpeechRecognitionManager {
     }
   }
 
-  stop() {
+  stop(abortedNoSpeech = false) {
+    this._stopSilenceDetection();
+
+    if (this._nativeSilenceTimer) {
+      clearTimeout(this._nativeSilenceTimer);
+      this._nativeSilenceTimer = null;
+    }
+
+    if (!this.isRecording) {
+      this._resetButton();
+      return;
+    }
+
+    if (abortedNoSpeech) {
+      this.abortedNoSpeech = true;
+    }
+
     if (this.recordingMode === 'mediaRecorder') {
-      if (this.mediaRecorder && this.isRecording) {
+      this.isRecording = false;
+      if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
         try { this.mediaRecorder.stop(); } catch (e) {}
       }
       if (this.audioStream) {
         try { this.audioStream.getTracks().forEach(t => t.stop()); } catch (e) {}
         this.audioStream = null;
       }
-      this.isRecording = false;
       return;
     }
 
-    if (this.recognition && this.isRecording) {
+    if (this.recognition) {
       try { this.recognition.stop(); } catch (e) {}
     }
     this.isRecording = false;
@@ -396,7 +557,6 @@ class SpeechRecognitionManager {
     this.currentButton = null;
   }
 }
-
 const speechManager = new SpeechRecognitionManager();
 
 // Cleanup on page unload/navigation to prevent memory leaks
