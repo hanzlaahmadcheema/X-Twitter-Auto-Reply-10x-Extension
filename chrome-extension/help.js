@@ -139,6 +139,22 @@ const GUIDES = {
             { title: "Copy and paste", desc: "Copy the key and paste it into the extension." }
         ]
     },
+        brave_mic: {
+        title: "Brave Browser Voice Input",
+        sub: "AI voice transcription in Brave",
+        iconHtml: '<i class="fas fa-microphone" style="color:#1da1f2;font-size:18px"></i>',
+        iconBg: "rgba(29,161,242,0.15)",
+        consoleUrl: "https://console.groq.com/keys",
+        consoleTxt: "Get Free Groq API Key",
+        docsUrl: "https://support.brave.com/",
+        docsTxt: "Brave Support",
+        steps: [
+            { title: "Brave Privacy Architecture", desc: "Brave permanently removed Google\'s Web Speech API to protect user privacy. HA ReplyX automatically uses <strong>AI Voice Transcription (via Groq Whisper or Gemini)</strong> instead!" },
+            { title: "Add an API Key", desc: "Ensure you have added a free <strong>Groq API key</strong> (recommended for ultra-fast Whisper) or a <strong>Google Gemini key</strong> in extension settings." },
+            { title: "Allow Site Microphone Access", desc: "On x.com or web.whatsapp.com, make sure Microphone permission is set to <strong>Allow</strong> in your address bar." },
+            { title: "Click Mic & Speak", desc: "Click the mic button to start recording. Speak into your microphone and click the stop button when done. AI will transcribe your voice into the text box automatically!" }
+        ]
+    },
     edenai: {
         title: "Eden AI (PAID)",
         sub: "One key, many AI providers",

@@ -41,7 +41,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/contentScript.bundle.js-loader-C9NQsKCM.js",
+        "assets/contentScript.bundle.js-loader-DMnNKwEM.js",
         "assets/selectionActions.js-loader-Bth4puJL.js"
       ],
       "matches": [
@@ -68,7 +68,7 @@
         "libs/html2canvas.min.js",
         "fonts/*",
         "assets/rolldown-runtime-D9-fqq9M.js",
-        "assets/contentScript.bundle.js-PbAwf3N-.js",
+        "assets/contentScript.bundle.js-FFx5_jox.js",
         "assets/selectionActions.js-C7JNaS0J.js"
       ],
       "use_dynamic_url": false
