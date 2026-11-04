@@ -22,7 +22,7 @@ export default function App() {
 
   // AI Models Config State
   const DEFAULT_MODELS_STATE = {
-    gemini: { name: 'Google Gemini', tier: 'FREE', keyRequired: true, models: ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'] },
+    gemini: { name: 'Google Gemini', tier: 'FREE', keyRequired: true, models: ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'] },
     groq: { name: 'Groq', tier: 'FREE', keyRequired: true, models: ['openai/gpt-oss-120b', 'qwen/qwen-3.6-27b'] },
     ollama: { name: 'Ollama', tier: 'FREE', keyRequired: false, models: ['gemma2:9b', 'llama3', 'mistral', 'phi3'] },
     grok: { name: 'xAI Grok', tier: 'PAID', keyRequired: true, models: ['grok-2-1212', 'grok-beta'] },
