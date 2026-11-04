@@ -13,8 +13,7 @@
     "scripting",
     "notifications",
     "downloads",
-    "identity",
-    "sidePanel"
+    "identity"
   ],
   "host_permissions": [
     "*://x.com/*",
@@ -34,9 +33,6 @@
   "background": {
     "service_worker": "service-worker-loader.js",
     "type": "module"
-  },
-  "side_panel": {
-    "default_path": "popup.html"
   },
   "content_scripts": [
     {
@@ -84,6 +80,7 @@
     "512": "icons/icon-512.png"
   },
   "action": {
+    "default_popup": "popup.html",
     "default_title": "HA ReplyX",
     "default_icon": {
       "16": "icons/icon-16.png",

@@ -12,7 +12,10 @@
 html, body {
     margin: 0;
     padding: 0;
+    width: 400px;
+    height: 580px;
     font-family: 'Chirp', sans-serif;
+    overflow: hidden;
 }
 
 @layer utilities {

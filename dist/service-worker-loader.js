@@ -1,1 +1,1 @@
-import './assets/background.js-CWJmxCWP.js';
+import './assets/background.js-AxLAy6WP.js';

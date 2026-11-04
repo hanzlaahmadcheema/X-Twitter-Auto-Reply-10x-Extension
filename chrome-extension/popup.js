@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ── Global: open all external links in a new browser tab, not inside the side panel ──
+  // ── Global: open all external links in a new browser tab, not inside the popup ──
   document.addEventListener("click", e => {
     const link = e.target.closest("a[href]");
     if (!link) return;
@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let state = {
     selectedModel: "gemini",
     selectedApiKey: "",
-    geminiModel: "gemini-3.7-flash",
+    geminiModel: "gemini-3.8-flash",
     openaiModel: "gpt-4o",
     edenaiModel: "openai/gpt-4o",
     grokModel: "grok-2-1212",
@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const MODELS = {
-    gemini: { name: "Google Gemini", tier: "FREE", keyRequired: true, models: ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"] },
+    gemini: { name: "Google Gemini", tier: "FREE", keyRequired: true, models: ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"] },
     groq: { name: "Groq", tier: "FREE", keyRequired: true, models: ["openai/gpt-oss-120b", "qwen/qwen-3.6-27b"] },
     ollama: { name: "Ollama", tier: "FREE", keyRequired: false, models: ["gemma2:9b", "llama3", "mistral", "phi3"] }
   };
@@ -480,7 +480,8 @@ document.addEventListener("DOMContentLoaded", () => {
       wizTestStatus.textContent = "Validating…";
       wizTestStatus.style.color = "#1da1f2";
 
-      chrome.runtime.sendMessage({ action: "testConnection", model: activeProvider, key }, res => {
+      const targetModel = activeProvider === "gemini" ? (state.geminiModel || "gemini-3.8-flash") : undefined;
+      chrome.runtime.sendMessage({ action: "testConnection", model: activeProvider, key, targetModel }, res => {
         wizTestBtn.innerHTML = '<i class="fas fa-plus"></i> Add';
         wizTestBtn.disabled  = false;
         if (res?.success) {
@@ -493,7 +494,7 @@ document.addEventListener("DOMContentLoaded", () => {
           renderKeysList();
           updateFinishBtn();
         } else {
-          wizTestStatus.textContent = "❌ Invalid key: " + (res?.error || "Unknown");
+          wizTestStatus.textContent = "❌ " + (res?.error || "Unknown");
           wizTestStatus.style.color = "#e0245e";
         }
       });
@@ -596,6 +597,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function initMainView() {
     chrome.storage.sync.get(null, (data) => {
       state = { ...state, ...data };
+      if (state.geminiModel === "gemini-3.7-flash") {
+        state.geminiModel = "gemini-3.8-flash";
+        chrome.storage.sync.set({ geminiModel: "gemini-3.8-flash" });
+      }
       
       const pData = MODELS[state.selectedModel];
       mainSummaryProvider.textContent = pData.name;

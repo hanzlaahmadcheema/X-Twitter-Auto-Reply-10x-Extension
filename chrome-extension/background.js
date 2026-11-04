@@ -7,7 +7,7 @@ function log(...args) {
 }
 
 const CONFIG = {
-  DEFAULT_MODEL: "gemini-3.7-flash",
+  DEFAULT_MODEL: "gemini-3.8-flash",
   GEMINI_BASE_URL: "https://generativelanguage.googleapis.com/v1beta/models/",
   GROK_BASE_URL: "https://api.x.ai/v1/chat/completions",
   EDENAI_BASE_URL: "https://api.edenai.run/v2/text/chat/",
@@ -289,7 +289,8 @@ chrome.runtime.onConnect.addListener((port) => {
         chrome.storage.sync.get(
           ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "edenaiModel", "ollamaModel", "ollamaUrl", "groqModel", "customPersona", "personalityProfile"],
           async (data) => {
-            const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, edenaiModel, ollamaModel, ollamaUrl, groqModel, customPersona, personalityProfile } = data;
+            let { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, edenaiModel, ollamaModel, ollamaUrl, groqModel, customPersona, personalityProfile } = data;
+            if (geminiModel === "gemini-3.7-flash") geminiModel = "gemini-3.8-flash";
             const systemPrompt = getSystemPrompt(message, customPersona, personalityProfile);
 
           try {
@@ -629,16 +630,42 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       try {
         if (message.model === "gemini") {
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/interactions`, {
-            method: "POST",
-            headers: { 
-              "Content-Type": "application/json",
-              "x-goog-api-key": message.key
-            },
-            body: JSON.stringify({ model: "gemini-3.7-flash", input: "hi" })
-          });
-          const data = await response.json();
-          if (data.error) throw new Error(data.error.message);
+          const testModel = message.targetModel || "gemini-3.8-flash";
+          const candidateModels = [testModel, "gemini-3.8-flash", "gemini-3.5-flash", "gemini-2.5-flash"].filter((m, i, arr) => arr.indexOf(m) === i);
+          let lastError = null;
+          let succeeded = false;
+
+          for (const modelToTry of candidateModels) {
+            try {
+              const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/interactions`, {
+                method: "POST",
+                headers: { 
+                  "Content-Type": "application/json",
+                  "x-goog-api-key": message.key
+                },
+                body: JSON.stringify({ model: modelToTry, input: "hi" })
+              });
+              const data = await response.json();
+              if (data.error) {
+                lastError = data.error.message;
+                if (/API_KEY_INVALID|API key not valid|PERMISSION_DENIED|unauthorized/i.test(lastError)) {
+                  throw new Error(lastError);
+                }
+                continue;
+              }
+              succeeded = true;
+              break;
+            } catch (err) {
+              if (/API_KEY_INVALID|API key not valid|PERMISSION_DENIED|unauthorized/i.test(err.message)) {
+                throw err;
+              }
+              lastError = err.message;
+            }
+          }
+
+          if (!succeeded) {
+            throw new Error(lastError || "Could not validate Gemini API key.");
+          }
           sendResponse({ success: true });
         } else if (message.model === "ollama") {
           const response = await fetch(`${message.url}/api/tags`);
@@ -668,7 +695,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       chrome.storage.sync.get(
         ["selectedApiKey", "selectedModel", "geminiModel", "grokModel", "openaiModel", "edenaiModel", "ollamaModel", "ollamaUrl", "groqModel", "customPersona", "personalityProfile"],
         async (data) => {
-          const { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, edenaiModel, ollamaModel, ollamaUrl, groqModel, customPersona, personalityProfile } = data;
+          let { selectedApiKey, selectedModel, geminiModel, grokModel, openaiModel, edenaiModel, ollamaModel, ollamaUrl, groqModel, customPersona, personalityProfile } = data;
+          if (geminiModel === "gemini-3.7-flash") geminiModel = "gemini-3.8-flash";
 
         if (!selectedApiKey && selectedModel !== "ollama") {
           sendResponse({ error: "API key not set. Please select an API key." });
@@ -1029,13 +1057,4 @@ function formatCleanError(error) {
   message = message.trim();
 
   return message || "Failed to generate reply. Please try again.";
-}
-
-if (chrome.sidePanel && chrome.sidePanel.setPanelBehavior) {
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => {
-    // Suppress the harmless "Error: No SW" that Chrome throws during dev mode reloads
-    if (!error.message.includes("No SW")) {
-      console.error(error);
-    }
-  });
 }
